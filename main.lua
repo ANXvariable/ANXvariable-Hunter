@@ -23,15 +23,15 @@ local initialize = function()
     
     -- Load the common survivor sprites into a table
     local sprites = {
-        idle = load_sprite("samus_idle", "sSamusIdle.png", 1, 14, 18),
-        walk = load_sprite("samus_walk", "sSamusRun.png", 4, 12, 20),
-        jump = load_sprite("samus_jump", "sSamusRun.png", 4, 12, 20),
-        jump_peak = load_sprite("samus_jump_peak", "sSamusRun.png", 4, 12, 20),
-        fall = load_sprite("samus_fall", "sSamusRun.png", 4, 12, 20),
-        climb = load_sprite("samus_climb", "sSamusRun.png", 4, 12, 20),
-        climb_hurt = load_sprite("samus_climb_hurt", "sSamusRun.png", 4, 12, 20), 
-        death = load_sprite("samus_death", "sSamusRun.png", 4, 12, 20),
-        decoy = load_sprite("samus_decoy", "sSamusRun.png", 4, 12, 20),
+        idle = load_sprite("samus_idle", "sSamusIdle.png", 1, 14, 16),
+        walk = load_sprite("samus_walk", "sSamusRun.png", 4, 12, 25),
+        jump = load_sprite("samus_jump", "sSamusRun.png", 4, 12, 25),
+        jump_peak = load_sprite("samus_jump_peak", "sSamusRun.png", 4, 12, 25),
+        fall = load_sprite("samus_fall", "sSamusRun.png", 4, 12, 25),
+        climb = load_sprite("samus_climb", "sSamusRun.png", 4, 12, 25),
+        climb_hurt = load_sprite("samus_climb_hurt", "sSamusRun.png", 4, 12, 25), 
+        death = load_sprite("samus_death", "sSamusRun.png", 4, 12, 25),
+        decoy = load_sprite("samus_decoy", "sSamusRun.png", 4, 12, 25),
     }
 
     --placeholder
