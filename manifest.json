@@ -1,0 +1,11 @@
+﻿{
+	"name": "Samus",
+	"version_number": "1.0.0",
+	"website_url": "",
+	"description": "This is a mod for Risk of Rain Returns.",
+	"dependencies": [
+		"ReturnOfModding-ReturnOfModding-1.0.53",
+		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.2.0",
+		"MGReturns-ENVY-1.1.1"
+	]
+}
