@@ -6,6 +6,6 @@
 	"dependencies": [
 		"ReturnOfModding-ReturnOfModding-1.0.53",
 		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.2.0",
-		"MGReturns-ENVY-1.1.1"
+		"LuaENVY-ENVY-1.2.0"
 	]
 }
