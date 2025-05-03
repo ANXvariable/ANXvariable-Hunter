@@ -1,16 +1,19 @@
--- MyMod
+-- Samus
 
+log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["MGReturns-ENVY"]
 envy.auto()
 mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto()
 
-PATH = _ENV["!plugins_mod_folder_path"]
+local PATH = _ENV["!plugins_mod_folder_path"]
+local NAMESPACE = "ANXvariable"
 
 
 
 -- ========== Main ==========
 
-local function initialize()
+local initialize = function() 
+    local samus = Survivor.new(NAMESPACE, "samus")
     -- Initialization of content goes here
     -- https://github.com/RoRRModdingToolkit/RoRR_Modding_Toolkit/wiki/Initialize
     
