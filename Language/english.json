@@ -1,0 +1,33 @@
+{
+	"skill" : {
+		"samusZ" : {
+			"name" : "Beam",
+			"description" : "beam attack"
+		},
+		"samusX" : {
+			"name" : "Missile",
+			"description" : "a second"
+        },
+        "samusC" : {
+			"name" : "Flash Shift",
+			"description" : "blink"
+		},
+		"samusV" : {
+			"name" : "Morph",
+			"description" : "marumari"
+		}
+	},
+
+	"survivor" : {
+		"samus" : {
+			"endQuote" : "..and so she left.",
+			"description" : "<y>Samus</c> has received a distress call from the <y>UES Contact Light</c>!",
+			"name" :  "Samus",
+			"nameUpper" : "SAMUS",
+			"story" : "???",
+            "id" : "???",
+            "departure"  : "???",
+            "arrival" : "???"
+		}
+	}
+}
