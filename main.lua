@@ -204,6 +204,7 @@ local initialize = function()
     skill_secondary:set_skill_properties(4.0, 120)
     skill_secondary:set_skill_stock(5, 5, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
+    skill_utility:set_skill_stock(2, 2, true, 1)
     skill_special:set_skill_properties(0.0, 20)
 
     -- Again consider renaming these variables after the ability itself
@@ -263,6 +264,7 @@ local initialize = function()
 
 
             end
+            actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
         end
     
     
@@ -304,6 +306,7 @@ local initialize = function()
 
 
             end
+            actor:sound_play(gm.constants.wMissileLaunch, 1, 0.8 + math.random() * 0.2)
         end
     
     
@@ -316,7 +319,7 @@ local initialize = function()
         actor.image_index = 0 -- Make sure our animation starts on its first frame
         -- From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
- 
+        actor:sound_play(gm.constants.wHuntressShoot3, 1, 0.8 + math.random() * 0.2)
     end)
     
     -- Executed every game tick during this state
