@@ -55,6 +55,10 @@ local initialize = function()
     samus.sprite_credits = sprites.idle
     samus:set_animations(sprites)
 
+    -- Offset for the cape visual
+    samus:set_cape_offset(-1, -6, 0, -5)
+
+
     -- Survivor stats
     samus:set_stats_base({
         maxhp = 300,
@@ -328,7 +332,15 @@ local initialize = function()
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_utility)
-        actor:actor_animation_set(animation, 0.25)
+        local animation_speed = 0.25
+
+        -- We don't want attack speed to speed up the dodge itself, because that could end up
+        -- reducing the dodge window, so we undo its benefit ahead of time
+        if actor.attack_speed > 0 then
+            animation_speed = animation_speed / actor.attack_speed
+        end
+
+        actor:actor_animation_set(animation, animation_speed)
 
         local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
