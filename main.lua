@@ -114,7 +114,7 @@ local initialize = function()
         end
 
         -- The beam cannot exist for too long
-        if instance.statetime >= 30 then
+        if instance.statetime >= 26 + (16 / 4) then
             instance:destroy()
             return
         end
