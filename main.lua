@@ -39,7 +39,8 @@ local initialize = function()
     local spr_loadout = load_sprite("samus_loadout", "sSelectSamus.png", 4, 28, 0)
     local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png", 3)
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
-    local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png") 
+    local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
+    local spr_beam = load_sprite("samus_beam", "sSamusBeam.png") 
 
     -- Assign sprites to various survivor fields
     samus.sprite_loadout = spr_loadout
@@ -63,6 +64,25 @@ local initialize = function()
         damage = 4,
         regen = 0.004,
     })
+
+    local obj_beam = Object.new(NAMESPACE, "samus_beam")
+    obj_beam.obj_sprite = spr_beam
+    obj_beam.obj_depth = 1
+    
+    obj_beam:onStep(function(instance)
+        local data = instance:get_data()
+        instance.x = instance.x + data.horizontal_velocity
+
+        -- Check we're within stage bounds
+        local stage_width = GM._mod_room_get_current_width()
+        local stage_height = GM._mod_room_get_current_height()
+        if instance.x < -16 or instance.x > stage_width + 16 
+           or instance.y < -16 or instance.y > stage_height + 16 
+        then 
+            instance:destroy()
+            return
+        end
+    end)
     
     -- Grab references to skills.  Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
@@ -90,6 +110,66 @@ local initialize = function()
     skill_secondary:set_skill_properties(4.0, 120)
     skill_utility:set_skill_properties(0.0, 240)
     skill_special:set_skill_properties(0.0, 20)
+
+    -- Again consider renaming these variables after the ability itself
+    local state_primary = State.new(NAMESPACE, skill_primary.identifier)
+    local state_secondary = State.new(NAMESPACE, skill_secondary.identifier)
+    local state_utility = State.new(NAMESPACE, skill_utility.identifier)
+    local state_special = State.new(NAMESPACE, skill_special.identifier)
+    
+    -- Register callbacks that switch states when skills are activated
+    skill_primary:onActivate(function(actor, skill, index)
+        actor:enter_state(state_primary)
+    end)
+    
+    skill_secondary:onActivate(function(actor, skill, index)
+        actor:enter_state(state_secondary)
+    end)
+    
+    skill_utility:onActivate(function(actor, skill, index)
+        actor:enter_state(state_utility)
+    end)
+    
+    skill_special:onActivate(function(actor, skill, index)
+        actor:enter_state(state_special)
+    end)
+
+    -- Executed when state_primary is entered
+    state_primary:onEnter(function(actor, data)
+        actor.image_index = 0 -- Make sure our animation starts on its first frame
+        -- From here we can setup custom data that we might want to refer back to in onStep
+        -- Our flag to prevent firing more than once per attack
+        data.fired = 0
+ 
+    end)
+    
+    -- Executed every game tick during this state
+    state_primary:onStep(function(actor, data)    
+        -- Set the animation and animation speed. This speed will automatically have the survivor's 
+        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
+        local animation = actor:actor_get_skill_animation(skill_primary)
+        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+
+        if actor.image_index >= 1 and data.fired == 0 then
+            data.fired = 1
+    
+            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+            local buff_shadow_clone = Buff.find("ror", "shadowClone")
+            for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                local spawn_offset = 5 * direction
+                local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
+                local beam_data = beam:get_data()
+                beam_data.horizontal_velocity = 10 * direction
+
+            end
+        end
+    
+    
+        -- A convenience function that exits this state automatically once the animation ends
+        actor:skill_util_exit_state_on_anim_end()
+    end)
+
+
     
 
     
