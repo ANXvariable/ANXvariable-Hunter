@@ -37,7 +37,7 @@ local initialize = function()
     --placeholder
     local spr_skills = load_sprite("samus_skills", "sSamusSkills.png", 5, 0, 0)
     local spr_loadout = load_sprite("samus_loadout", "sSelectSamus.png", 4, 28, 0)
-    local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png")
+    local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png", 3)
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
