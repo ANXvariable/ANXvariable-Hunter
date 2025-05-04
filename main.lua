@@ -114,7 +114,7 @@ local initialize = function()
         end
 
         -- The beam cannot exist for too long
-        if instance.statetime >= 26 + (16 / 4) then
+        if instance.statetime >= 20 + (instance.duration) then
             instance:destroy()
             return
         end
@@ -260,6 +260,8 @@ local initialize = function()
                 local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
                 beam.image_xscale = direction
                 beam.statetime = 0
+                beam.dmg = actor.damage
+                beam.duration = math.min(actor.level * 10, 200)
                 local beam_data = beam:get_data()
                 beam_data.parent = actor
                 beam_data.horizontal_velocity = 10 * direction
