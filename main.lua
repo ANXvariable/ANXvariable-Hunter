@@ -123,6 +123,17 @@ local initialize = function()
     obj_missile:onStep(function(instance)
         local data = instance:get_data()
         instance.x = instance.x + data.horizontal_velocity
+        if data.horizontal_velocity < 12
+            and  data.horizontal_velocity > 0
+        then
+            data.horizontal_velocity = data.horizontal_velocity + 0.5
+        end
+        
+        if data.horizontal_velocity < 0
+            and  data.horizontal_velocity > -12
+        then
+            data.horizontal_velocity = data.horizontal_velocity - 0.5
+        end
 
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -286,7 +297,7 @@ local initialize = function()
                 missile.statetime = 0
                 local missile_data = missile:get_data()
                 missile_data.parent = actor
-                missile_data.horizontal_velocity = 10 * direction
+                missile_data.horizontal_velocity = 0.5 * direction
                 local damage = actor:skill_get_damage(skill_secondary)
                 missile_data.damage_coefficient = damage
 
