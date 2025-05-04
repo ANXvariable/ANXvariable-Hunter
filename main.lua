@@ -23,7 +23,7 @@ local initialize = function()
     
     -- Load the common survivor sprites into a table
     local sprites = {
-        idle = load_sprite("samus_idle", "sSamusIdle.png", 1, 14, 16),
+        idle = load_sprite("samus_idle", "sSamusIdle.png", 1, 14, 20),
         walk = load_sprite("samus_walk", "sSamusRun.png", 4, 12, 25),
         jump = load_sprite("samus_jump", "sSamusRun.png", 4, 12, 25),
         jump_peak = load_sprite("samus_jump_peak", "sSamusRun.png", 4, 12, 25),
@@ -37,10 +37,12 @@ local initialize = function()
     --placeholder
     local spr_skills = load_sprite("samus_skills", "sSamusSkills.png", 5, 0, 0)
     local spr_loadout = load_sprite("samus_loadout", "sSelectSamus.png", 4, 28, 0)
-    local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png", 3)
+    local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png")
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
-    local spr_beam = load_sprite("samus_beam", "sSamusBeam.png") 
+    local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
+    local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
+    local spr_missile_explosion = gm.sprite_duplicate(1848)
 
     -- Assign sprites to various survivor fields
     samus.sprite_loadout = spr_loadout
@@ -73,6 +75,29 @@ local initialize = function()
         local data = instance:get_data()
         instance.x = instance.x + data.horizontal_velocity
 
+        -- Hit the first enemy actor that's been collided with
+        local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
+        for _, other_actor in ipairs(actor_collisions) do
+            if data.parent:attack_collision_canhit(other_actor) then
+                -- Deal damage
+                local damage_direction = 0
+                if data.horizontal_velocity < 0 then
+                    damage_direction = 180
+                end
+                data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none)
+
+                -- Destroy the beam
+                instance:destroy()
+                return
+            end
+        end
+
+        -- Hitting terrain destroys the beam
+        if instance:is_colliding(gm.constants.pSolidBulletCollision) then
+            instance:destroy()
+            return
+        end
+
         -- Check we're within stage bounds
         local stage_width = GM._mod_room_get_current_width()
         local stage_height = GM._mod_room_get_current_height()
@@ -82,7 +107,64 @@ local initialize = function()
             instance:destroy()
             return
         end
+
+        -- The beam cannot exist for too long
+        if instance.statetime >= 30 then
+            instance:destroy()
+            return
+        end
+        instance.statetime = instance.statetime + 1
     end)
+
+    local obj_missile = Object.new(NAMESPACE, "samus_missile")
+    obj_missile.obj_sprite = spr_missile
+    obj_missile.obj_depth = 1
+    
+    obj_missile:onStep(function(instance)
+        local data = instance:get_data()
+        instance.x = instance.x + data.horizontal_velocity
+
+        -- Hit the first enemy actor that's been collided with
+        local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
+        for _, other_actor in ipairs(actor_collisions) do
+            if data.parent:attack_collision_canhit(other_actor) then
+                -- Deal damage
+                local damage_direction = 0
+                if data.horizontal_velocity < 0 then
+                    damage_direction = 180
+                end
+                data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none)
+
+                -- Destroy the missile
+                instance:destroy()
+                return
+            end
+        end
+
+        -- Hitting terrain destroys the missile
+        if instance:is_colliding(gm.constants.pSolidBulletCollision) then
+            instance:destroy()
+            return
+        end
+
+        -- Check we're within stage bounds
+        local stage_width = GM._mod_room_get_current_width()
+        local stage_height = GM._mod_room_get_current_height()
+        if instance.x < -16 or instance.x > stage_width + 16 
+           or instance.y < -16 or instance.y > stage_height + 16 
+        then 
+            instance:destroy()
+            return
+        end
+
+        -- The missile cannot exist for too long
+        if instance.statetime >= 360 then
+            instance:destroy()
+            return
+        end
+        instance.statetime = instance.statetime + 1
+    end)
+    
     
     -- Grab references to skills.  Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
@@ -95,7 +177,7 @@ local initialize = function()
     skill_primary:set_skill_animation(sprites.walk)
     skill_secondary:set_skill_animation(sprites.walk)
     skill_utility:set_skill_animation(sprites.walk)
-    skill_utility:set_skill_animation(sprites.walk)
+    skill_special:set_skill_animation(sprites.walk)
     
     -- Set the icons for each skill, specifying the icon spritesheet and the specific subimage
     skill_primary:set_skill_icon(spr_skills, 0)
@@ -106,8 +188,9 @@ local initialize = function()
     -- Set the damage coefficient and cooldown for each skill. A damage coefficient of 100% is equal
     -- to 1.0, 150% to 1.5, 200% to 2.0, and so on. Cooldowns are specified in frames, so multiply by
     -- 60 to turn that into actual seconds.
-    skill_primary:set_skill_properties(2.5, 0)
+    skill_primary:set_skill_properties(1.3, 0)
     skill_secondary:set_skill_properties(4.0, 120)
+    skill_secondary:set_skill_stock(5, 5, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
     skill_special:set_skill_properties(0.0, 20)
 
@@ -150,7 +233,7 @@ local initialize = function()
         local animation = actor:actor_get_skill_animation(skill_primary)
         actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
 
-        if actor.image_index >= 1 and data.fired == 0 then
+        if actor.image_index >= 0 and data.fired == 0 then
             data.fired = 1
     
             local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
@@ -158,8 +241,14 @@ local initialize = function()
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                 local spawn_offset = 5 * direction
                 local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
+                beam.image_xscale = direction
+                beam.statetime = 0
                 local beam_data = beam:get_data()
+                beam_data.parent = actor
                 beam_data.horizontal_velocity = 10 * direction
+                local damage = actor:skill_get_damage(skill_primary)
+                beam_data.damage_coefficient = damage
+
 
             end
         end
@@ -169,6 +258,101 @@ local initialize = function()
         actor:skill_util_exit_state_on_anim_end()
     end)
 
+    -- Executed when state_secondary is entered
+    state_secondary:onEnter(function(actor, data)
+        actor.image_index = 0 -- Make sure our animation starts on its first frame
+        -- From here we can setup custom data that we might want to refer back to in onStep
+        -- Our flag to prevent firing more than once per attack
+        data.fired = 0
+ 
+    end)
+    
+    -- Executed every game tick during this state
+    state_secondary:onStep(function(actor, data)    
+        -- Set the animation and animation speed. This speed will automatically have the survivor's 
+        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
+        local animation = actor:actor_get_skill_animation(skill_secondary)
+        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+
+        if actor.image_index >= 0 and data.fired == 0 then
+            data.fired = 1
+    
+            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+            local buff_shadow_clone = Buff.find("ror", "shadowClone")
+            for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                local spawn_offset = 5 * direction
+                local missile = obj_missile:create(actor.x + spawn_offset, actor.y)
+                missile.image_xscale = direction
+                missile.statetime = 0
+                local missile_data = missile:get_data()
+                missile_data.parent = actor
+                missile_data.horizontal_velocity = 10 * direction
+                local damage = actor:skill_get_damage(skill_secondary)
+                missile_data.damage_coefficient = damage
+
+
+            end
+        end
+    
+    
+        -- A convenience function that exits this state automatically once the animation ends
+        actor:skill_util_exit_state_on_anim_end()
+    end)
+
+    -- Executed when state_utility is entered
+    state_utility:onEnter(function(actor, data)
+        actor.image_index = 0 -- Make sure our animation starts on its first frame
+        -- From here we can setup custom data that we might want to refer back to in onStep
+        -- Our flag to prevent firing more than once per attack
+        data.fired = 0
+ 
+    end)
+    
+    -- Executed every game tick during this state
+    state_utility:onStep(function(actor, data)    
+        -- Set the animation and animation speed. This speed will automatically have the survivor's 
+        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
+        local animation = actor:actor_get_skill_animation(skill_utility)
+        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+
+        if actor.image_index >= 3 and data.fired == 0 then
+            data.fired = 1
+    
+            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+            local buff_shadow_clone = Buff.find("ror", "shadowClone")
+        end
+    
+    
+        -- A convenience function that exits this state automatically once the animation ends
+        actor:skill_util_exit_state_on_anim_end()
+    end)
+    -- Executed when state_special is entered
+    state_special:onEnter(function(actor, data)
+        actor.image_index = 0 -- Make sure our animation starts on its first frame
+        -- From here we can setup custom data that we might want to refer back to in onStep
+        -- Our flag to prevent firing more than once per attack
+        data.fired = 0
+ 
+    end)
+    
+    -- Executed every game tick during this state
+    state_special:onStep(function(actor, data)    
+        -- Set the animation and animation speed. This speed will automatically have the survivor's 
+        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
+        local animation = actor:actor_get_skill_animation(skill_special)
+        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+
+        if actor.image_index >= 3 and data.fired == 0 then
+            data.fired = 1
+    
+            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+            local buff_shadow_clone = Buff.find("ror", "shadowClone")
+        end
+    
+    
+        -- A convenience function that exits this state automatically once the animation ends
+        actor:skill_util_exit_state_on_anim_end()
+    end)
 
     
 
@@ -186,7 +370,7 @@ gm.post_script_hook(gm.constants.__input_system_tick, function(self, other, resu
     -- This is an example of a hook
     -- This hook in particular will run every frame after it has finished loading (i.e., "Hopoo Games" appears)
     -- You can hook into any function in the game
-    -- Use pre_script_hook instead to run code before the function
+    -- Use pre_script_hook 'stead to run code before the function
     -- https://github.com/return-of-modding/ReturnOfModding/blob/master/docs/lua/tables/gm.md
     
 end)
