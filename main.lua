@@ -34,12 +34,13 @@ local initialize = function()
         decoy = load_sprite("samus_decoy", "sSamusRun.png", 4, 12, 25),
     }
 
-    --placeholder
+    --placeholder category, todo organize later
     local spr_skills = load_sprite("samus_skills", "sSamusSkills.png", 5, 0, 0)
     local spr_loadout = load_sprite("samus_loadout", "sSelectSamus.png", 4, 28, 0)
     local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png", 3)
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
+    local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
     local spr_missile_explosion = gm.sprite_duplicate(1848)
@@ -177,7 +178,7 @@ local initialize = function()
     end)
     
     
-    -- Grab references to skills.  Consider renaming the variables to match your skill names, in case 
+    -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
     local skill_primary = samus:get_primary()
     local skill_secondary = samus:get_secondary()
@@ -187,7 +188,7 @@ local initialize = function()
     -- Set the animations for each skill
     skill_primary:set_skill_animation(sprites.walk)
     skill_secondary:set_skill_animation(sprites.walk)
-    skill_utility:set_skill_animation(sprites.walk)
+    skill_utility:set_skill_animation(spr_flashshift)
     skill_special:set_skill_animation(sprites.walk)
     
     -- Set the icons for each skill, specifying the icon spritesheet and the specific subimage
@@ -238,7 +239,7 @@ local initialize = function()
     end)
     
     -- Executed every game tick during this state
-    state_primary:onStep(function(actor, data)    
+    state_primary:onStep(function(actor, data)
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_primary)
@@ -279,7 +280,7 @@ local initialize = function()
     end)
     
     -- Executed every game tick during this state
-    state_secondary:onStep(function(actor, data)    
+    state_secondary:onStep(function(actor, data)
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_secondary)
@@ -315,28 +316,37 @@ local initialize = function()
         actor.image_index = 0 -- Make sure our animation starts on its first frame
         -- From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
-        data.fired = 0
  
     end)
     
     -- Executed every game tick during this state
-    state_utility:onStep(function(actor, data)    
+    state_utility:onStep(function(actor, data)
+        actor:skill_util_fix_hspeed()
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_utility)
-        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:actor_animation_set(animation, 0.25)
 
-        if actor.image_index >= 3 and data.fired == 0 then
-            data.fired = 1
-    
-            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
-            local buff_shadow_clone = Buff.find("ror", "shadowClone")
+        local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+        local buff_shadow_clone = Buff.find("ror", "shadowClone")
+        if actor.invincible < 10 then 
+            actor.invincible = 10
         end
-    
-    
+        actor.pHspeed = direction * actor.pHmax * 6
+        actor.pVspeed = 0
+        
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
     end)
+
+    state_utility:onExit(function(actor, data)
+        if actor.invincible <= 10 then
+            actor.invincible = 0
+        end
+        actor.pHspeed = 0
+ 
+    end)
+
     -- Executed when state_special is entered
     state_special:onEnter(function(actor, data)
         actor.image_index = 0 -- Make sure our animation starts on its first frame
@@ -347,7 +357,7 @@ local initialize = function()
     end)
     
     -- Executed every game tick during this state
-    state_special:onStep(function(actor, data)    
+    state_special:onStep(function(actor, data)
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_special)
