@@ -62,7 +62,7 @@ local initialize = function()
     -- Survivor stats
     samus:set_stats_base({
         maxhp = 300,
-        damage = 15,
+        damage = 16,
         regen = 0.02
     })
 
@@ -204,7 +204,7 @@ local initialize = function()
     -- Set the damage coefficient and cooldown for each skill. A damage coefficient of 100% is equal
     -- to 1.0, 150% to 1.5, 200% to 2.0, and so on. Cooldowns are specified in frames, so multiply by
     -- 60 to turn that into actual seconds.
-    skill_primary:set_skill_properties(1.3, 0)
+    skill_primary:set_skill_properties(1.2, 0)
     skill_secondary:set_skill_properties(4.0, 120)
     skill_secondary:set_skill_stock(5, 5, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
