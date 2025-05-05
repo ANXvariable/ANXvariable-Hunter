@@ -41,6 +41,7 @@ local initialize = function()
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
     local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
+    local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 40, 12, 25)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
     local spr_missile_explosion = gm.sprite_duplicate(1848)
@@ -199,7 +200,7 @@ local initialize = function()
     skill_primary:set_skill_animation(sprites.walk)
     skill_secondary:set_skill_animation(sprites.walk)
     skill_utility:set_skill_animation(spr_flashshift)
-    skill_special:set_skill_animation(sprites.walk)
+    skill_special:set_skill_animation(spr_morphandbomb)
     
     -- Set the icons for each skill, specifying the icon spritesheet and the specific subimage
     skill_primary:set_skill_icon(spr_skills, 0)
@@ -216,7 +217,7 @@ local initialize = function()
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
     skill_utility.is_utility = true
-    skill_special:set_skill_properties(0.0, 20)
+    skill_special:set_skill_properties(3.0, 20)
 
     -- Clear callbacks
     skill_primary:clear_callbacks()
@@ -392,16 +393,25 @@ local initialize = function()
     
     -- Executed every game tick during this state
     state_special:onStep(function(actor, data)
+        actor:skill_util_fix_hspeed()
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_special)
-        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:actor_animation_set(animation, 1) -- 0.25 means 4 ticks per frame at base attack speed
 
-        if actor.image_index >= 3 and data.fired == 0 then
+        if actor.image_index == 3 then
+            actor:sound_play(gm.constants.wMine, 1, 0.8 + math.random() * 0.2)
+        end
+        
+        if actor.image_index >= 33 and data.fired == 0 then
             data.fired = 1
     
-            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
+            for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                actor:fire_explosion(actor.x, actor.y,  64, 64, actor:skill_get_damage(skill_special), spr_missile_explosion, spr_none)
+            end
+        actor:sound_play(gm.constants.wExplosiveShot, 1, 0.8 + math.random() * 0.2)
+        actor.pVspeed = actor.pVmax * -1.25
         end
     
     
