@@ -45,6 +45,9 @@ local initialize = function()
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
     local spr_missile_explosion = gm.sprite_duplicate(1848)
 
+    -- Colour for the character's skill names on character select
+    samus:set_primary_color(Color.from_rgb(8, 253, 142))
+
     -- Assign sprites to various survivor fields
     samus.sprite_loadout = spr_loadout
     samus.sprite_portrait = spr_portrait
