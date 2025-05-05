@@ -1,7 +1,7 @@
 ﻿{
 	"name": "Samus",
 	"version_number": "1.0.0",
-	"website_url": "",
+	"website_url": "https://github.com/ANXvariable/ANXvariable-Samus",
 	"description": "This is a mod for Risk of Rain Returns.",
 	"dependencies": [
 		"ReturnOfModding-ReturnOfModding-1.0.53",
