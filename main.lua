@@ -57,6 +57,7 @@ local initialize = function()
     samus.sprite_idle = sprites.idle
     samus.sprite_credits = sprites.idle
     samus:set_animations(sprites)
+    samus:clear_callbacks()
 
     -- Offset for the cape visual
     samus:set_cape_offset(-1, -6, 0, -5)
@@ -78,6 +79,7 @@ local initialize = function()
     local obj_beam = Object.new(NAMESPACE, "samus_beam")
     obj_beam.obj_sprite = spr_beam
     obj_beam.obj_depth = 1
+    obj_beam:clear_callbacks()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
@@ -127,6 +129,7 @@ local initialize = function()
     local obj_missile = Object.new(NAMESPACE, "samus_missile")
     obj_missile.obj_sprite = spr_missile
     obj_missile.obj_depth = 1
+    obj_missile:clear_callbacks()
     
     obj_missile:onStep(function(instance)
         local data = instance:get_data()
@@ -215,11 +218,21 @@ local initialize = function()
     skill_utility.is_utility = true
     skill_special:set_skill_properties(0.0, 20)
 
+    -- Clear callbacks
+    skill_primary:clear_callbacks()
+    skill_secondary:clear_callbacks()
+    skill_utility:clear_callbacks()
+    skill_special:clear_callbacks()
+
     -- Again consider renaming these variables after the ability itself
     local state_primary = State.new(NAMESPACE, skill_primary.identifier)
+    state_primary:clear_callbacks()
     local state_secondary = State.new(NAMESPACE, skill_secondary.identifier)
+    state_secondary:clear_callbacks()
     local state_utility = State.new(NAMESPACE, skill_utility.identifier)
+    state_utility:clear_callbacks()
     local state_special = State.new(NAMESPACE, skill_special.identifier)
+    state_special:clear_callbacks()
     
     -- Register callbacks that switch states when skills are activated
     skill_primary:onActivate(function(actor, skill, index)
