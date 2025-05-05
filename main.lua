@@ -209,6 +209,7 @@ local initialize = function()
     skill_secondary:set_skill_stock(5, 5, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
+    skill_utility.is_utility = true
     skill_special:set_skill_properties(0.0, 20)
 
     -- Again consider renaming these variables after the ability itself
