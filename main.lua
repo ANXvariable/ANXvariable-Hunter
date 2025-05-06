@@ -41,10 +41,12 @@ local initialize = function()
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
     local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
-    local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
+    --local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
+    local spr_morph = load_sprite("samus_morph", "sSamusMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
     local spr_missile_explosion = gm.sprite_duplicate(1848)
+    local spr_bomb = load_sprite("samus_bomb", "sSamusBomb.png")
 
     -- Colour for the character's skill names on character select
     samus:set_primary_color(Color.from_rgb(8, 253, 142))
@@ -186,6 +188,34 @@ local initialize = function()
         instance.statetime = instance.statetime + 1
     end)
     
+    local obj_bomb = Object.new(NAMESPACE, "samus_bomb")
+    obj_bomb.obj_sprite = spr_bomb
+    obj_bomb.obj_depth = -501
+    obj_bomb:clear_callbacks()
+
+    obj_bomb:onStep(function(instance)
+        local data = instance:get_data()
+
+        -- Fuse
+        if instance.statetime >= 30 then
+            data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+            instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+            instance:destroy()
+            return
+        end
+
+        -- Check we're within stage bounds
+        local stage_width = GM._mod_room_get_current_width()
+        local stage_height = GM._mod_room_get_current_height()
+        if instance.x < -16 or instance.x > stage_width + 16 
+           or instance.y < -16 or instance.y > stage_height + 16 
+        then 
+            instance:destroy()
+            return
+        end
+
+        instance.statetime = instance.statetime + 1
+    end)
     
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
@@ -198,7 +228,7 @@ local initialize = function()
     skill_primary:set_skill_animation(sprites.walk)
     skill_secondary:set_skill_animation(sprites.walk)
     skill_utility:set_skill_animation(spr_flashshift)
-    skill_special:set_skill_animation(spr_morphandbomb)
+    skill_special:set_skill_animation(spr_morph)
     
     -- Set the icons for each skill, specifying the icon spritesheet and the specific subimage
     skill_primary:set_skill_icon(spr_skills, 0)
@@ -392,7 +422,6 @@ local initialize = function()
     
     -- Executed every game tick during this state
     state_special:onStep(function(actor, data)
-        actor:skill_util_fix_hspeed()
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_special)
@@ -401,20 +430,19 @@ local initialize = function()
         if actor.image_index >= 1 and data.fired == 0 then
             data.fired = 1
             actor:sound_play(gm.constants.wMine, 0.5, 0.8 + math.random() * 0.2)
-        end
-        
-        if actor.image_index >= 9 and data.fired == 1 then
-            data.fired = 2
-    
+            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                actor:fire_explosion(actor.x, actor.y,  64, 64, actor:skill_get_damage(skill_special), spr_missile_explosion, spr_none)
+                local spawn_offset = 5 * direction
+                local bomb = obj_bomb:create(actor.x - 4, actor.y + 3)
+                bomb.statetime = 0
+                local bomb_data = bomb:get_data()
+                bomb_data.parent = actor
+                local damage = actor:skill_get_damage(skill_special)
+                bomb_data.damage_coefficient = damage
             end
-        actor:sound_play(gm.constants.wExplosiveShot, 1, 0.8 + math.random() * 0.2)
-        actor.pVspeed = actor.pVmax * -1.25
         end
-    
-    
+            
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
     end)
