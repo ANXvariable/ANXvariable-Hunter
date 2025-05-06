@@ -298,8 +298,9 @@ local initialize = function()
         actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
 
         if actor.image_index >= 0 and data.fired == 0 then
+            local damage = actor:skill_get_damage(skill_primary)
             data.fired = 1
-    
+            actor:skill_util_update_heaven_cracker(actor, damage)
             local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
@@ -312,17 +313,18 @@ local initialize = function()
                 local beam_data = beam:get_data()
                 beam_data.parent = actor
                 beam_data.horizontal_velocity = 10 * direction
-                local damage = actor:skill_get_damage(skill_primary)
                 beam_data.damage_coefficient = damage
-
-
             end
-            actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
+        actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
         end
     
     
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
+    end)
+
+    state_primary:onExit(function(actor, data)
+        
     end)
 
     -- Executed when state_secondary is entered
