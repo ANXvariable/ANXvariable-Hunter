@@ -41,7 +41,7 @@ local initialize = function()
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
     local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
-    local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 40, 12, 25)
+    local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
     local spr_missile_explosion = gm.sprite_duplicate(1848)
@@ -152,12 +152,8 @@ local initialize = function()
         for _, other_actor in ipairs(actor_collisions) do
             if data.parent:attack_collision_canhit(other_actor) then
                 -- Deal damage
-                local damage_direction = 0
-                if data.horizontal_velocity < 0 then
-                    damage_direction = 180
-                end
-                data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none)
-
+                data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 -- Destroy the missile
                 instance:destroy()
                 return
@@ -166,6 +162,8 @@ local initialize = function()
 
         -- Hitting terrain destroys the missile
         if instance:is_colliding(gm.constants.pSolidBulletCollision) then
+            data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+            instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
             instance:destroy()
             return
         end
@@ -217,7 +215,8 @@ local initialize = function()
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
     skill_utility.is_utility = true
-    skill_special:set_skill_properties(3.0, 20)
+    skill_special:set_skill_properties(3.0, 0)
+    skill_special.is_primary = true
 
     -- Clear callbacks
     skill_primary:clear_callbacks()
@@ -397,14 +396,15 @@ local initialize = function()
         -- Set the animation and animation speed. This speed will automatically have the survivor's 
         -- attack speed bonuses applied (e.g. from Soldier's Syringe)
         local animation = actor:actor_get_skill_animation(skill_special)
-        actor:actor_animation_set(animation, 1) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
 
-        if actor.image_index == 3 then
-            actor:sound_play(gm.constants.wMine, 1, 0.8 + math.random() * 0.2)
+        if actor.image_index >= 1 and data.fired == 0 then
+            data.fired = 1
+            actor:sound_play(gm.constants.wMine, 0.5, 0.8 + math.random() * 0.2)
         end
         
-        if actor.image_index >= 33 and data.fired == 0 then
-            data.fired = 1
+        if actor.image_index >= 9 and data.fired == 1 then
+            data.fired = 2
     
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
