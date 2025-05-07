@@ -54,7 +54,7 @@ local initialize = function()
     --local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("samus_morph", "sSamusMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
-    local spr_missile = load_sprite("samus_missile", "sSamusMissile.png")
+    local spr_missile = load_sprite("samus_missile", "sSamusMissile.png", 3, 22)
     local spr_missile_explosion = gm.sprite_duplicate(1848)
     local spr_bomb = load_sprite("samus_bomb", "sSamusBomb.png")
 
@@ -98,6 +98,10 @@ local initialize = function()
         regen = 0.004,
     })
 
+    samus:onStep(function(actor)
+        Global.samus_xspeed = actor.pHspeed
+    end)
+
     local obj_beam = Object.new(NAMESPACE, "samus_beam")
     obj_beam.obj_sprite = spr_beam
     obj_beam.obj_depth = 1
@@ -105,7 +109,7 @@ local initialize = function()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
-        instance.x = instance.x + data.horizontal_velocity
+        instance.x = instance.x + data.horizontal_velocity + Global.samus_xspeed
 
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -155,17 +159,17 @@ local initialize = function()
     
     obj_missile:onStep(function(instance)
         local data = instance:get_data()
-        instance.x = instance.x + data.horizontal_velocity
-        if data.horizontal_velocity < 12
-            and  data.horizontal_velocity > 0
+        instance.x = instance.x + data.horizontal_velocity + Global.samus_xspeed
+        if data.horizontal_velocity < 16
+            and instance.image_xscale > 0
         then
-            data.horizontal_velocity = data.horizontal_velocity + 0.5
+            data.horizontal_velocity = 16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1))
         end
         
-        if data.horizontal_velocity < 0
-            and  data.horizontal_velocity > -12
+        if instance.image_xscale < 0
+            and data.horizontal_velocity > -16
         then
-            data.horizontal_velocity = data.horizontal_velocity - 0.5
+            data.horizontal_velocity = -(16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1)))
         end
 
         -- Hit the first enemy actor that's been collided with
@@ -205,11 +209,12 @@ local initialize = function()
             return
         end
 
-        local trail = GM.instance_create((instance.x - 13) * instance.image_xscale, instance.y + 5, gm.constants.oEfTrail)
+        local trail = GM.instance_create(instance.x - 18 * instance.image_xscale, instance.y + 5, gm.constants.oEfTrail)
         trail.sprite_index = gm.constants.sEfMissileTrail
         trail.image_index = 0
         trail.image_speed = 8 / 9
-        trail.image_xscale = instance.image_xscale
+        trail.image_xscale = instance.image_xscale * (data.horizontal_velocity / 16)
+        trail.image_yscale = 0.8
         trail.depth = instance.depth + 1
         instance.statetime = instance.statetime + 1
     end)
@@ -241,10 +246,6 @@ local initialize = function()
         end
 
         instance.statetime = instance.statetime + 1
-    end)
-
-    samus:onStep(function(actor)
-
     end)
     
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
@@ -340,6 +341,7 @@ local initialize = function()
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                 local spawn_offset = 5 * direction
                 local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
+                beam.image_speed = 0.25
                 beam.image_xscale = direction
                 beam.statetime = 0
                 beam.dmg = actor.damage
@@ -388,11 +390,12 @@ local initialize = function()
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                 local spawn_offset = 5 * direction
                 local missile = obj_missile:create(actor.x + spawn_offset, actor.y)
+                missile.image_speed = 0.25
                 missile.image_xscale = direction
                 missile.statetime = 0
                 local missile_data = missile:get_data()
                 missile_data.parent = actor
-                missile_data.horizontal_velocity = 0.5 * direction
+                missile_data.horizontal_velocity = 0
                 local damage = actor:skill_get_damage(skill_secondary)
                 missile_data.damage_coefficient = damage
 
