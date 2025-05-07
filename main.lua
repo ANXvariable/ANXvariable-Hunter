@@ -34,6 +34,15 @@ local initialize = function()
         decoy = load_sprite("samus_decoy", "sSamusRun.png", 4, 12, 25),
     }
 
+    --spr_half
+    local spr_idle_half = load_sprite("samus_idle_half", "sSamusIdleHalf.png", 1, 14, 20)
+    local spr_walk_half = load_sprite("samus_walk_half", "sSamusRunHalf.png", 4, 12, 25)
+    local spr_jump_half = load_sprite("samus_jump_half", "sSamusRunHalf.png", 4, 12, 25)
+    local spr_jump_peak_half = load_sprite("samus_jump_peak_half", "sSamusRunHalf.png", 4, 12, 25)
+    local spr_fall_half = load_sprite("samus_fall_half", "sSamusRunHalf.png", 4, 12, 25)
+
+    local spr_shoot1_half = load_sprite("samus_shoot1_half", "sSamusShoot1Half.png", 4, 12, 25)
+    
     --placeholder category, todo organize later
     local spr_skills = load_sprite("samus_skills", "sSamusSkills.png", 5, 0, 0)
     local spr_loadout = load_sprite("samus_loadout", "sSelectSamus.png", 4, 28, 0)
@@ -41,6 +50,7 @@ local initialize = function()
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
     local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
+    local spr_flashshifttrail = load_sprite("samus_flashshifttrail", "sSamusFlashShift.png", 4, 12, 25)
     --local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("samus_morph", "sSamusMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
@@ -60,10 +70,19 @@ local initialize = function()
     samus.sprite_idle = sprites.idle
     samus.sprite_credits = sprites.idle
     samus:set_animations(sprites)
-    samus:clear_callbacks()
-
-    -- Offset for the cape visual
+    -- Offset for the Prophet's Cape
     samus:set_cape_offset(-1, -6, 0, -5)
+
+    samus:clear_callbacks()
+    samus:onInit(function(actor)
+        actor.sprite_idle_half = Array.new({sprites.idle, spr_idle_half, 0})
+        actor.sprite_walk_half = Array.new({sprites.walk, spr_walk_half, 0})
+        actor.sprite_jump_half = Array.new({sprites.jump, spr_jump_half, 0})
+        actor.sprite_jump_peak_half = Array.new({sprites.jump_peak, spr_jump_peak_half, 0})
+        actor.sprite_fall_half = Array.new({sprites.fall, spr_fall_half, 0})
+
+        actor:survivor_util_init_half_sprites()
+    end)
 
 
     -- Survivor stats
@@ -185,6 +204,13 @@ local initialize = function()
             instance:destroy()
             return
         end
+
+        local trail = GM.instance_create((instance.x - 13) * instance.image_xscale, instance.y + 5, gm.constants.oEfTrail)
+        trail.sprite_index = gm.constants.sEfMissileTrail
+        trail.image_index = 0
+        trail.image_speed = 8 / 9
+        trail.image_xscale = instance.image_xscale
+        trail.depth = instance.depth + 1
         instance.statetime = instance.statetime + 1
     end)
     
@@ -215,6 +241,10 @@ local initialize = function()
         end
 
         instance.statetime = instance.statetime + 1
+    end)
+
+    samus:onStep(function(actor)
+
     end)
     
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
@@ -260,6 +290,7 @@ local initialize = function()
     local state_secondary = State.new(NAMESPACE, skill_secondary.identifier)
     state_secondary:clear_callbacks()
     local state_utility = State.new(NAMESPACE, skill_utility.identifier)
+    state_utility.activity_flags = State.ACTIVITY_FLAG.allow_rope_cancel
     state_utility:clear_callbacks()
     local state_special = State.new(NAMESPACE, skill_special.identifier)
     state_special:clear_callbacks()
@@ -283,8 +314,10 @@ local initialize = function()
 
     -- Executed when state_primary is entered
     state_primary:onEnter(function(actor, data)
-        actor.image_index = 0 -- Make sure our animation starts on its first frame
-        -- From here we can setup custom data that we might want to refer back to in onStep
+        actor:skill_util_strafe_init()
+        actor:skill_util_strafe_turn_init()
+        actor.image_index2 = 0 -- Make sure our animation starts on its first frame
+        -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
         data.fired = 0
  
@@ -292,14 +325,15 @@ local initialize = function()
     
     -- Executed every game tick during this state
     state_primary:onStep(function(actor, data)
-        -- Set the animation and animation speed. This speed will automatically have the survivor's 
-        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
-        local animation = actor:actor_get_skill_animation(skill_primary)
-        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+        actor.sprite_index2 = spr_shoot1_half
+        -- index2 is needed for strafe sprites to work
+        actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:skill_util_step_strafe_sprites()
+        actor:skill_util_strafe_turn_update()
 
-        if actor.image_index >= 0 and data.fired == 0 then
-            local damage = actor:skill_get_damage(skill_primary)
+        if actor.image_index2 >= 0 and data.fired == 0 then
             data.fired = 1
+            local damage = actor:skill_get_damage(skill_primary)
             actor:skill_util_update_heaven_cracker(actor, damage)
             local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
@@ -324,13 +358,15 @@ local initialize = function()
     end)
 
     state_primary:onExit(function(actor, data)
-        
+        actor:skill_util_strafe_exit()
     end)
 
     -- Executed when state_secondary is entered
     state_secondary:onEnter(function(actor, data)
-        actor.image_index = 0 -- Make sure our animation starts on its first frame
-        -- From here we can setup custom data that we might want to refer back to in onStep
+        actor:skill_util_strafe_init()
+        actor:skill_util_strafe_turn_init()
+        actor.image_index2 = 0 -- Make sure our animation starts on its first frame
+        -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
         data.fired = 0
  
@@ -338,12 +374,13 @@ local initialize = function()
     
     -- Executed every game tick during this state
     state_secondary:onStep(function(actor, data)
-        -- Set the animation and animation speed. This speed will automatically have the survivor's 
-        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
-        local animation = actor:actor_get_skill_animation(skill_secondary)
-        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+        actor.sprite_index2 = spr_shoot1_half
+        -- index2 is needed for strafe sprites to work    
+        actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:skill_util_step_strafe_sprites()
+        actor:skill_util_strafe_turn_update()
 
-        if actor.image_index >= 0 and data.fired == 0 then
+        if actor.image_index2 >= 0 and data.fired == 0 then
             data.fired = 1
     
             local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
@@ -367,6 +404,10 @@ local initialize = function()
     
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
+    end)
+
+    state_secondary:onExit(function(actor, data)
+        actor:skill_util_strafe_exit()
     end)
 
     -- Executed when state_utility is entered
@@ -400,6 +441,13 @@ local initialize = function()
         end
         actor.pHspeed = direction * actor.pHmax * 6
         actor.pVspeed = 0
+
+        local trail = GM.instance_create(actor.x, actor.y, gm.constants.oEfTrail)
+        trail.sprite_index = spr_flashshifttrail
+        trail.image_index = actor.image_index - 1
+        trail.image_xscale = direction
+        trail.image_alpha = actor.image_alpha - 0.25
+        trail.depth = actor.depth + 1
         
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
