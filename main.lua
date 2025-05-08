@@ -463,21 +463,25 @@ local initialize = function()
 
     -- Executed when state_special is entered
     state_special:onEnter(function(actor, data)
-        actor.image_index = 0 -- Make sure our animation starts on its first frame
-        -- From here we can setup custom data that we might want to refer back to in onStep
+        actor:skill_util_strafe_init()
+        actor:skill_util_strafe_turn_init()
+        actor.image_index2 = 0 -- Make sure our animation starts on its first frame
+        -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
+        actor.image_alpha = 0
         data.fired = 0
  
     end)
     
     -- Executed every game tick during this state
     state_special:onStep(function(actor, data)
-        -- Set the animation and animation speed. This speed will automatically have the survivor's 
-        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
-        local animation = actor:actor_get_skill_animation(skill_special)
-        actor:actor_animation_set(animation, 0.25) -- 0.25 means 4 ticks per frame at base attack speed
+        actor.sprite_index2 = spr_morph
+        -- index2 is needed for strafe sprites to work
+        actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:skill_util_step_strafe_sprites()
+        actor:skill_util_strafe_turn_update()
 
-        if actor.image_index >= 1 and data.fired == 0 then
+        if actor.image_index2 >= 1 and data.fired == 0 then
             data.fired = 1
             actor:sound_play(gm.constants.wMine, 0.5, 0.8 + math.random() * 0.2)
             local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
@@ -497,7 +501,10 @@ local initialize = function()
         actor:skill_util_exit_state_on_anim_end()
     end)
 
-    
+    state_special:onExit(function(actor, data)
+        actor:skill_util_strafe_exit()
+        actor.image_alpha = 1
+    end)    
 
     
     
