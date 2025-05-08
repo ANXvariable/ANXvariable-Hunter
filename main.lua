@@ -102,8 +102,7 @@ local initialize = function()
     })
 
     samus:onStep(function(actor)
-        Global.samus_xspeed = actor.pHspeed
-        local survivor_xspeed = actor.pHspeed
+        
     end)
 
     local obj_beam = Object.new(NAMESPACE, "samus_beam")
@@ -113,7 +112,7 @@ local initialize = function()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
-        instance.x = instance.x + data.horizontal_velocity + Global.samus_xspeed
+        instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed
 
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -163,7 +162,7 @@ local initialize = function()
     
     obj_missile:onStep(function(instance)
         local data = instance:get_data()
-        instance.x = instance.x + data.horizontal_velocity + Global.samus_xspeed
+        instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed
         if data.horizontal_velocity < 16
             and data.horizontal_velocity > - 16
         then
@@ -496,6 +495,15 @@ local initialize = function()
                 bomb_data.damage_coefficient = damage
             end
         end
+
+        --for i=0, 20 do
+        --    local trail = GM.instance_create(actor.x, actor.y, gm.constants.oEfTrail)
+        --    trail.sprite_index = spr_morph
+        --    trail.image_index = actor.image_index2
+        --    trail.image_xscale = actor.image_xscale
+        --    trail.image_alpha = 1 / 10
+        --    trail.depth = actor.depth
+        --end--this will probably be very laggy
             
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
