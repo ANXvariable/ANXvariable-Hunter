@@ -49,6 +49,7 @@ local initialize = function()
     local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png", 3)
     local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
+    local spr_log = load_sprite("samus_log", "sPortraitSamus.png")
     local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
     local spr_flashshifttrail = load_sprite("samus_flashshifttrail", "sSamusFlashShift.png", 4, 12, 25)
     --local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
@@ -72,6 +73,8 @@ local initialize = function()
     samus:set_animations(sprites)
     -- Offset for the Prophet's Cape
     samus:set_cape_offset(-1, -6, 0, -5)
+
+    local samus_log = Survivor_Log.new(samus, spr_log, sprites.walk)
 
     samus:clear_callbacks()
     samus:onInit(function(actor)

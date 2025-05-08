@@ -1,20 +1,20 @@
 {
     "skill" : {
         "samusZ" : {
-            "name" : "Beam",
-            "description" : "Fire your Power Beam for 120% damage. Range increases with level.\nYou can shoot all skills while moving. "
+            "name" : "Power Beam",
+            "description" : "Rapidly fire an energy blast for <y>120% damage</c>. <#fffb33>Range increases with level.</c>\n<b>Agile: You can shoot while moving.</c>"
         },
         "samusX" : {
-            "name" : "Missile",
-            "description" : "Fire a powerful Missile for 400% damage."
+            "name" : "Missile Launcher",
+            "description" : "Fire a <y>powerful missile</c> that explodes on impact, dealing <y>400% damage</c>.\n<b>Agile.</c>"
         },
         "samusC" : {
             "name" : "Flash Shift",
-            "description" : "Blink forward a short distance.\nYou cannot be hit while blinking."
+            "description" : "Blink <y>forward a short distance.</c>\nYou <b>cannot be hit</c> while blinking."
         },
         "samusV" : {
-            "name" : "Morph Bombs",
-            "description" : "Morph into a ball and lay a small, timed bomb for 300% damage."
+            "name" : "Morph Bomb",
+            "description" : "Curl into a ball and lay a <y>small, timed bomb</c> that explodes for <y>300% damage</c>."
         }
     },
 
@@ -24,9 +24,9 @@
 			"description" : "<y>Samus</c> has received a distress call from the <y>UES Contact Light</c>!",
 			"name" :  "Samus",
 			"nameUpper" : "SAMUS",
-			"story" : "???",
-            "id" : "???",
-            "departure"  : "???",
+			"story" : "Samus is under fire! She's sent an emergency directive: \"Join the fight!\"",
+            "id" : "Ultimate Warrior",
+            "departure"  : "August 6, 1986",
             "arrival" : "???"
 		}
 	}
