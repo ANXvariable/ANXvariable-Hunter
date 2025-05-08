@@ -1,26 +1,26 @@
 {
-	"skill" : {
-		"samusZ" : {
-			"name" : "Beam",
-			"description" : "beam attack"
-		},
-		"samusX" : {
-			"name" : "Missile",
-			"description" : "a second"
+    "skill" : {
+        "samusZ" : {
+            "name" : "Beam",
+            "description" : "Fire your Power Beam for 120% damage. Range increases with level.\nYou can shoot all skills while moving. "
+        },
+        "samusX" : {
+            "name" : "Missile",
+            "description" : "Fire a powerful Missile for 400% damage."
         },
         "samusC" : {
-			"name" : "Flash Shift",
-			"description" : "blink"
-		},
-		"samusV" : {
-			"name" : "Morph",
-			"description" : "marumari"
-		}
-	},
+            "name" : "Flash Shift",
+            "description" : "Blink forward a short distance.\nYou cannot be hit while blinking."
+        },
+        "samusV" : {
+            "name" : "Morph Bombs",
+            "description" : "Morph into a ball and lay a small, timed bomb for 300% damage."
+        }
+    },
 
 	"survivor" : {
 		"samus" : {
-			"endQuote" : "..and so she left.",
+			"endQuote" : "...and so she left, with another metroid to remake.",
 			"description" : "<y>Samus</c> has received a distress call from the <y>UES Contact Light</c>!",
 			"name" :  "Samus",
 			"nameUpper" : "SAMUS",
