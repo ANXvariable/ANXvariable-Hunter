@@ -225,8 +225,19 @@ local initialize = function()
 
         -- Fuse
         if instance.statetime >= 30 then
-            data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-            instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+            if data.parent:is_colliding(instance) and instance.hitowner == 0 then
+                data.parent.pVspeed = data.parent.pVmax * -1.25
+                instance.hitowner = 1
+            end
+            if data.fired == 0 then
+                data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                instance.image_alpha = 0
+                data.fired = 1
+            end
+        end
+
+        if instance.statetime >=33 then
             instance:destroy()
             return
         end
@@ -489,10 +500,12 @@ local initialize = function()
                 local spawn_offset = 5 * direction
                 local bomb = obj_bomb:create(actor.x - 4, actor.y + 3)
                 bomb.statetime = 0
+                bomb.hitowner = 0
                 local bomb_data = bomb:get_data()
                 bomb_data.parent = actor
                 local damage = actor:skill_get_damage(skill_special)
                 bomb_data.damage_coefficient = damage
+                bomb_data.fired = 0
             end
         end
 
