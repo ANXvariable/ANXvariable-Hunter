@@ -100,6 +100,7 @@ local initialize = function()
 
     samus:onStep(function(actor)
         Global.samus_xspeed = actor.pHspeed
+        local survivor_xspeed = actor.pHspeed
     end)
 
     local obj_beam = Object.new(NAMESPACE, "samus_beam")
@@ -161,17 +162,10 @@ local initialize = function()
         local data = instance:get_data()
         instance.x = instance.x + data.horizontal_velocity + Global.samus_xspeed
         if data.horizontal_velocity < 16
-            and instance.image_xscale > 0
+            and data.horizontal_velocity > - 16
         then
-            data.horizontal_velocity = 16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1))
+            data.horizontal_velocity = gm.sign(instance.image_xscale) * 16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1))
         end
-        
-        if instance.image_xscale < 0
-            and data.horizontal_velocity > -16
-        then
-            data.horizontal_velocity = -(16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1)))
-        end
-
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
         for _, other_actor in ipairs(actor_collisions) do
@@ -388,7 +382,7 @@ local initialize = function()
             local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                local spawn_offset = 5 * direction
+                local spawn_offset = 16 * direction
                 local missile = obj_missile:create(actor.x + spawn_offset, actor.y)
                 missile.image_speed = 0.25
                 missile.image_xscale = direction
