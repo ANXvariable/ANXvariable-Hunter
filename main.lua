@@ -225,7 +225,7 @@ local initialize = function()
 
         -- Fuse
         if instance.statetime >= 30 then
-            if data.parent:is_colliding(instance) and instance.hitowner == 0 then
+            if (data.parent:is_colliding(instance) and instance.hitowner == 0) or (instance:distance_to_point(data.parent.x, data.parent.y - 11) <= 11 and instance.hitowner == 0) then
                 data.parent.pVspeed = data.parent.pVmax * -1.25
                 instance.hitowner = 1
             end
@@ -233,21 +233,13 @@ local initialize = function()
                 data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
                 instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 instance.image_alpha = 0
+                local skill4 = data.parent:get_active_skill(Skill.SLOT.special)
+                skill4.stock = skill4.stock + 1
                 data.fired = 1
             end
         end
 
         if instance.statetime >=33 then
-            instance:destroy()
-            return
-        end
-
-        -- Check we're within stage bounds
-        local stage_width = GM._mod_room_get_current_width()
-        local stage_height = GM._mod_room_get_current_height()
-        if instance.x < -16 or instance.x > stage_width + 16 
-           or instance.y < -16 or instance.y > stage_height + 16 
-        then 
             instance:destroy()
             return
         end
@@ -285,6 +277,9 @@ local initialize = function()
     skill_utility.is_utility = true
     skill_special:set_skill_properties(3.0, 0)
     skill_special.is_primary = true
+    skill_special:set_skill_stock(3, 3, false, 1)
+    skill_special.require_key_press = true
+    skill_special.required_interrupt_priority = State.ACTOR_STATE_INTERRUPT_PRIORITY.skill
 
     -- Clear callbacks
     skill_primary:clear_callbacks()
@@ -525,7 +520,15 @@ local initialize = function()
     state_special:onExit(function(actor, data)
         actor:skill_util_strafe_exit()
         actor.image_alpha = 1
-    end)    
+    end)
+
+    state_special:onGetInterruptPriority(function(actor, data)
+        if actor.image_index2 < 2 then
+            return State.ACTOR_STATE_INTERRUPT_PRIORITY.priority_skill
+        else
+            return State.ACTOR_STATE_INTERRUPT_PRIORITY.skill_interrupt_period
+        end
+    end)
 
     
     
