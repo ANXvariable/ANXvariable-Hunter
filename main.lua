@@ -59,7 +59,7 @@ local initialize = function()
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
     local spr_bomb = load_sprite("samus_bomb", "sSamusBomb.png")
     local spr_powerbomb = load_sprite("samus_powerbomb", "sSamusPowerBomb.png")
-    local spr_powerbomb_explosion = load_sprite("samus_powerbomb_explosion", "sSamusPowerBombExplode.png")
+    local spr_powerbomb_explosion = load_sprite("samus_powerbomb_explosion", "sSamusPowerBombExplode.png", 1, 683, 384)
 
     -- Colour for the character's skill names on character select
     samus:set_primary_color(Color.from_rgb(8, 253, 142))
@@ -261,12 +261,17 @@ local initialize = function()
     obj_powerbomb.obj_sprite = spr_powerbomb
     obj_powerbomb.obj_depth = -501
     obj_powerbomb:clear_callbacks()
+    
+    local obj_powerbomb_explosion = Object.new(NAMESPACE, "samus_powerbomb_explosion")
+    obj_powerbomb_explosion.obj_sprite = spr_powerbomb_explosion
+    obj_powerbomb_explosion.obj_depth = -501
+    obj_powerbomb_explosion:clear_callbacks()
 
     obj_powerbomb:onStep(function(instance)
         local data = instance:get_data()
 
         -- Fuse
-        if instance.statetime >= 60 then
+        if instance.statetime >= 70 then
             local parentalignx = data.parent.x - 4
             local diffx = parentalignx - instance.x
             --if instance.hitowner == 0 then
@@ -280,20 +285,56 @@ local initialize = function()
                 instance.hitowner = 1
             end
             if data.fired == 0 then
-                data.parent:fire_explosion(instance.x, instance.y,  640, 640, data.damage_coefficient * 10, gm.constants.sEfSuperMissileExplosion, spr_none)
-                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                --data.parent:fire_explosion(instance.x, instance.y,  1366, 768, data.damage_coefficient * 10, spr_none, spr_none)
+                local powerbombex = obj_powerbomb_explosion:create(instance.x + 4, instance.y + 4)
+                powerbombex.statetime = 0
+                powerbombex.image_xscale = 0
+                powerbombex.image_yscale = 0
+                powerbombex.image_alpha = 0.8
+                local powerbombex_data = powerbombex:get_data()
+                powerbombex_data.parent = data.parent
+                local damage = data.damage_coefficient
+                powerbombex_data.damage_coefficient = damage
+                powerbombex_data.fired = 0
+                --instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 instance.image_alpha = 0
                 data.fired = 1
             end
         end
 
-        if instance.statetime >= 62 then
+        if instance.statetime >= 72 then
             instance:destroy()
             return
         end
 
         instance.statetime = instance.statetime + 1
     end)
+
+    obj_powerbomb_explosion:onStep(function(instance)
+        local data = instance:get_data()
+
+        if instance.image_xscale < 1 then
+            instance.image_xscale = instance.image_xscale + 0.02
+            instance.image_yscale = instance.image_yscale + 0.02
+            if math.fmod(instance.statetime, 5) == 0 then
+                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                --log.info(instance.statetime)
+            end
+        else
+            if data.fired == 0 then
+                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                data.fired = 1
+            end
+            instance.image_alpha = instance.image_alpha - 0.025
+        end
+        if instance.image_alpha <= 0 then
+            instance:destroy()
+            return
+        end
+
+        instance.statetime = instance.statetime + 1
+    end)
+    
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
     local skill_primary = samus:get_primary()
@@ -331,7 +372,7 @@ local initialize = function()
     skill_special:set_skill_stock(3, 3, false, 1)
     skill_special.require_key_press = true
     skill_special.required_interrupt_priority = State.ACTOR_STATE_INTERRUPT_PRIORITY.skill
-    skill_scepter_special:set_skill_properties(3.0, 900)
+    skill_scepter_special:set_skill_properties(30.0, 900)
     skill_scepter_special:set_skill_stock(1, 1, true, 1)
     skill_scepter_special.require_key_press = true
     skill_scepter_special.required_interrupt_priority = State.ACTOR_STATE_INTERRUPT_PRIORITY.skill
@@ -567,14 +608,14 @@ local initialize = function()
             end
         end
 
-        --for i=0, 20 do
-        --    local trail = GM.instance_create(actor.x, actor.y, gm.constants.oEfTrail)
-        --    trail.sprite_index = spr_morph
-        --    trail.image_index = actor.image_index2
-        --    trail.image_xscale = actor.image_xscale
-        --    trail.image_alpha = 1 / 10
-        --    trail.depth = actor.depth
-        --end--this will probably be very laggy
+        for i=0, 20 do
+            local trail = GM.instance_create(actor.x, actor.y - 6, gm.constants.oEfTrail)
+            trail.sprite_index = spr_morph
+            trail.image_index = actor.image_index2
+            trail.image_xscale = actor.image_xscale
+            trail.image_alpha = 1 / 10
+            trail.depth = actor.depth
+        end--this will probably be very laggy
             
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
@@ -619,7 +660,7 @@ local initialize = function()
 
         if actor.image_index2 >= 1 and data.fired == 0 then
             data.fired = 1
-            actor:sound_play(gm.constants.wMine, 0.75, 0.8)
+            actor:sound_play(gm.constants.wBossLaser1Fire, 0.8, 1)
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do
                 local powerbomb = obj_powerbomb:create(actor.x - 4, actor.y - 3)
