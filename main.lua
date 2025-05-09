@@ -58,6 +58,8 @@ local initialize = function()
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png", 3, 22)
     local spr_missile_explosion = gm.sprite_duplicate(1848)
     local spr_bomb = load_sprite("samus_bomb", "sSamusBomb.png")
+    local spr_powerbomb = load_sprite("samus_powerbomb", "sSamusPowerBomb.png")
+    local spr_powerbomb_explosion = load_sprite("samus_powerbomb_explosion", "sSamusPowerBombExplode.png")
 
     -- Colour for the character's skill names on character select
     samus:set_primary_color(Color.from_rgb(8, 253, 142))
@@ -255,24 +257,65 @@ local initialize = function()
         instance.statetime = instance.statetime + 1
     end)
     
+    local obj_powerbomb = Object.new(NAMESPACE, "samus_powerbomb")
+    obj_powerbomb.obj_sprite = spr_powerbomb
+    obj_powerbomb.obj_depth = -501
+    obj_powerbomb:clear_callbacks()
+
+    obj_powerbomb:onStep(function(instance)
+        local data = instance:get_data()
+
+        -- Fuse
+        if instance.statetime >= 60 then
+            local parentalignx = data.parent.x - 4
+            local diffx = parentalignx - instance.x
+            --if instance.hitowner == 0 then
+            --    log.info(instance:distance_to_point(data.parent.x, data.parent.y + 11))
+            --end
+            if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 11 and instance.hitowner == 0 then
+                if parentalignx ~= instance.x then
+                    data.parent.pHspeed = data.parent.pHspeed + 2.8 * gm.sign(diffx)
+                end
+                data.parent.pVspeed = data.parent.pVmax * -1.25
+                instance.hitowner = 1
+            end
+            if data.fired == 0 then
+                data.parent:fire_explosion(instance.x, instance.y,  640, 640, data.damage_coefficient * 10, gm.constants.sEfSuperMissileExplosion, spr_none)
+                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                instance.image_alpha = 0
+                data.fired = 1
+            end
+        end
+
+        if instance.statetime >= 62 then
+            instance:destroy()
+            return
+        end
+
+        instance.statetime = instance.statetime + 1
+    end)
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
     local skill_primary = samus:get_primary()
     local skill_secondary = samus:get_secondary()
     local skill_utility = samus:get_utility()
     local skill_special = samus:get_special()
+    local skill_scepter_special = Skill.new(NAMESPACE, "samusVBoosted")
+    skill_special:set_skill_upgrade(skill_scepter_special)
 
     -- Set the animations for each skill
     skill_primary:set_skill_animation(sprites.walk)
     skill_secondary:set_skill_animation(sprites.walk)
     skill_utility:set_skill_animation(spr_flashshift)
     skill_special:set_skill_animation(spr_morph)
+    skill_scepter_special:set_skill_animation(spr_morph)
     
     -- Set the icons for each skill, specifying the icon spritesheet and the specific subimage
     skill_primary:set_skill_icon(spr_skills, 0)
     skill_secondary:set_skill_icon(spr_skills, 1)
     skill_utility:set_skill_icon(spr_skills, 2)
     skill_special:set_skill_icon(spr_skills, 3)
+    skill_scepter_special:set_skill_icon(spr_skills, 4)
     
     -- Set the damage coefficient and cooldown for each skill. A damage coefficient of 100% is equal
     -- to 1.0, 150% to 1.5, 200% to 2.0, and so on. Cooldowns are specified in frames, so multiply by
@@ -288,12 +331,17 @@ local initialize = function()
     skill_special:set_skill_stock(3, 3, false, 1)
     skill_special.require_key_press = true
     skill_special.required_interrupt_priority = State.ACTOR_STATE_INTERRUPT_PRIORITY.skill
+    skill_scepter_special:set_skill_properties(3.0, 900)
+    skill_scepter_special:set_skill_stock(1, 1, true, 1)
+    skill_scepter_special.require_key_press = true
+    skill_scepter_special.required_interrupt_priority = State.ACTOR_STATE_INTERRUPT_PRIORITY.skill
 
     -- Clear callbacks
     skill_primary:clear_callbacks()
     skill_secondary:clear_callbacks()
     skill_utility:clear_callbacks()
     skill_special:clear_callbacks()
+    skill_scepter_special:clear_callbacks()
 
     -- Again consider renaming these variables after the ability itself
     local state_primary = State.new(NAMESPACE, skill_primary.identifier)
@@ -305,6 +353,8 @@ local initialize = function()
     state_utility:clear_callbacks()
     local state_special = State.new(NAMESPACE, skill_special.identifier)
     state_special:clear_callbacks()
+    local state_scepter_special = State.new(NAMESPACE, skill_scepter_special.identifier)
+    state_scepter_special:clear_callbacks()
     
     -- Register callbacks that switch states when skills are activated
     skill_primary:onActivate(function(actor, skill, index)
@@ -322,6 +372,11 @@ local initialize = function()
     skill_special:onActivate(function(actor, skill, index)
         actor:enter_state(state_special)
     end)
+    
+    skill_scepter_special:onActivate(function(actor, skill, index)
+        actor:enter_state(state_scepter_special)
+    end)
+
 
     -- Executed when state_primary is entered
     state_primary:onEnter(function(actor, data)
@@ -498,7 +553,7 @@ local initialize = function()
 
         if actor.image_index2 >= 1 and data.fired == 0 then
             data.fired = 1
-            actor:sound_play(gm.constants.wMine, 0.5, 0.8 + math.random() * 0.2)
+            actor:sound_play(gm.constants.wPlayer_TakeDamage, 0.75, 1.5)
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do
                 local bomb = obj_bomb:create(actor.x - 4, actor.y - 3)
@@ -533,6 +588,72 @@ local initialize = function()
     end)
 
     state_special:onGetInterruptPriority(function(actor, data)
+        if actor.image_index2 <= 2 then
+            return State.ACTOR_STATE_INTERRUPT_PRIORITY.priority_skill
+        else
+            return State.ACTOR_STATE_INTERRUPT_PRIORITY.skill_interrupt_period
+        end
+    end)
+
+    -- Executed when state_scepter_special is entered
+    state_scepter_special:onEnter(function(actor, data)
+        actor:skill_util_strafe_init()
+        actor:skill_util_strafe_turn_init()
+        actor.image_index2 = 0 -- Make sure our animation starts on its first frame
+        -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
+        -- Our flag to prevent firing more than once per attack
+        actor.image_alpha = 0
+        actor.image_yscale = 0.5
+        actor.y = actor.y + 6
+        data.fired = 0
+ 
+    end)
+    
+    -- Executed every game tick during this state
+    state_scepter_special:onStep(function(actor, data)
+        actor.sprite_index2 = spr_morph
+        -- index2 is needed for strafe sprites to work
+        actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:skill_util_step_strafe_sprites()
+        actor:skill_util_strafe_turn_update()
+
+        if actor.image_index2 >= 1 and data.fired == 0 then
+            data.fired = 1
+            actor:sound_play(gm.constants.wMine, 0.75, 0.8)
+            local buff_shadow_clone = Buff.find("ror", "shadowClone")
+            for i=0, actor:buff_stack_count(buff_shadow_clone) do
+                local powerbomb = obj_powerbomb:create(actor.x - 4, actor.y - 3)
+                powerbomb.statetime = 0
+                powerbomb.hitowner = 0
+                local powerbomb_data = powerbomb:get_data()
+                powerbomb_data.parent = actor
+                local damage = actor:skill_get_damage(skill_scepter_special)
+                powerbomb_data.damage_coefficient = damage
+                powerbomb_data.fired = 0
+            end
+        end
+
+        for i=0, 20 do
+            local trail = GM.instance_create(actor.x, actor.y - 6, gm.constants.oEfTrail)
+            trail.sprite_index = spr_morph
+            trail.image_index = actor.image_index2
+            trail.image_xscale = actor.image_xscale
+            trail.image_alpha = 1 / 10
+            trail.depth = actor.depth
+        end--this will probably be very laggy
+            
+        -- A convenience function that exits this state automatically once the animation ends
+        actor:skill_util_exit_state_on_anim_end()
+    end)
+
+    state_scepter_special:onExit(function(actor, data)
+        actor:skill_util_strafe_exit()
+        actor.image_yscale = 1
+        actor.y = actor.y - 6
+        actor.image_alpha = 1
+    end)
+
+    state_scepter_special:onGetInterruptPriority(function(actor, data)
         if actor.image_index2 <= 2 then
             return State.ACTOR_STATE_INTERRUPT_PRIORITY.priority_skill
         else
