@@ -20,14 +20,14 @@
 
 	"survivor" : {
 		"samus" : {
-			"endQuote" : "...and so she left, with another metroid to remake.",
-			"description" : "<y>Samus</c> has received a distress call from the <y>UES Contact Light</c>!",
-			"name" :  "Samus",
-			"nameUpper" : "SAMUS",
-			"story" : "Samus is under fire! She's sent an emergency directive: \"Join the fight!\"",
-            "id" : "Ultimate Warrior",
-            "departure"  : "August 6, 1986",
-            "arrival" : "???"
+            "endQuote" : "...and so she left, with another metroid to remake.",
+            "description" : "The <y>Bounty Hunter</c> has received a distress call from the <y>UES Contact Light</c>!",
+            "name" :  "Bounty Hunter",
+            "nameUpper" : "BOUNTY HUNTER",
+            "story" : "<ul>Passenger Details:\n<g>[Unexpected Benefactor]\n\n<ul>Luggage & Equipment: Passenger boarded at the time of invasion, equipped with an advanced exoskeleton modified for human use, which has been enhanced with multiple upgrades. The passenger's right arm possesses an adaptable cannon with an extensive arsenal. Individual was unable to be checked fully due to hostile circumstances.\n\n<b>[SECURITY RECALL]</c>\n<ul>[Event OM]</c> Individual intercepted UES Contact Light at the time of invasion. Further records lost.",
+            "id" : "0806198638809272007",
+            "departure"  : "Ceres Space Colony, Zebes",
+            "arrival" : "B.S.L. Research Station, SR388"
 		}
 	}
 }
