@@ -225,7 +225,15 @@ local initialize = function()
 
         -- Fuse
         if instance.statetime >= 30 then
-            if (data.parent:is_colliding(instance) and instance.hitowner == 0) or (instance:distance_to_point(data.parent.x, data.parent.y - 11) <= 11 and instance.hitowner == 0) then
+            local parentalignx = data.parent.x - 4
+            local diffx = parentalignx - instance.x
+            --if instance.hitowner == 0 then
+            --    log.info(instance:distance_to_point(data.parent.x, data.parent.y + 11))
+            --end
+            if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 11 and instance.hitowner == 0 then
+                if parentalignx ~= instance.x then
+                    data.parent.pHspeed = data.parent.pHspeed + 2.8 * gm.sign(diffx)
+                end
                 data.parent.pVspeed = data.parent.pVmax * -1.25
                 instance.hitowner = 1
             end
@@ -239,7 +247,7 @@ local initialize = function()
             end
         end
 
-        if instance.statetime >=33 then
+        if instance.statetime >= 32 then
             instance:destroy()
             return
         end
@@ -474,6 +482,8 @@ local initialize = function()
         -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
         actor.image_alpha = 0
+        actor.image_yscale = 0.5
+        actor.y = actor.y + 6
         data.fired = 0
  
     end)
@@ -489,11 +499,9 @@ local initialize = function()
         if actor.image_index2 >= 1 and data.fired == 0 then
             data.fired = 1
             actor:sound_play(gm.constants.wMine, 0.5, 0.8 + math.random() * 0.2)
-            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
-            for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                local spawn_offset = 5 * direction
-                local bomb = obj_bomb:create(actor.x - 4, actor.y + 3)
+            for i=0, actor:buff_stack_count(buff_shadow_clone) do
+                local bomb = obj_bomb:create(actor.x - 4, actor.y - 3)
                 bomb.statetime = 0
                 bomb.hitowner = 0
                 local bomb_data = bomb:get_data()
@@ -519,11 +527,13 @@ local initialize = function()
 
     state_special:onExit(function(actor, data)
         actor:skill_util_strafe_exit()
+        actor.image_yscale = 1
+        actor.y = actor.y - 6
         actor.image_alpha = 1
     end)
 
     state_special:onGetInterruptPriority(function(actor, data)
-        if actor.image_index2 < 2 then
+        if actor.image_index2 <= 2 then
             return State.ACTOR_STATE_INTERRUPT_PRIORITY.priority_skill
         else
             return State.ACTOR_STATE_INTERRUPT_PRIORITY.skill_interrupt_period
