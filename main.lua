@@ -80,6 +80,7 @@ local initialize = function()
 
     samus:clear_callbacks()
     samus:onInit(function(actor)
+        actor.shiftedfrom = 0
         actor.sprite_idle_half = Array.new({sprites.idle, spr_idle_half, 0})
         actor.sprite_walk_half = Array.new({sprites.walk, spr_walk_half, 0})
         actor.sprite_jump_half = Array.new({sprites.jump, spr_jump_half, 0})
@@ -525,6 +526,7 @@ local initialize = function()
         -- From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
         actor:sound_play(gm.constants.wHuntressShoot3, 1, 0.8 + math.random() * 0.2)
+        actor.shiftedfrom = actor.y
     end)
     
     -- Executed every game tick during this state
@@ -550,6 +552,7 @@ local initialize = function()
         end
         actor.pHspeed = direction * actor.pHmax * 6
         actor.pVspeed = 0
+        actor.y = actor.shiftedfrom
 
         local trail = GM.instance_create(actor.x, actor.y, gm.constants.oEfTrail)
         trail.sprite_index = spr_flashshifttrail
