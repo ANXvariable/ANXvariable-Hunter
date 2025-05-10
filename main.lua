@@ -170,7 +170,7 @@ local initialize = function()
         if data.horizontal_velocity < 16
             and data.horizontal_velocity > - 16
         then
-            data.horizontal_velocity = gm.sign(instance.image_xscale) * 16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1))
+            data.horizontal_velocity = GM.sign(instance.image_xscale) * 16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1))
         end
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -236,7 +236,7 @@ local initialize = function()
             --end
             if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 11 and instance.hitowner == 0 then
                 if parentalignx ~= instance.x then
-                    data.parent.pHspeed = data.parent.pHspeed + 2.8 * gm.sign(diffx)
+                    data.parent.pHspeed = data.parent.pHspeed + 2.8 * GM.sign(diffx)
                 end
                 data.parent.pVspeed = data.parent.pVmax * -1.25
                 instance.hitowner = 1
@@ -281,7 +281,7 @@ local initialize = function()
             --end
             if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 11 and instance.hitowner == 0 then
                 if parentalignx ~= instance.x then
-                    data.parent.pHspeed = data.parent.pHspeed + 2.8 * gm.sign(diffx)
+                    data.parent.pHspeed = data.parent.pHspeed + 2.8 * GM.sign(diffx)
                 end
                 data.parent.pVspeed = data.parent.pVmax * -1.25
                 instance.hitowner = 1
