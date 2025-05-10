@@ -1,4 +1,6 @@
 -- Samus
+-- check how you can make immune to debuffs. and water
+-- lowprio: check how to control the camera
 
 log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["LuaENVY-ENVY"]
@@ -287,7 +289,6 @@ local initialize = function()
                 instance.hitowner = 1
             end
             if data.fired == 0 then
-                --data.parent:fire_explosion(instance.x, instance.y,  1366, 768, data.damage_coefficient * 10, spr_none, spr_none)
                 local powerbombex = obj_powerbomb_explosion:create(instance.x + 4, instance.y + 4)
                 powerbombex.statetime = 0
                 powerbombex.image_xscale = 0
@@ -298,7 +299,6 @@ local initialize = function()
                 local damage = data.damage_coefficient
                 powerbombex_data.damage_coefficient = damage
                 powerbombex_data.fired = 0
-                --instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 instance.image_alpha = 0
                 data.fired = 1
             end
@@ -314,17 +314,28 @@ local initialize = function()
 
     obj_powerbomb_explosion:onStep(function(instance)
         local data = instance:get_data()
+        local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
 
         if instance.image_xscale < 1 then
             instance.image_xscale = instance.image_xscale + 0.02
             instance.image_yscale = instance.image_yscale + 0.02
             if math.fmod(instance.statetime, 5) == 0 then
                 data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
-                --log.info(instance.statetime)
+                --for _, other_actor in ipairs(actor_collisions) do
+                --    if data.parent:attack_collision_canhit(other_actor) then
+                --        if other_actor.x == instance.x then
+                --            local damage_direction = 0
+                --        else
+                --            local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
+                --        end
+                --    end
+                --    data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)
+                --end
             end
         else
             if data.fired == 0 then
-                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)
                 data.fired = 1
             end
             instance.image_alpha = instance.image_alpha - 0.025
