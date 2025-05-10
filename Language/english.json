@@ -1,25 +1,25 @@
 {
     "skill" : {
-        "samusZ" : {
+        "hunterZ" : {
             "name" : "Power Beam",
             "description" : "Rapidly fire an energy blast for <y>120% damage</c>. <#fffb33>Range increases with level.</c>\n<b>Agile: You can shoot while moving.</c>"
         },
-        "samusX" : {
+        "hunterX" : {
             "name" : "Missile Launcher",
             "description" : "Fire a <y>powerful missile</c> that explodes on impact, dealing <y>400% damage</c>.\n<b>Agile.</c>"
         },
-        "samusC" : {
+        "hunterC" : {
             "name" : "Flash Shift",
             "description" : "Blink <y>forward a short distance.</c>\nYou <b>cannot be hit</c> while blinking."
         },
-        "samusV" : {
+        "hunterV" : {
             "name" : "Morph Bomb",
             "description" : "Curl into a ball and lay a <y>small, timed bomb</c> that explodes for <y>300% damage</c>."
         }
     },
 
 	"survivor" : {
-		"samus" : {
+		"hunter" : {
             "endQuote" : "...and so she left, with another metroid to remake.",
             "description" : "The <y>Hunter</c> has received a distress call from the <y>UES Contact Light</c>!",
             "name" :  "Hunter",

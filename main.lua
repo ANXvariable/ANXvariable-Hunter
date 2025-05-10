@@ -1,4 +1,4 @@
--- Samus
+-- Hunter
 -- check how you can make immune to debuffs. and water
 -- lowprio: check how to control the camera
 
@@ -15,7 +15,7 @@ local NAMESPACE = "ANXvariable"
 -- ========== Main ==========
 
 local initialize = function() 
-    local samus = Survivor.new(NAMESPACE, "samus")
+    local hunter = Survivor.new(NAMESPACE, "hunter")
 
     -- Utility function for getting sprite paths concisely
     local load_sprite = function (id, filename, frames, orig_x, orig_y, speed, left, top, right, bottom) 
@@ -25,64 +25,64 @@ local initialize = function()
     
     -- Load the common survivor sprites into a table
     local sprites = {
-        idle = load_sprite("samus_idle", "sSamusIdle.png", 1, 14, 20),
-        walk = load_sprite("samus_walk", "sSamusRun.png", 4, 12, 25),
-        jump = load_sprite("samus_jump", "sSamusRun.png", 4, 12, 25),
-        jump_peak = load_sprite("samus_jump_peak", "sSamusRun.png", 4, 12, 25),
-        fall = load_sprite("samus_fall", "sSamusRun.png", 4, 12, 25),
-        climb = load_sprite("samus_climb", "sSamusRun.png", 4, 12, 25),
-        climb_hurt = load_sprite("samus_climb_hurt", "sSamusRun.png", 4, 12, 25), 
-        death = load_sprite("samus_death", "sSamusRun.png", 4, 12, 25),
-        decoy = load_sprite("samus_decoy", "sSamusRun.png", 4, 12, 25),
+        idle = load_sprite("hunter_idle", "sHunterIdle.png", 1, 14, 20),
+        walk = load_sprite("hunter_walk", "sHunterRun.png", 4, 12, 25),
+        jump = load_sprite("hunter_jump", "sHunterRun.png", 4, 12, 25),
+        jump_peak = load_sprite("hunter_jump_peak", "sHunterRun.png", 4, 12, 25),
+        fall = load_sprite("hunter_fall", "sHunterRun.png", 4, 12, 25),
+        climb = load_sprite("hunter_climb", "sHunterRun.png", 4, 12, 25),
+        climb_hurt = load_sprite("hunter_climb_hurt", "sHunterRun.png", 4, 12, 25), 
+        death = load_sprite("hunter_death", "sHunterRun.png", 4, 12, 25),
+        decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 12, 25),
     }
 
     --spr_half
-    local spr_idle_half = load_sprite("samus_idle_half", "sSamusIdleHalf.png", 1, 14, 20)
-    local spr_walk_half = load_sprite("samus_walk_half", "sSamusRunHalf.png", 4, 12, 25)
-    local spr_jump_half = load_sprite("samus_jump_half", "sSamusRunHalf.png", 4, 12, 25)
-    local spr_jump_peak_half = load_sprite("samus_jump_peak_half", "sSamusRunHalf.png", 4, 12, 25)
-    local spr_fall_half = load_sprite("samus_fall_half", "sSamusRunHalf.png", 4, 12, 25)
+    local spr_idle_half = load_sprite("hunter_idle_half", "sHunterIdleHalf.png", 1, 14, 20)
+    local spr_walk_half = load_sprite("hunter_walk_half", "sHunterRunHalf.png", 4, 12, 25)
+    local spr_jump_half = load_sprite("hunter_jump_half", "sHunterRunHalf.png", 4, 12, 25)
+    local spr_jump_peak_half = load_sprite("hunter_jump_peak_half", "sHunterRunHalf.png", 4, 12, 25)
+    local spr_fall_half = load_sprite("hunter_fall_half", "sHunterRunHalf.png", 4, 12, 25)
 
-    local spr_shoot1_half = load_sprite("samus_shoot1_half", "sSamusShoot1Half.png", 4, 12, 25)
+    local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 12, 25)
     
     --placeholder category, todo organize later
-    local spr_skills = load_sprite("samus_skills", "sSamusSkills.png", 5, 0, 0)
-    local spr_loadout = load_sprite("samus_loadout", "sSelectSamus.png", 4, 28, 0)
-    local spr_portrait = load_sprite("samus_portrait", "sSamusPortrait.png", 3)
-    local spr_portrait_small = load_sprite("samus_portrait_small", "sSamusPortraitSmall.png")
-    local spr_portrait_cropped = load_sprite("samus_portrait_cropped", "sSamusPortraitC.png")
-    local spr_log = load_sprite("samus_log", "sPortraitSamus.png")
-    local spr_flashshift = load_sprite("samus_flashshift", "sSamusFlashShift.png", 4, 12, 25)
-    local spr_flashshifttrail = load_sprite("samus_flashshifttrail", "sSamusFlashShift.png", 4, 12, 25)
-    --local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
-    local spr_morph = load_sprite("samus_morph", "sSamusMorph.png", 8, 6, 0)
-    local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
-    local spr_beam_c0000 = load_sprite("samus_beam_c0000", "sSamusBeamC0000.png", 4, 14, 8)
-    local spr_missile = load_sprite("samus_missile", "sSamusMissile.png", 3, 22)
+    local spr_skills = load_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
+    local spr_loadout = load_sprite("hunter_loadout", "sSelectHunter.png", 4, 28, 0)
+    local spr_portrait = load_sprite("hunter_portrait", "sHunterPortrait.png", 3)
+    local spr_portrait_small = load_sprite("hunter_portrait_small", "sHunterPortraitSmall.png")
+    local spr_portrait_cropped = load_sprite("hunter_portrait_cropped", "sHunterPortraitC.png")
+    local spr_log = load_sprite("hunter_log", "sPortraitHunter.png")
+    local spr_flashshift = load_sprite("hunter_flashshift", "sHunterFlashShift.png", 4, 12, 25)
+    local spr_flashshifttrail = load_sprite("hunter_flashshifttrail", "sHunterFlashShift.png", 4, 12, 25)
+    --local spr_morphandbomb = load_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
+    local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
+    local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
+    local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 8)
+    local spr_missile = load_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
-    local spr_bomb = load_sprite("samus_bomb", "sSamusBomb.png")
-    local spr_powerbomb = load_sprite("samus_powerbomb", "sSamusPowerBomb.png")
-    local spr_powerbomb_explosion = load_sprite("samus_powerbomb_explosion", "sSamusPowerBombExplode.png", 1, 683, 384)
+    local spr_bomb = load_sprite("hunter_bomb", "sHunterBomb.png")
+    local spr_powerbomb = load_sprite("hunter_powerbomb", "sHunterPowerBomb.png")
+    local spr_powerbomb_explosion = load_sprite("hunter_powerbomb_explosion", "sHunterPowerBombExplode.png", 1, 683, 384)
 
     -- Colour for the character's skill names on character select
-    samus:set_primary_color(Color.from_rgb(8, 253, 142))
+    hunter:set_primary_color(Color.from_rgb(8, 253, 142))
 
     -- Assign sprites to various survivor fields
-    samus.sprite_loadout = spr_loadout
-    samus.sprite_portrait = spr_portrait
-    samus.sprite_portrait_small = spr_portrait_small
-    samus.sprite_portrait_palette = spr_portrait_cropped
-    samus.sprite_title = sprites.walk
-    samus.sprite_idle = sprites.idle
-    samus.sprite_credits = sprites.idle
-    samus:set_animations(sprites)
+    hunter.sprite_loadout = spr_loadout
+    hunter.sprite_portrait = spr_portrait
+    hunter.sprite_portrait_small = spr_portrait_small
+    hunter.sprite_portrait_palette = spr_portrait_cropped
+    hunter.sprite_title = sprites.walk
+    hunter.sprite_idle = sprites.idle
+    hunter.sprite_credits = sprites.idle
+    hunter:set_animations(sprites)
     -- Offset for the Prophet's Cape
-    samus:set_cape_offset(-1, -6, 0, -5)
+    hunter:set_cape_offset(-1, -6, 0, -5)
 
-    local samus_log = Survivor_Log.new(samus, spr_log, sprites.walk)
+    local hunter_log = Survivor_Log.new(hunter, spr_log, sprites.walk)
 
-    samus:clear_callbacks()
-    samus:onInit(function(actor)
+    hunter:clear_callbacks()
+    hunter:onInit(function(actor)
         actor.shiftedfrom = 0
         actor.sprite_idle_half = Array.new({sprites.idle, spr_idle_half, 0})
         actor.sprite_walk_half = Array.new({sprites.walk, spr_walk_half, 0})
@@ -95,23 +95,23 @@ local initialize = function()
 
 
     -- Survivor stats
-    samus:set_stats_base({
+    hunter:set_stats_base({
         maxhp = 300,
         damage = 16,
         regen = 0.02
     })
 
-    samus:set_stats_level({
+    hunter:set_stats_level({
         maxhp = 75,
         damage = 4,
         regen = 0.004,
     })
 
-    samus:onStep(function(actor)
+    hunter:onStep(function(actor)
         
     end)
 
-    local obj_beam = Object.new(NAMESPACE, "samus_beam")
+    local obj_beam = Object.new(NAMESPACE, "hunter_beam")
     obj_beam.obj_sprite = spr_beam
     obj_beam.obj_depth = 1
     obj_beam:clear_callbacks()
@@ -161,7 +161,7 @@ local initialize = function()
         instance.statetime = instance.statetime + 1
     end)
 
-    local obj_missile = Object.new(NAMESPACE, "samus_missile")
+    local obj_missile = Object.new(NAMESPACE, "hunter_missile")
     obj_missile.obj_sprite = spr_missile
     obj_missile.obj_depth = 1
     obj_missile:clear_callbacks()
@@ -221,7 +221,7 @@ local initialize = function()
         instance.statetime = instance.statetime + 1
     end)
     
-    local obj_bomb = Object.new(NAMESPACE, "samus_bomb")
+    local obj_bomb = Object.new(NAMESPACE, "hunter_bomb")
     obj_bomb.obj_sprite = spr_bomb
     obj_bomb.obj_depth = -501
     obj_bomb:clear_callbacks()
@@ -261,12 +261,12 @@ local initialize = function()
         instance.statetime = instance.statetime + 1
     end)
     
-    local obj_powerbomb = Object.new(NAMESPACE, "samus_powerbomb")
+    local obj_powerbomb = Object.new(NAMESPACE, "hunter_powerbomb")
     obj_powerbomb.obj_sprite = spr_powerbomb
     obj_powerbomb.obj_depth = -501
     obj_powerbomb:clear_callbacks()
     
-    local obj_powerbomb_explosion = Object.new(NAMESPACE, "samus_powerbomb_explosion")
+    local obj_powerbomb_explosion = Object.new(NAMESPACE, "hunter_powerbomb_explosion")
     obj_powerbomb_explosion.obj_sprite = spr_powerbomb_explosion
     obj_powerbomb_explosion.obj_depth = -501
     obj_powerbomb_explosion:clear_callbacks()
@@ -350,11 +350,11 @@ local initialize = function()
     
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
     -- you want to switch which skill they're assigned to in future.
-    local skill_primary = samus:get_primary()
-    local skill_secondary = samus:get_secondary()
-    local skill_utility = samus:get_utility()
-    local skill_special = samus:get_special()
-    local skill_scepter_special = Skill.new(NAMESPACE, "samusVBoosted")
+    local skill_primary = hunter:get_primary()
+    local skill_secondary = hunter:get_secondary()
+    local skill_utility = hunter:get_utility()
+    local skill_special = hunter:get_special()
+    local skill_scepter_special = Skill.new(NAMESPACE, "hunterVBoosted")
     skill_special:set_skill_upgrade(skill_scepter_special)
 
     -- Set the animations for each skill
