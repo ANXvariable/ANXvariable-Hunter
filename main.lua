@@ -55,6 +55,7 @@ local initialize = function()
     --local spr_morphandbomb = load_sprite("samus_morphandbomb", "sSamusMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("samus_morph", "sSamusMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("samus_beam", "sSamusBeam.png", 4)
+    local spr_beam_c0000 = load_sprite("samus_beam_c0000", "sSamusBeamC0000.png", 4, 14, 8)
     local spr_missile = load_sprite("samus_missile", "sSamusMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
     local spr_bomb = load_sprite("samus_bomb", "sSamusBomb.png")
@@ -363,6 +364,7 @@ local initialize = function()
     -- to 1.0, 150% to 1.5, 200% to 2.0, and so on. Cooldowns are specified in frames, so multiply by
     -- 60 to turn that into actual seconds.
     skill_primary:set_skill_properties(1.2, 0)
+    skill_primary.require_key_press = true
     skill_secondary:set_skill_properties(4.0, 120)
     skill_secondary:set_skill_stock(5, 5, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
@@ -428,7 +430,9 @@ local initialize = function()
         -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
         data.fired = 0
- 
+        data.charge = 0
+        data.beamcharged = 0
+        data.released = 0
     end)
     
     -- Executed every game tick during this state
@@ -438,28 +442,54 @@ local initialize = function()
         actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
         actor:skill_util_step_strafe_sprites()
         actor:skill_util_strafe_turn_update()
+        local waterbucket = not actor:control("skill1", 0)
+        local damage = actor:skill_get_damage(skill_primary)
+        local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+        local buff_shadow_clone = Buff.find("ror", "shadowClone")
+        local spawn_offset = 5 * direction
 
-        if actor.image_index2 >= 0 and data.fired == 0 then
-            data.fired = 1
-            local damage = actor:skill_get_damage(skill_primary)
-            actor:skill_util_update_heaven_cracker(actor, damage)
-            local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
-            local buff_shadow_clone = Buff.find("ror", "shadowClone")
-            for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                local spawn_offset = 5 * direction
-                local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
-                beam.image_speed = 0.25
-                beam.image_xscale = direction
-                beam.statetime = 0
-                beam.dmg = actor.damage
-                beam.duration = math.min(actor.level * 10, 200)
-                local beam_data = beam:get_data()
-                beam_data.parent = actor
-                beam_data.horizontal_velocity = 10 * direction
-                beam_data.damage_coefficient = damage
+        if not waterbucket and data.released == 0 then
+            if actor.image_index2 > 0 then
+                actor.image_index2 = 0
             end
-        actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
+
+            if data.charge < 50 then
+                data.charge = data.charge + actor.attack_speed
+            elseif data.beamcharged == 0 then
+                data.beamcharged = 1
+                actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
+                actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
+                local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
+                sparks.sprite_index = gm.constants.sSparks18
+                sparks.depth = actor.depth - 1
+            end
+        else
+            if actor.image_index2 >= 0 and data.fired == 0 then
+                data.fired = 1
+                actor:skill_util_update_heaven_cracker(actor, damage)
+                if data.beamcharged == 1 then
+                    damage = damage * 3
+                end
+                    for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                        local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
+                        local beam_data = beam:get_data()
+                        beam.image_speed = 0.25
+                        beam.image_xscale = direction
+                        if data.beamcharged == 1 then
+                            beam.sprite_index = spr_beam_c0000
+                            beam.mask_index = beam.sprite_index
+                        end
+                        beam.statetime = 0
+                        beam.duration = math.min(actor.level * 10, 200)
+                        beam_data.parent = actor
+                        beam_data.horizontal_velocity = 10 * direction
+                        beam_data.damage_coefficient = damage
+                    end
+                actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
+                data.released = 1
+            end
         end
+
     
     
         -- A convenience function that exits this state automatically once the animation ends
