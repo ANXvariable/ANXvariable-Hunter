@@ -367,7 +367,7 @@ local initialize = function()
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
     skill_utility.is_utility = true
-    skill_special:set_skill_properties(3.0, 0)
+    skill_special:set_skill_properties(2.0, 0)
     skill_special.is_primary = true
     skill_special:set_skill_stock(3, 3, false, 1)
     skill_special.require_key_press = true
