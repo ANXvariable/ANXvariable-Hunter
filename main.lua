@@ -334,8 +334,8 @@ local initialize = function()
             end
         else
             if data.fired == 0 then
-                --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
-                data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)
+                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                --data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)
                 data.fired = 1
             end
             instance.image_alpha = instance.image_alpha - 0.025
