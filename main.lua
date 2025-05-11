@@ -320,22 +320,31 @@ local initialize = function()
             instance.image_xscale = instance.image_xscale + 0.02
             instance.image_yscale = instance.image_yscale + 0.02
             if math.fmod(instance.statetime, 5) == 0 then
-                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
-                --for _, other_actor in ipairs(actor_collisions) do
-                --    if data.parent:attack_collision_canhit(other_actor) then
-                --        if other_actor.x == instance.x then
-                --            local damage_direction = 0
-                --        else
-                --            local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
-                --        end
-                --    end
-                --    data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)
-                --end
+                --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                for _, other_actor in ipairs(actor_collisions) do
+                    if data.parent:attack_collision_canhit(other_actor) then
+                        if other_actor.x == instance.x then
+                            local damage_direction = 0
+                        else
+                            local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
+                        end
+                        data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                    end
+                end
             end
         else
             if data.fired == 0 then
-                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
-                --data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)
+                --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)for _, other_actor in ipairs(actor_collisions) do
+                    if data.parent:attack_collision_canhit(other_actor) then
+                        if other_actor.x == instance.x then
+                            local damage_direction = 0
+                        else
+                            local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
+                        end
+                        data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                    end
+                end
                 data.fired = 1
             end
             instance.image_alpha = instance.image_alpha - 0.025
