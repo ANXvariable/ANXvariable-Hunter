@@ -1,6 +1,5 @@
 -- Hunter
 -- check how you can make immune to debuffs. and water
--- lowprio: check how to control the camera
 
 log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["LuaENVY-ENVY"]
