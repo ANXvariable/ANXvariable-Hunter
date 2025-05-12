@@ -103,15 +103,15 @@ local initialize = function()
 
     -- Survivor stats
     hunter:set_stats_base({
-        maxhp = 300,
-        damage = 16,
-        regen = 0.02
+        maxhp = 99,
+        damage = 12,
+        regen = 0.01
     })
 
     hunter:set_stats_level({
-        maxhp = 75,
-        damage = 4,
-        regen = 0.004,
+        maxhp = 32,
+        damage = 3,
+        regen = 0.002,
     })
 
     hunter:onStep(function(actor)
@@ -413,7 +413,7 @@ local initialize = function()
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
     skill_utility.is_utility = true
-    skill_special:set_skill_properties(2.0, 0)
+    skill_special:set_skill_properties(1.5, 0)
     skill_special.is_primary = true
     skill_special:set_skill_stock(3, 3, false, 1)
     skill_special.require_key_press = true
