@@ -136,7 +136,8 @@ local initialize = function()
                 if data.horizontal_velocity < 0 then
                     damage_direction = 180
                 end
-                data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none)
+                local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
+                attack.attack_info.climb = data.shadowclimb * 8
 
                 -- Destroy the beam
                 instance:destroy()
@@ -186,8 +187,11 @@ local initialize = function()
         for _, other_actor in ipairs(actor_collisions) do
             if data.parent:attack_collision_canhit(other_actor) then
                 -- Deal damage
-                data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                attack.attack_info.climb = data.shadowclimb * 8
+                if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
+                    instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                end
                 -- Destroy the missile
                 instance:destroy()
                 return
@@ -196,8 +200,11 @@ local initialize = function()
 
         -- Hitting terrain destroys the missile
         if instance:is_colliding(gm.constants.pSolidBulletCollision) then
-            data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-            instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+            local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+            attack.attack_info.climb = data.shadowclimb * 8
+            if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
+                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+            end
             instance:destroy()
             return
         end
@@ -251,11 +258,16 @@ local initialize = function()
                 instance.hitowner = 1
             end
             if data.fired == 0 then
-                data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-                instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                attack.attack_info.climb = data.shadowclimb * 8
+                if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
+                    instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
+                end
                 instance.image_alpha = 0
                 local skill4 = data.parent:get_active_skill(Skill.SLOT.special)
-                skill4.stock = skill4.stock + 1
+                if data.shadowclimb < 1 then
+                    skill4.stock = skill4.stock + 1
+                end
                 data.fired = 1
             end
         end
@@ -302,6 +314,7 @@ local initialize = function()
                 powerbombex.image_yscale = 0
                 powerbombex.image_alpha = 0.8
                 local powerbombex_data = powerbombex:get_data()
+                powerbombex_data.shadowclimb = data.shadowclimb
                 powerbombex_data.parent = data.parent
                 local damage = data.damage_coefficient
                 powerbombex_data.damage_coefficient = damage
@@ -335,21 +348,23 @@ local initialize = function()
                         else
                             local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
                         end
-                        data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                        local attack = data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                        attack.attack_info.climb = data.shadowclimb * 8
                     end
                 end
             end
         else
             if data.fired == 0 then
                 --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
-                data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, instance.x, instance.y, spr_none)for _, other_actor in ipairs(actor_collisions) do
+                for _, other_actor in ipairs(actor_collisions) do
                     if data.parent:attack_collision_canhit(other_actor) then
                         if other_actor.x == instance.x then
                             local damage_direction = 0
                         else
                             local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
                         end
-                        data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                        local attack = data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                        attack.attack_info.climb = data.shadowclimb * 8
                     end
                 end
                 data.fired = 1
@@ -530,6 +545,7 @@ local initialize = function()
                         end
                         beam.statetime = 0
                         beam.duration = math.min(actor.level * 10, 180)
+                        beam_data.shadowclimb = i
                         beam_data.parent = actor
                         beam_data.horizontal_velocity = 10 * direction
                         beam_data.damage_coefficient = damage
@@ -582,6 +598,7 @@ local initialize = function()
                 missile.image_xscale = direction
                 missile.statetime = 0
                 local missile_data = missile:get_data()
+                missile_data.shadowclimb = i
                 missile_data.parent = actor
                 missile_data.horizontal_velocity = 0
                 local damage = actor:skill_get_damage(skill_secondary)
@@ -685,6 +702,7 @@ local initialize = function()
                 bomb.statetime = 0
                 bomb.hitowner = 0
                 local bomb_data = bomb:get_data()
+                bomb_data.shadowclimb = i
                 bomb_data.parent = actor
                 local damage = actor:skill_get_damage(skill_special)
                 bomb_data.damage_coefficient = damage
@@ -751,6 +769,7 @@ local initialize = function()
                 powerbomb.statetime = 0
                 powerbomb.hitowner = 0
                 local powerbomb_data = powerbomb:get_data()
+                powerbomb_data.shadowclimb = i
                 powerbomb_data.parent = actor
                 local damage = actor:skill_get_damage(skill_scepter_special)
                 powerbomb_data.damage_coefficient = damage
