@@ -488,6 +488,7 @@ local initialize = function()
         actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
         actor:skill_util_step_strafe_sprites()
         actor:skill_util_strafe_turn_update()
+        --actor:skill_util_strafe_turn_turn_if_direction_changed()
         local waterbucket = not actor:control("skill1", 0)
         local damage = actor:skill_get_damage(skill_primary)
         local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
