@@ -84,6 +84,10 @@ local initialize = function()
 
     local hunter_log = Survivor_Log.new(hunter, spr_log, sprites.walk)
 
+    local played_sounds = {
+        snd_charge = 0
+    }
+
     hunter:clear_callbacks()
     hunter:onInit(function(actor)
         actor.shiftedfrom = 0
@@ -387,7 +391,7 @@ local initialize = function()
     -- to 1.0, 150% to 1.5, 200% to 2.0, and so on. Cooldowns are specified in frames, so multiply by
     -- 60 to turn that into actual seconds.
     skill_primary:set_skill_properties(1.2, 0)
-    skill_primary.require_key_press = true
+    skill_primary.use_delay = 5
     skill_secondary:set_skill_properties(4.0, 120)
     skill_secondary:set_skill_stock(5, 5, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
@@ -456,6 +460,10 @@ local initialize = function()
         data.charge = 0
         data.beamcharged = 0
         data.released = 0
+        for i in pairs(played_sounds) do
+            played_sounds[i] = 0
+        end
+        actor:get_data().sound_has_played = played_sounds
     end)
     
     -- Executed every game tick during this state
@@ -471,6 +479,13 @@ local initialize = function()
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
         local spawn_offset = 5 * direction
 
+        if data.fired == 1 then
+            data.fired = data.fired + 1
+            actor.image_blend = Color.YELLOW
+        end
+        if data.fired == 4 then
+            actor.image_blend = -1
+        end
         if not waterbucket and data.released == 0 then
             if actor.image_index2 > 0 then
                 actor.image_index2 = 0
@@ -478,6 +493,10 @@ local initialize = function()
 
             if data.charge < 50 then
                 data.charge = data.charge + actor.attack_speed
+                if actor:get_data().sound_has_played["snd_charge"] == 0 then
+                    actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, actor.attack_speed - 0.12))
+                    actor:get_data().sound_has_played["snd_charge"] = 1
+                end
             elseif data.beamcharged == 0 then
                 data.beamcharged = 1
                 actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
@@ -485,11 +504,15 @@ local initialize = function()
                 local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
                 sparks.sprite_index = gm.constants.sSparks18
                 sparks.depth = actor.depth - 1
+                sparks.image_blend = Color.YELLOW
             end
         else
             if actor.image_index2 >= 0 and data.fired == 0 then
                 data.fired = 1
-                actor:skill_util_update_heaven_cracker(actor, damage)
+                local doproc = true
+                if actor:skill_util_update_heaven_cracker(actor, damage) then
+                    doproc = false
+                end
                 if data.beamcharged == 1 then
                     damage = damage * 3
                 end
@@ -501,12 +524,17 @@ local initialize = function()
                         if data.beamcharged == 1 then
                             beam.sprite_index = spr_beam_c0000
                             beam.mask_index = beam.sprite_index
+
+                            local attack = actor:fire_explosion(actor.x + spawn_offset + direction, actor.y - 2, 16, 16, damage * 0.6, gm.constants.sWispSpark, spr_none)
+                            attack.attack_info.climb = i * 8 + 16
                         end
                         beam.statetime = 0
-                        beam.duration = math.min(actor.level * 10, 200)
+                        beam.duration = math.min(actor.level * 10, 180)
                         beam_data.parent = actor
                         beam_data.horizontal_velocity = 10 * direction
                         beam_data.damage_coefficient = damage
+                        beam_data.doproc = doproc
+
                     end
                 actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
                 data.released = 1
