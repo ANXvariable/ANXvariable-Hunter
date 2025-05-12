@@ -115,7 +115,7 @@ local initialize = function()
     })
 
     hunter:onStep(function(actor)
-        
+
     end)
 
     local obj_beam = Object.new(NAMESPACE, "hunter_beam")
@@ -406,6 +406,7 @@ local initialize = function()
     -- to 1.0, 150% to 1.5, 200% to 2.0, and so on. Cooldowns are specified in frames, so multiply by
     -- 60 to turn that into actual seconds.
     skill_primary:set_skill_properties(1.2, 0)
+    skill_primary.require_key_press = true
     skill_primary.use_delay = 5
     skill_secondary:set_skill_properties(4.0, 120)
     skill_secondary:set_skill_stock(5, 5, true, 1)
@@ -510,7 +511,7 @@ local initialize = function()
             if data.charge < 50 then
                 data.charge = data.charge + actor.attack_speed
                 if actor:get_data().sound_has_played["snd_charge"] == 0 then
-                    actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, actor.attack_speed - 0.12))
+                    local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, actor.attack_speed - 0.12))
                     actor:get_data().sound_has_played["snd_charge"] = 1
                 end
             elseif data.beamcharged == 0 then
