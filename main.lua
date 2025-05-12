@@ -476,12 +476,34 @@ local initialize = function()
         data.charge = 0
         data.beamcharged = 0
         data.released = 0
+        data.wannacharge = 0
         for i in pairs(played_sounds) do
             played_sounds[i] = 0
         end
         actor:get_data().sound_has_played = played_sounds
-    end)
     
+        function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
+            local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
+            local beam_data = beam:get_data()
+            beam.image_speed = 0.25
+            beam.image_xscale = direction
+            if data.beamcharged == 1 then
+                beam.sprite_index = spr_beam_c0000
+                beam.mask_index = beam.sprite_index
+        
+                local attack = actor:fire_explosion(actor.x + spawn_offset + direction, actor.y - 2, 16, 16, damage * 0.6, gm.constants.sWispSpark, spr_none)
+                attack.attack_info.climb = i * 8 + 16
+            end
+            beam.statetime = 0
+            beam.duration = math.min(actor.level * 10, 180)
+            beam_data.shadowclimb = i
+            beam_data.parent = actor
+            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * data.beamcharged)
+            beam_data.damage_coefficient = damage
+            beam_data.doproc = doproc
+        end
+    end)
+
     -- Executed every game tick during this state
     state_primary:onStep(function(actor, data)
         actor.sprite_index2 = spr_shoot1_half
@@ -495,66 +517,57 @@ local initialize = function()
         local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
         local spawn_offset = 5 * direction
+        local doproc = true
 
-        if data.fired == 1 then
-            data.fired = data.fired + 1
-            actor.image_blend = Color.YELLOW
+        if actor.image_index2 >= 0 and data.fired == 0 then
+            data.fired = 1
+            if actor:skill_util_update_heaven_cracker(actor, damage) then
+                doproc = false
+            end
+                for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                    fireBeam(actor, spawn_offset, direction, damage, doproc, i)
+                end
+            actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
         end
-        if data.fired == 4 then
-            actor.image_blend = -1
-        end
+
         if not waterbucket and data.released == 0 then
+            data.wannacharge = data.wannacharge + 1
             if actor.image_index2 > 0 then
                 actor.image_index2 = 0
             end
-
-            if data.charge < 50 then
-                data.charge = data.charge + actor.attack_speed
-                if actor:get_data().sound_has_played["snd_charge"] == 0 then
-                    local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, actor.attack_speed - 0.12))
-                    actor:get_data().sound_has_played["snd_charge"] = 1
+            if data.wannacharge >= 10 then
+                if data.charge < 50 then
+                    data.charge = data.charge + 1 - ((1 - actor.attack_speed) * 2)
+                    if actor:get_data().sound_has_played["snd_charge"] == 0 then
+                        local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
+                        actor:get_data().sound_has_played["snd_charge"] = 1
+                    end
+                elseif data.beamcharged == 0 then
+                    data.beamcharged = 1
+                    actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
+                    actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
+                    local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
+                    sparks.sprite_index = gm.constants.sSparks18
+                    sparks.depth = actor.depth - 1
+                    sparks.image_blend = Color.YELLOW
                 end
-            elseif data.beamcharged == 0 then
-                data.beamcharged = 1
-                actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
-                actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
-                local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
-                sparks.sprite_index = gm.constants.sSparks18
-                sparks.depth = actor.depth - 1
-                sparks.image_blend = Color.YELLOW
             end
         else
-            if actor.image_index2 >= 0 and data.fired == 0 then
-                data.fired = 1
-                local doproc = true
-                if actor:skill_util_update_heaven_cracker(actor, damage) then
-                    doproc = false
-                end
+            if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
+                data.fired = 2
                 if data.beamcharged == 1 then
                     damage = damage * 3
                 end
+                if actor:skill_util_update_heaven_cracker(actor, damage) then
+                    doproc = false
+                end
                     for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                        local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
-                        local beam_data = beam:get_data()
-                        beam.image_speed = 0.25
-                        beam.image_xscale = direction
-                        if data.beamcharged == 1 then
-                            beam.sprite_index = spr_beam_c0000
-                            beam.mask_index = beam.sprite_index
-
-                            local attack = actor:fire_explosion(actor.x + spawn_offset + direction, actor.y - 2, 16, 16, damage * 0.6, gm.constants.sWispSpark, spr_none)
-                            attack.attack_info.climb = i * 8 + 16
-                        end
-                        beam.statetime = 0
-                        beam.duration = math.min(actor.level * 10, 180)
-                        beam_data.shadowclimb = i
-                        beam_data.parent = actor
-                        beam_data.horizontal_velocity = 10 * direction
-                        beam_data.damage_coefficient = damage
-                        beam_data.doproc = doproc
-
+                        fireBeam(actor, spawn_offset, direction, damage, doproc, i)
                     end
                 actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
+                data.released = 1
+            end
+            if data.wannacharge < 10 then
                 data.released = 1
             end
         end
