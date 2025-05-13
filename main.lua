@@ -47,6 +47,9 @@ local initialize = function()
     local spr_fall_half = load_sprite("hunter_fall_half", "sHunterRunHalf.png", 4, 12, 25)
 
     local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 12, 25)
+    local spr_shoot1_half_chargemask = load_sprite("hunter_shoot1_half_chargemask", "sHunterShoot1HalfChargeMask.png", 4, 12, 25)
+    local spr_idle_half_chargemask = load_sprite("hunter_idle_half_chargemask", "sHunterIdleHalfChargeMask.png", 1, 14, 20)
+    local spr_walk_half_chargemask = load_sprite("hunter_walk_half_chargemask", "sHunterRunHalfChargeMask.png", 4, 12, 25)
     
     --placeholder category, todo organize later
     local spr_skills = load_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
@@ -66,9 +69,12 @@ local initialize = function()
     local spr_bomb = load_sprite("hunter_bomb", "sHunterBomb.png")
     local spr_powerbomb = load_sprite("hunter_powerbomb", "sHunterPowerBomb.png")
     local spr_powerbomb_explosion = load_sprite("hunter_powerbomb_explosion", "sHunterPowerBombExplode.png", 1, 683, 384)
-
+    
     -- Colour for the character's skill names on character select
     hunter:set_primary_color(Color.from_rgb(8, 253, 142))
+
+    --snd
+    local snd_chargeloop = load_sound("hunter_chargeloop", "wDivineTP_CompleteAmbience_Loopable_steeled.ogg")
 
     -- Assign sprites to various survivor fields
     hunter.sprite_loadout = spr_loadout
@@ -116,6 +122,22 @@ local initialize = function()
 
     hunter:onStep(function(actor)
 
+    end)
+
+    local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
+    obj_chargemask.obj_sprite = spr_shoot1_half_chargemask
+    obj_chargemask.obj_depth = -1
+    obj_chargemask:clear_callbacks()
+
+    obj_chargemask:onStep(function(instance)
+        local data = instance:get_data()
+        instance.x = data.parent.x
+        instance.y = data.parent.y
+        instance.statetime = instance.statetime + 1
+        if instance.statetime > 0 then
+            instance:destroy()
+            return
+        end
     end)
 
     local obj_beam = Object.new(NAMESPACE, "hunter_beam")
@@ -542,14 +564,36 @@ local initialize = function()
                         local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
                         actor:get_data().sound_has_played["snd_charge"] = 1
                     end
-                elseif data.beamcharged == 0 then
-                    data.beamcharged = 1
-                    actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
-                    actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
-                    local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
-                    sparks.sprite_index = gm.constants.sSparks18
-                    sparks.depth = actor.depth - 1
-                    sparks.image_blend = Color.YELLOW
+                else
+                    if data.beamcharged == 0 then
+                        data.beamcharged = 1
+                        actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
+                        actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
+                        local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
+                        local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
+                        sparks.sprite_index = gm.constants.sSparks18
+                        sparks.depth = actor.depth - 2
+                        sparks.image_blend = Color.YELLOW
+                    end
+                    if data.beamcharged == 1 then
+                        for i = 0, 1 do
+                            local chargemask = obj_chargemask:create(actor.x + actor.pHspeed, actor.y + actor.pVspeed)
+                            chargemask.statetime = 0
+                            chargemask.depth = actor.depth - 1
+                            chargemask.image_index = actor.image_index2
+                            if i > 0 then
+                                chargemask.sprite_index = spr_walk_half_chargemask
+                                if actor.sprite_index == spr_idle_half then
+                                    chargemask.sprite_index = spr_idle_half_chargemask
+                                end
+                                chargemask.image_index = actor.image_index
+                            end
+                            chargemask.image_xscale = direction
+                            chargemask.image_alpha = 0.5 * (1 -(math.abs(3 - (math.fmod(data.wannacharge, 6)))) / 3)
+                            local chargemask_data = chargemask:get_data()
+                            chargemask_data.parent = actor
+                        end
+                    end
                 end
             end
         else
@@ -566,6 +610,10 @@ local initialize = function()
                     end
                 actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
                 data.released = 1
+                if GM._mod_sound_isPlaying(snd_chargeloop) then
+                    log.info(GM._mod_sound_get_gain(snd_chargeloop))
+                    GM._mod_sound_stop(snd_chargeloop)
+                end
             end
             if data.wannacharge < 10 then
                 data.released = 1
