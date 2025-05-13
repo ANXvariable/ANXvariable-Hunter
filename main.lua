@@ -122,9 +122,7 @@ local initialize = function()
 
     hunter:onStep(function(actor)
         local data = actor:get_data()
-
         local free = GM.bool(actor.free)
-
         local wallx = 0
 
         if actor:is_colliding(gm.constants.pSolidBulletCollision, actor.x - 3 - actor.pHmax / 2.8) and actor:control("right", 0) then
@@ -132,19 +130,33 @@ local initialize = function()
         elseif actor:is_colliding(gm.constants.pSolidBulletCollision, actor.x + 3 + actor.pHmax / 2.8) and actor:control("left", 0) then
             wallx = 1
         end
-
         local walljumpable = free and wallx ~= 0
 
-        if walljumpable and not data.hunterJump_feather_preserve then
+        if walljumpable and not data.hunterJump_feather_preserve and not data.iceTool_feather_preserve then
             data.hunterJump_feather_preserve = actor.jump_count
             actor.jump_count = math.huge
-        elseif not walljumpable and data.hunterJump_feather_preserve then
+        elseif walljumpable and not data.hunterJump_feather_preserve and data.iceTool_feather_preserve and data.iceTool_feather_preserve ~= math.huge then
+            data.hunterJump_feather_preserve = data.iceTool_feather_preserve
+        elseif walljumpable and not data.hunterJump_feather_preserve then
+            data.hunterJump_feather_preserve = math.max(0, actor:item_stack_count(Item.find("ror", "hopooFeather")) - 1)
+        elseif not walljumpable and data.hunterJump_feather_preserve and data.iceTool_feather_preserve ~= math.huge and data.hunterJump_feather_preserve ~= math.huge then
             actor.jump_count = data.hunterJump_feather_preserve
             data.hunterJump_feather_preserve = nil
         end
-        if actor.jump_count ~= math.huge and data.hunterJump_feather_preserve then
-            actor.jump_count = math.huge
-        end
+    --    if actor.jump_count ~= math.huge and (data.hunterJump_feather_preserve or data.iceTool_feather_preserve) then
+    --        actor.jump_count = math.huge
+    --    end
+    --    the above lines stay commented or iceTool fucking kills me apparently even though that's where i got this from
+    --    if free and (actor:control("left", 0) or actor:control("right", 0)) and actor:item_stack_count(Item.find("ssr", "iceTool")) > 0 then
+    --        log.info("wallx =      "..wallx)
+    --        log.info("jump_count = "..actor.jump_count)
+    --        if data.hunterJump_feather_preserve then
+    --        log.info("HJFP = "..data.hunterJump_feather_preserve)
+    --        end
+            if data.iceTool_feather_preserve then
+            log.info("ITFP = "..data.iceTool_feather_preserve)
+            end
+    --    end--this info log stays uncommented because apparently data.iceTool_feather_preserve never returns true or something so I never saw this log. ever. so it stays while i test if it ever will work.
 
         if actor:control("jump", 1) and walljumpable then
             actor.pVspeed = -actor.pVmax - 1.5
@@ -155,7 +167,11 @@ local initialize = function()
 
 	    	actor.pHspeed = -actor.pHmax * wallx
 	    	actor.image_xscale = -wallx
+            actor:sound_play(gm.constants.wClayHit, 1, 1.25)
         end
+    --    if actor:control("jump", 1) then
+    --        log.info("jc on jump = "..actor.jump_count)
+    --    end
     end)
 
     local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
