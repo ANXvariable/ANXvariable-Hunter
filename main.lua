@@ -121,7 +121,41 @@ local initialize = function()
     })
 
     hunter:onStep(function(actor)
+        local data = actor:get_data()
 
+        local free = GM.bool(actor.free)
+
+        local wallx = 0
+
+        if actor:is_colliding(gm.constants.pSolidBulletCollision, actor.x - 3 - actor.pHmax / 2.8) and actor:control("right", 0) then
+            wallx = -1
+        elseif actor:is_colliding(gm.constants.pSolidBulletCollision, actor.x + 3 + actor.pHmax / 2.8) and actor:control("left", 0) then
+            wallx = 1
+        end
+
+        local walljumpable = free and wallx ~= 0
+
+        if walljumpable and not data.hunterJump_feather_preserve then
+            data.hunterJump_feather_preserve = actor.jump_count
+            actor.jump_count = math.huge
+        elseif not walljumpable and data.hunterJump_feather_preserve then
+            actor.jump_count = data.hunterJump_feather_preserve
+            data.hunterJump_feather_preserve = nil
+        end
+        if actor.jump_count ~= math.huge and data.hunterJump_feather_preserve then
+            actor.jump_count = math.huge
+        end
+
+        if actor:control("jump", 1) and walljumpable then
+            actor.pVspeed = -actor.pVmax - 1.5
+	    	actor.free_jump_timer = 0
+	    	actor.jumping = true
+	    	actor.moveUp = false
+	    	actor.moveUp_buffered = false
+
+	    	actor.pHspeed = -actor.pHmax * wallx
+	    	actor.image_xscale = -wallx
+        end
     end)
 
     local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
@@ -611,7 +645,6 @@ local initialize = function()
                 actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
                 data.released = 1
                 if GM._mod_sound_isPlaying(snd_chargeloop) then
-                    log.info(GM._mod_sound_get_gain(snd_chargeloop))
                     GM._mod_sound_stop(snd_chargeloop)
                 end
             end
