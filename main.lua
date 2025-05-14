@@ -121,6 +121,7 @@ local initialize = function()
     })
 
     hunter:onStep(function(actor)
+        --walljumping
         local data = actor:get_data()
         local free = GM.bool(actor.free)
         local wallx = 0
@@ -563,7 +564,7 @@ local initialize = function()
                 beam.sprite_index = spr_beam_c0000
                 beam.mask_index = beam.sprite_index
         
-                local attack = actor:fire_explosion(actor.x + spawn_offset + direction, actor.y - 2, 16, 16, damage * 0.6, gm.constants.sWispSpark, spr_none)
+                local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, gm.constants.sWispSpark, spr_none)
                 attack.attack_info.climb = i * 8 + 16
             end
             beam.statetime = 0
@@ -650,7 +651,7 @@ local initialize = function()
             if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
                 data.fired = 2
                 if data.beamcharged == 1 then
-                    damage = damage * 3
+                    damage = damage * 5
                 end
                 if actor:skill_util_update_heaven_cracker(actor, damage) then
                     doproc = false
