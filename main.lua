@@ -28,27 +28,27 @@ local initialize = function()
     
     -- Load the common survivor sprites into a table
     local sprites = {
-        idle = load_sprite("hunter_idle", "sHunterIdle.png", 1, 14, 20),
+        idle = load_sprite("hunter_idle", "sHunterIdle.png", 1, 14, 15),
         walk = load_sprite("hunter_walk", "sHunterRun.png", 4, 12, 25),
-        jump = load_sprite("hunter_jump", "sHunterRun.png", 4, 12, 25),
-        jump_peak = load_sprite("hunter_jump_peak", "sHunterRun.png", 4, 12, 25),
-        fall = load_sprite("hunter_fall", "sHunterRun.png", 4, 12, 25),
-        climb = load_sprite("hunter_climb", "sHunterRun.png", 4, 12, 25),
-        climb_hurt = load_sprite("hunter_climb_hurt", "sHunterRun.png", 4, 12, 25), 
-        death = load_sprite("hunter_death", "sHunterRun.png", 4, 12, 25),
-        decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 12, 25),
+        jump = load_sprite("hunter_jump", "sHunterSault.png", 4, 14, 14),
+        jump_peak = load_sprite("hunter_jump_peak", "sHunterSault.png", 4, 14, 14),
+        fall = load_sprite("hunter_fall", "sHunterSault.png", 4, 14, 14),
+        climb = load_sprite("hunter_climb", "sHunterElevator.png", 1, 14, 18),
+        climb_hurt = load_sprite("hunter_climb_hurt", "sHunterElevator.png", 1, 14, 18), 
+        death = load_sprite("hunter_death", "sHunterDeath.png", 20, 34, 58),
+        decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 14, 25),
     }
 
     --spr_half
-    local spr_idle_half = load_sprite("hunter_idle_half", "sHunterIdleHalf.png", 1, 14, 20)
+    local spr_idle_half = load_sprite("hunter_idle_half", "sHunterIdleHalf.png", 1, 14, 15)
     local spr_walk_half = load_sprite("hunter_walk_half", "sHunterRunHalf.png", 4, 12, 25)
     local spr_jump_half = load_sprite("hunter_jump_half", "sHunterRunHalf.png", 4, 12, 25)
     local spr_jump_peak_half = load_sprite("hunter_jump_peak_half", "sHunterRunHalf.png", 4, 12, 25)
     local spr_fall_half = load_sprite("hunter_fall_half", "sHunterRunHalf.png", 4, 12, 25)
 
-    local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 12, 25)
-    local spr_shoot1_half_chargemask = load_sprite("hunter_shoot1_half_chargemask", "sHunterShoot1HalfChargeMask.png", 4, 12, 25)
-    local spr_idle_half_chargemask = load_sprite("hunter_idle_half_chargemask", "sHunterIdleHalfChargeMask.png", 1, 14, 20)
+    local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 13, 25)
+    local spr_shoot1_half_chargemask = load_sprite("hunter_shoot1_half_chargemask", "sHunterShoot1HalfChargeMask.png", 4, 13, 25)
+    local spr_idle_half_chargemask = load_sprite("hunter_idle_half_chargemask", "sHunterIdleHalfChargeMask.png", 1, 14, 15)
     local spr_walk_half_chargemask = load_sprite("hunter_walk_half_chargemask", "sHunterRunHalfChargeMask.png", 4, 12, 25)
     
     --placeholder category, todo organize later
@@ -58,8 +58,8 @@ local initialize = function()
     local spr_portrait_small = load_sprite("hunter_portrait_small", "sHunterPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("hunter_portrait_cropped", "sHunterPortraitC.png")
     local spr_log = load_sprite("hunter_log", "sPortraitHunter.png")
-    local spr_flashshift = load_sprite("hunter_flashshift", "sHunterFlashShift.png", 4, 12, 25)
-    local spr_flashshifttrail = load_sprite("hunter_flashshifttrail", "sHunterFlashShift.png", 4, 12, 25)
+    local spr_flashshift = load_sprite("hunter_flashshift", "sHunterFlashShift.png", 4, 14, 25)
+    local spr_flashshifttrail = load_sprite("hunter_flashshifttrail", "sHunterFlashShift.png", 4, 14, 25)
     --local spr_morphandbomb = load_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
@@ -86,7 +86,7 @@ local initialize = function()
     hunter.sprite_credits = sprites.idle
     hunter:set_animations(sprites)
     -- Offset for the Prophet's Cape
-    hunter:set_cape_offset(-1, -6, 0, -5)
+    hunter:set_cape_offset(-1, -6, -8, -1)
 
     local hunter_log = Survivor_Log.new(hunter, spr_log, sprites.walk)
 
