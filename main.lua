@@ -75,6 +75,7 @@ local initialize = function()
 
     --snd
     local snd_chargeloop = load_sound("hunter_chargeloop", "wDivineTP_CompleteAmbience_Loopable_steeled.ogg")
+    local snd_ondeath = load_sound("hunter_chargeloop", "snd_badexplosion.ogg")
 
     -- Assign sprites to various survivor fields
     hunter.sprite_loadout = spr_loadout
@@ -173,6 +174,14 @@ local initialize = function()
     --    if actor:control("jump", 1) then
     --        log.info("jc on jump = "..actor.jump_count)
     --    end
+
+    --onDeath
+    --if actor:control("jump", 0) then
+    --    log.info(actor.actor_state_current_id)
+    --end
+    --if actor.sprite_index == sprites.death and actor.image_index == 2 then
+    --    actor:sound_play(snd_ondeath, 1, 1)
+    --end--actor onstep doesn't run when you die i guess
     end)
 
     local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
