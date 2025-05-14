@@ -29,31 +29,31 @@ local initialize = function()
     -- Load the common survivor sprites into a table
     local sprites = {
         idle = load_sprite("hunter_idle", "sHunterIdle.png", 1, 14, 15),
-        walk = load_sprite("hunter_walk", "sHunterRun.png", 4, 12, 25),
+        walk = load_sprite("hunter_walk", "sHunterRun.png", 4, 12, 24),
         jump = load_sprite("hunter_jump", "sHunterSault.png", 4, 14, 14),
         jump_peak = load_sprite("hunter_jump_peak", "sHunterSault.png", 4, 14, 14),
         fall = load_sprite("hunter_fall", "sHunterSault.png", 4, 14, 14),
         climb = load_sprite("hunter_climb", "sHunterElevator.png", 1, 14, 18),
         climb_hurt = load_sprite("hunter_climb_hurt", "sHunterElevator.png", 1, 14, 18), 
         death = load_sprite("hunter_death", "sHunterDeath.png", 20, 34, 58),
-        decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 14, 25),
+        decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 14, 24),
     }
 
     --spr_half
     local spr_idle_half = load_sprite("hunter_idle_half", "sHunterIdleHalf.png", 1, 14, 15)
-    local spr_walk_half = load_sprite("hunter_walk_half", "sHunterRunHalf.png", 4, 12, 25)
-    local spr_jump_half = load_sprite("hunter_jump_half", "sHunterRunHalf.png", 4, 12, 25)
-    local spr_jump_peak_half = load_sprite("hunter_jump_peak_half", "sHunterRunHalf.png", 4, 12, 25)
-    local spr_fall_half = load_sprite("hunter_fall_half", "sHunterRunHalf.png", 4, 12, 25)
+    local spr_walk_half = load_sprite("hunter_walk_half", "sHunterRunHalf.png", 4, 12, 24)
+    local spr_jump_half = load_sprite("hunter_jump_half", "sHunterRunHalf.png", 4, 12, 24)
+    local spr_jump_peak_half = load_sprite("hunter_jump_peak_half", "sHunterRunHalf.png", 4, 12, 24)
+    local spr_fall_half = load_sprite("hunter_fall_half", "sHunterRunHalf.png", 4, 12, 24)
 
     local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 13, 25)
     local spr_shoot1_half_chargemask = load_sprite("hunter_shoot1_half_chargemask", "sHunterShoot1HalfChargeMask.png", 4, 13, 25)
     local spr_idle_half_chargemask = load_sprite("hunter_idle_half_chargemask", "sHunterIdleHalfChargeMask.png", 1, 14, 15)
-    local spr_walk_half_chargemask = load_sprite("hunter_walk_half_chargemask", "sHunterRunHalfChargeMask.png", 4, 12, 25)
+    local spr_walk_half_chargemask = load_sprite("hunter_walk_half_chargemask", "sHunterRunHalfChargeMask.png", 4, 12, 24)
     
     --placeholder category, todo organize later
     local spr_skills = load_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
-    local spr_loadout = load_sprite("hunter_loadout", "sSelectHunter.png", 4, 28, 0)
+    local spr_loadout = load_sprite("hunter_loadout", "sSelectHunter.png", 4, 28)
     local spr_portrait = load_sprite("hunter_portrait", "sHunterPortrait.png", 3)
     local spr_portrait_small = load_sprite("hunter_portrait_small", "sHunterPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("hunter_portrait_cropped", "sHunterPortraitC.png")
@@ -64,6 +64,7 @@ local initialize = function()
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
     local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 8)
+    local spr_beam_flare_0000 = load_sprite("hunter_beam_flare_0000", "sSparksHunterChargeFlare.png", 5, 12, 12)
     local spr_missile = load_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
     local spr_bomb = load_sprite("hunter_bomb", "sHunterBomb.png")
@@ -573,8 +574,13 @@ local initialize = function()
                 beam.sprite_index = spr_beam_c0000
                 beam.mask_index = beam.sprite_index
         
-                local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, gm.constants.sWispSpark, spr_none)
+                local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
                 attack.attack_info.climb = i * 8 + 16
+                local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
+                chargeflare.sprite_index = spr_beam_flare_0000
+                chargeflare.image_xscale = direction
+                chargeflare.image_yscale = 1
+                chargeflare.image_speed = 0.25
             end
             beam.statetime = 0
             beam.duration = math.min(actor.level * 10, 180)
