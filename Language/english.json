@@ -2,7 +2,7 @@
     "skill" : {
         "hunterZ" : {
             "name" : "Power Beam",
-            "description" : "Rapidly fire an energy blast for <y>120% damage</c>. <#fffb33>Range increases with level.</c>\n<b>Agile: You can shoot while moving.</c>"
+            "description" : "Fire an energy blast for <y>120% damage</c>. <#fffb33>Range increases with level.</c>\nCan be charged for <y>600% damage</c>, which creates a <y>360% damage</c> <#fffb33>flare</c> at your muzzle. <b>Agile.</c>\n<b>Agile: You can shoot while moving.</c>"
         },
         "hunterX" : {
             "name" : "Missile Launcher",
@@ -15,6 +15,10 @@
         "hunterV" : {
             "name" : "Morph Bomb",
             "description" : "Curl into a ball and lay a <y>small, timed bomb</c> that explodes for <y>300% damage</c>."
+        },
+        "hunterVBoosted" : {
+            "name" : "Power Bomb",
+            "description" : "Curl into a ball and lay a <y>small, timed bomb</c> that explodes for <y>3000% damage</c>."
         }
     },
 
