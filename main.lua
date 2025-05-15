@@ -64,7 +64,7 @@ local initialize = function()
     --local spr_morphandbomb = load_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
-    local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 8)
+    local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
     local spr_beam_flare_0000 = load_sprite("hunter_beam_flare_0000", "sSparksHunterChargeFlare.png", 5, 12, 12)
     local spr_missile = load_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
@@ -568,7 +568,7 @@ local initialize = function()
         actor:get_data().sound_has_played = played_sounds
     
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
-            local beam = obj_beam:create(actor.x + spawn_offset, actor.y)
+            local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
             local beam_data = beam:get_data()
             beam.image_speed = 0.25
             beam.image_xscale = direction
@@ -638,7 +638,7 @@ local initialize = function()
                         actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
                         actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
                         local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
-                        local sparks = GM.instance_create(actor.x + spawn_offset, actor.y, gm.constants.oEfSparks)
+                        local sparks = GM.instance_create(actor.x + spawn_offset, actor.y - 10, gm.constants.oEfSparks)
                         sparks.sprite_index = gm.constants.sSparks18
                         sparks.depth = actor.depth - 2
                         sparks.image_blend = Color.YELLOW
@@ -727,7 +727,7 @@ local initialize = function()
             local buff_shadow_clone = Buff.find("ror", "shadowClone")
             for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                 local spawn_offset = 16 * direction
-                local missile = obj_missile:create(actor.x + spawn_offset, actor.y)
+                local missile = obj_missile:create(actor.x + spawn_offset, actor.y - 10)
                 missile.image_speed = 0.25
                 missile.image_xscale = direction
                 missile.statetime = 0
