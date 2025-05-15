@@ -171,7 +171,9 @@ local initialize = function()
 
 	    	actor.pHspeed = -actor.pHmax * wallx
 	    	actor.image_xscale = -wallx
-            actor:sound_play(gm.constants.wClayHit, 1, 1.25)
+            if not GM.actor_state_is_climb_state(actor.actor_state_current_id) then
+                actor:sound_play(gm.constants.wClayHit, 1, 1.25)
+            end
         end
     --    if actor:control("jump", 1) then
     --        log.info("jc on jump = "..actor.jump_count)
@@ -759,6 +761,20 @@ local initialize = function()
         -- Our flag to prevent firing more than once per attack
         actor:sound_play(gm.constants.wHuntressShoot3, 1, 0.8 + math.random() * 0.2)
         actor.shiftedfrom = actor.y
+        local circle = GM.instance_create(actor.x, actor.y, gm.constants.oEfCircle)
+        circle.parent = actor
+        circle.radius = 20
+        circle.image_blend = Color(0x73eeff)
+        if actor:control("left", 0) then
+            data.direction = -1
+        elseif actor:control("right", 0) then
+            data.direction = 1
+        else
+            data.direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+        end
+        if data.direction ~= GM.cos(GM.degtorad(actor:skill_util_facing_direction())) then
+            actor.image_xscale = -actor.image_xscale
+        end
     end)
     
     -- Executed every game tick during this state
@@ -777,7 +793,7 @@ local initialize = function()
 
         actor:actor_animation_set(animation, animation_speed)
 
-        local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+        local direction = data.direction
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
         if actor.invincible < 10 then 
             actor.invincible = 10
@@ -802,7 +818,7 @@ local initialize = function()
             actor.invincible = 0
         end
         actor.pHspeed = 0
- 
+        data.direction = nil
     end)
 
     -- Executed when state_special is entered
