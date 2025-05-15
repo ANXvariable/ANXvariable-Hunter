@@ -42,14 +42,15 @@ local initialize = function()
     --spr_half
     local spr_idle_half = load_sprite("hunter_idle_half", "sHunterIdleHalf.png", 1, 14, 15)
     local spr_walk_half = load_sprite("hunter_walk_half", "sHunterRunHalf.png", 4, 12, 24)
-    local spr_jump_half = load_sprite("hunter_jump_half", "sHunterRunHalf.png", 4, 12, 24)
-    local spr_jump_peak_half = load_sprite("hunter_jump_peak_half", "sHunterRunHalf.png", 4, 12, 24)
-    local spr_fall_half = load_sprite("hunter_fall_half", "sHunterRunHalf.png", 4, 12, 24)
+    local spr_jump_half = load_sprite("hunter_jump_half", "sHunterJumpHalf.png", 1, 12, 24)
+    local spr_jump_peak_half = load_sprite("hunter_jump_peak_half", "sHunterJumpHalf.png", 1, 12, 24)
+    local spr_fall_half = load_sprite("hunter_fall_half", "sHunterJumpHalf.png", 1, 12, 24)
 
     local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 13, 25)
     local spr_shoot1_half_chargemask = load_sprite("hunter_shoot1_half_chargemask", "sHunterShoot1HalfChargeMask.png", 4, 13, 25)
     local spr_idle_half_chargemask = load_sprite("hunter_idle_half_chargemask", "sHunterIdleHalfChargeMask.png", 1, 14, 15)
     local spr_walk_half_chargemask = load_sprite("hunter_walk_half_chargemask", "sHunterRunHalfChargeMask.png", 4, 12, 24)
+    local spr_jump_half_chargemask = load_sprite("hunter_jump_half_chargemask", "sHunterJumpHalfChargeMask.png", 1, 12, 24)
     
     --placeholder category, todo organize later
     local spr_skills = load_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
@@ -654,6 +655,10 @@ local initialize = function()
                                     chargemask.sprite_index = spr_idle_half_chargemask
                                 end
                                 chargemask.image_index = actor.image_index
+                                if GM.bool(actor.free) then
+                                    chargemask.sprite_index = spr_jump_half_chargemask
+                                    chargemask.image_index = 0
+                                end
                             end
                             chargemask.image_xscale = direction
                             chargemask.image_alpha = 0.5 * (1 -(math.abs(3 - (math.fmod(data.wannacharge, 6)))) / 3)
