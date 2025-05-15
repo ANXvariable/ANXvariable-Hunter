@@ -161,7 +161,7 @@ local initialize = function()
             end
     --    end--this info log stays uncommented because apparently data.iceTool_feather_preserve never returns true or something so I never saw this log. ever. so it stays while i test if it ever will work.
 
-        if actor:control("jump", 1) and walljumpable then
+        if actor:control("jump", 1) and walljumpable and actor.actor_state_current_id ~= State.find(NAMESPACE, "hunterV").value then
             actor.pVspeed = -actor.pVmax - 1.5
 	    	actor.free_jump_timer = 0
 	    	actor.jumping = true
@@ -178,7 +178,8 @@ local initialize = function()
 
     --onDeath
     --if actor:control("jump", 0) then
-    --    log.info(actor.actor_state_current_id)
+    --    log.info("asci = "..actor.actor_state_current_id)
+    --    log.info(State.find(NAMESPACE, "hunterV").value)
     --end
     --if actor.sprite_index == sprites.death and actor.image_index == 2 then
     --    actor:sound_play(snd_ondeath, 1, 1)
