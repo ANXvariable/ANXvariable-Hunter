@@ -622,9 +622,9 @@ local initialize = function()
         --actor:skill_util_strafe_turn_turn_if_direction_changed()
         local actorData = actor:get_data()
         local waterbucket = not actor:control("skill1", 0)
-        if not actor:is_authority() then
-            waterbucket = gm.bool(actor.activity_var2)
-        end
+    --    if not actor:is_authority() then
+    --        waterbucket = gm.bool(actor.activity_var2)
+    --    end
         local damage = actor:skill_get_damage(skill_primary)
         local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
@@ -693,13 +693,13 @@ local initialize = function()
                 end
             end
         else
-            if GM._mod_net_isOnline() then
-                if GM._mod_net_isHost() then
-                    GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
-                else
-                    GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
-                end
-            end
+        --    if GM._mod_net_isOnline() then
+        --        if GM._mod_net_isHost() then
+        --            GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
+        --        else
+        --            GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
+        --        end
+        --    end
             if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
                 data.fired = 2
                 if actorData.beamcharged == 1 then
