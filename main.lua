@@ -592,7 +592,7 @@ local initialize = function()
                 beam.sprite_index = spr_beam_c0000
                 beam.mask_index = beam.sprite_index
         
-            if data.parent:is_authority() then
+            if actor:is_authority() then
                 local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
                 attack.attack_info.climb = i * 8 + 16
                 local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
