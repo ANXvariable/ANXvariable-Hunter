@@ -639,7 +639,7 @@ local initialize = function()
                 for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                     fireBeam(actor, spawn_offset, direction, damage, doproc, i)
                 end
-            actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
+            actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 2 + math.random() * 0.1)
         end
 
         if not waterbucket and data.released == 0 then
@@ -711,7 +711,7 @@ local initialize = function()
                     for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                         fireBeam(actor, spawn_offset, direction, damage, doproc, i)
                     end
-                actor:sound_play(gm.constants.wSpiderShoot1, 1, 0.8 + math.random() * 0.2)
+                actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 1.5 + math.random() * 0.1)
                 data.released = 1
                 if GM._mod_sound_isPlaying(snd_chargeloop) then
                     GM._mod_sound_stop(snd_chargeloop)
