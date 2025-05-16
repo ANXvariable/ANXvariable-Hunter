@@ -4,7 +4,7 @@
 log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["LuaENVY-ENVY"]
 envy.auto()
-mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto()
+mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
 
 local PATH = _ENV["!plugins_mod_folder_path"]
 local NAMESPACE = "ANXvariable"
@@ -99,6 +99,7 @@ local initialize = function()
 
     hunter:clear_callbacks()
     hunter:onInit(function(actor)
+        local data = actor:get_data()
         actor.shiftedfrom = 0
         actor.sprite_idle_half = Array.new({sprites.idle, spr_idle_half, 0})
         actor.sprite_walk_half = Array.new({sprites.walk, spr_walk_half, 0})
@@ -556,25 +557,26 @@ local initialize = function()
     state_primary:onEnter(function(actor, data)
         actor:skill_util_strafe_init()
         actor:skill_util_strafe_turn_init()
+        local actorData = actor:get_data()
         actor.image_index2 = 0 -- Make sure our animation starts on its first frame
         -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
         data.fired = 0
         data.charge = 0
-        data.beamcharged = 0
+        actorData.beamcharged = 0
         data.released = 0
         data.wannacharge = 0
         for i in pairs(played_sounds) do
             played_sounds[i] = 0
         end
-        actor:get_data().sound_has_played = played_sounds
+        actorData.sound_has_played = played_sounds
     
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
             local beam_data = beam:get_data()
             beam.image_speed = 0.25
             beam.image_xscale = direction
-            if data.beamcharged == 1 then
+            if actorData.beamcharged == 1 then
                 beam.sprite_index = spr_beam_c0000
                 beam.mask_index = beam.sprite_index
         
@@ -590,7 +592,7 @@ local initialize = function()
             beam.duration = math.min(actor.level * 10, 180)
             beam_data.shadowclimb = i
             beam_data.parent = actor
-            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * data.beamcharged)
+            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)
             beam_data.damage_coefficient = damage
             beam_data.doproc = doproc
         end
@@ -604,6 +606,7 @@ local initialize = function()
         actor:skill_util_step_strafe_sprites()
         actor:skill_util_strafe_turn_update()
         --actor:skill_util_strafe_turn_turn_if_direction_changed()
+        local actorData = actor:get_data()
         local waterbucket = not actor:control("skill1", 0)
         if not actor:is_authority() then
             waterbucket = gm.bool(actor.activity_var2)
@@ -633,13 +636,13 @@ local initialize = function()
             if data.wannacharge >= 10 then
                 if data.charge < 50 then
                     data.charge = data.charge + 1 - ((1 - actor.attack_speed) * 2)
-                    if actor:get_data().sound_has_played["snd_charge"] == 0 then
+                    if actorData.sound_has_played["snd_charge"] == 0 then
                         local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
-                        actor:get_data().sound_has_played["snd_charge"] = 1
+                        actorData.sound_has_played["snd_charge"] = 1
                     end
                 else
-                    if data.beamcharged == 0 then
-                        data.beamcharged = 1
+                    if actorData.beamcharged == 0 then
+                        actorData.beamcharged = 1
                         actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
                         actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
                         local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
@@ -648,7 +651,7 @@ local initialize = function()
                         sparks.depth = actor.depth - 2
                         sparks.image_blend = Color.YELLOW
                     end
-                    if data.beamcharged == 1 then
+                    if actorData.beamcharged == 1 then
                         for i = 0, 1 do
                             local chargemask = obj_chargemask:create(actor.x + actor.pHspeed, actor.y + actor.pVspeed)
                             chargemask.statetime = 0
@@ -683,7 +686,7 @@ local initialize = function()
             end
             if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
                 data.fired = 2
-                if data.beamcharged == 1 then
+                if actorData.beamcharged == 1 then
                     damage = damage * 5
                 end
                 if actor:skill_util_update_heaven_cracker(actor, damage) then
