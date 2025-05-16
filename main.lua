@@ -645,7 +645,9 @@ local initialize = function()
                         actorData.beamcharged = 1
                         actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
                         actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
+                        if actor:is_authority() then
                         local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
+                        end
                         local sparks = GM.instance_create(actor.x + spawn_offset, actor.y - 10, gm.constants.oEfSparks)
                         sparks.sprite_index = gm.constants.sSparks18
                         sparks.depth = actor.depth - 2
