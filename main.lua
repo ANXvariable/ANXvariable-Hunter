@@ -224,10 +224,10 @@ local initialize = function()
                 if data.horizontal_velocity < 0 then
                     damage_direction = 180
                 end
-            if data.parent:is_authority() then
-                local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
-                attack.attack_info.climb = data.shadowclimb * 8
-            end
+                if data.parent:is_authority() then
+                    local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
+                    attack.attack_info.climb = data.shadowclimb * 8
+                end
 
                 -- Destroy the beam
                 instance:destroy()
@@ -277,10 +277,10 @@ local initialize = function()
         for _, other_actor in ipairs(actor_collisions) do
             if data.parent:attack_collision_canhit(other_actor) then
                 -- Deal damage
-            if data.parent:is_authority() then
-                local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-                attack.attack_info.climb = data.shadowclimb * 8
-            end
+                if data.parent:is_authority() then
+                    local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                    attack.attack_info.climb = data.shadowclimb * 8
+                end
                 if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
                     instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 end
@@ -293,8 +293,8 @@ local initialize = function()
         -- Hitting terrain destroys the missile
         if instance:is_colliding(gm.constants.pSolidBulletCollision) then
             if data.parent:is_authority() then
-            local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-            attack.attack_info.climb = data.shadowclimb * 8
+                local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                attack.attack_info.climb = data.shadowclimb * 8
             end
             if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
                 instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
@@ -352,10 +352,10 @@ local initialize = function()
                 instance.hitowner = 1
             end
             if data.fired == 0 then
-            if data.parent:is_authority() then
-                local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
-                attack.attack_info.climb = data.shadowclimb * 8
-            end
+                if data.parent:is_authority() then
+                    local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                    attack.attack_info.climb = data.shadowclimb * 8
+                end
                 if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
                     instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 end
@@ -444,10 +444,10 @@ local initialize = function()
                         else
                             local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
                         end
-            if data.parent:is_authority() then
-                        local attack = data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
-                        attack.attack_info.climb = data.shadowclimb * 8
-            end
+                        if data.parent:is_authority() then
+                            local attack = data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                            attack.attack_info.climb = data.shadowclimb * 8
+                        end
                     end
                 end
             end
@@ -461,10 +461,10 @@ local initialize = function()
                         else
                             local damage_direction = GM.darccos(GM.sign(other_actor.x - instance.x))
                         end
-            if data.parent:is_authority() then
-                        local attack = data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
-                        attack.attack_info.climb = data.shadowclimb * 8
-            end
+                        if data.parent:is_authority() then
+                            local attack = data.parent:fire_direct(other_actor, data.damage_coefficient / 10, damage_direction, other_actor.x, other_actor.y, spr_none)
+                            attack.attack_info.climb = data.shadowclimb * 8
+                        end
                     end
                 end
                 data.fired = 1
@@ -592,15 +592,15 @@ local initialize = function()
                 beam.sprite_index = spr_beam_c0000
                 beam.mask_index = beam.sprite_index
         
-            if actor:is_authority() then
-                local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
-                attack.attack_info.climb = i * 8 + 16
-                local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
-                chargeflare.sprite_index = spr_beam_flare_0000
-                chargeflare.image_xscale = direction
-                chargeflare.image_yscale = 1
-                chargeflare.image_speed = 0.25
-            end
+                if actor:is_authority() then
+                    local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
+                    attack.attack_info.climb = i * 8 + 16
+                    local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
+                    chargeflare.sprite_index = spr_beam_flare_0000
+                    chargeflare.image_xscale = direction
+                    chargeflare.image_yscale = 1
+                    chargeflare.image_speed = 0.25
+                end
             end
             beam.statetime = 0
             beam.duration = math.min(actor.level * 10, 180)
@@ -660,7 +660,7 @@ local initialize = function()
                         actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
                         actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
                         if actor:is_authority() then
-                        local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
+                            local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
                         end
                         local sparks = GM.instance_create(actor.x + spawn_offset, actor.y - 10, gm.constants.oEfSparks)
                         sparks.sprite_index = gm.constants.sSparks18
