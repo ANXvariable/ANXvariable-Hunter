@@ -577,7 +577,6 @@ local initialize = function()
         local played_sounds = {
             snd_charge = 0
         }
-        log.info(actorData)
         --if actor:is_authority() then
             actor.image_index2 = 0 -- Make sure our animation starts on its first frame
             -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
