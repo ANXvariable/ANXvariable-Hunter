@@ -574,32 +574,32 @@ local initialize = function()
         actor:skill_util_strafe_init()
         actor:skill_util_strafe_turn_init()
         local actorData = actor:get_data()
-    local played_sounds = {
-        snd_charge = 0
-    }
+        local played_sounds = {
+            snd_charge = 0
+        }
         log.info(actorData)
         --if actor:is_authority() then
             actor.image_index2 = 0 -- Make sure our animation starts on its first frame
             -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
             -- Our flag to prevent firing more than once per attack
             data.fired = 0
-            data.charge = 0
-            actorData.beamcharged = 0
-            data.released = 0
-            data.wannacharge = 0
+            data.charge = 0--how long we've been charging, this will scale with attack speed
+            actorData.beamcharged = 0--if the beam is fully charged or not
+            data.released = 0--a variable to stop you from staying in the state if you release-and-press before the state ends
+            data.wannacharge = 0--how long you've held the button to start charging. this is essentially a "charge delay" and will not scale with speed
             for i in pairs(played_sounds) do
                 played_sounds[i] = 0
             end
             actorData.sound_has_played = played_sounds
         --end
-    
+        --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
             local beam_data = beam:get_data()
             beam.image_speed = 0.25
             beam.image_xscale = direction
             if actorData.beamcharged == 1 then
-                beam.sprite_index = spr_beam_c0000
+                beam.sprite_index = spr_beam_c0000--charged beam sprite
                 beam.mask_index = beam.sprite_index
         
                 if actor:is_authority() then
@@ -612,13 +612,13 @@ local initialize = function()
                 chargeflare.image_yscale = 1
                 chargeflare.image_speed = 0.25
             end
-            beam.statetime = 0
-            beam.duration = math.min(actor.level * 10, 180)
+            beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onstep and i use it to do things
+            beam.duration = math.min(actor.level * 10, 180)--like compare it to this variable and destroy it if it has existed too long
             beam_data.shadowclimb = i
             beam_data.parent = actor
-            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)
+            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
             beam_data.damage_coefficient = damage
-            beam_data.doproc = doproc
+            beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onstep
         end
     end)
 
@@ -629,20 +629,20 @@ local initialize = function()
         actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
         actor:skill_util_step_strafe_sprites()
         actor:skill_util_strafe_turn_update()
-        --actor:skill_util_strafe_turn_turn_if_direction_changed()
+        --actor:skill_util_strafe_turn_turn_if_direction_changed()--i used to want to turn while shooting but it didn't work so i commented it out until i find out how it works
         local actorData = actor:get_data()
-        local waterbucket = not actor:control("skill1", 0)
+        local release = not actor:control("skill1", 0)
     --    if not actor:is_authority() then
-    --        waterbucket = gm.bool(actor.activity_var2)
-    --    end
+    --        release = gm.bool(actor.activity_var2)
+    --    end--i took some code from nemmando, this gets referenced later
         local damage = actor:skill_get_damage(skill_primary)
         local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
         local spawn_offset = 5 * direction
-        local doproc = true
+        local doproc = true--i stick this into the "can_proc" arg for fire_direct
 
         --if actor:is_authority() then
-            if actor.image_index2 >= 0 and data.fired == 0 then
+            if actor.image_index2 >= 0 and data.fired == 0 then--fire an uncharged beam as soon as the skill starts, it's just how i want the attack to work
                 data.fired = 1
                 if actor:skill_util_update_heaven_cracker(actor, damage) then
                     doproc = false
@@ -653,19 +653,19 @@ local initialize = function()
                 actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 2 + math.random() * 0.1)
             end
 
-            if not waterbucket and data.released == 0 then
+            if not release and data.released == 0 then--as long as you hold the button down
                 data.wannacharge = data.wannacharge + 1
                 if actor.image_index2 > 0 then
-                    actor.image_index2 = 0
+                    actor.image_index2 = 0--freeze you at the first image index
                 end
-                if data.wannacharge >= 10 then
-                    if data.charge < 50 then
+                if data.wannacharge >= 10 then--the charge delay is 10 frames
+                    if data.charge < 50 then--the charge windup is 50 frames at base attack speed
                         data.charge = data.charge + 1 - ((1 - actor.attack_speed) * 2)
-                        if actorData.sound_has_played["snd_charge"] == 0 then
+                        if actorData.sound_has_played["snd_charge"] == 0 then--play a sound and stop it from playing every frame. it's a table because i was planning on adding more
                             local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
                             actorData.sound_has_played["snd_charge"] = 1
                         end
-                    else
+                    else--once you finish the 50 frame windup
                         if actorData.beamcharged == 0 then
                             actorData.beamcharged = 1
                             actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
@@ -678,8 +678,8 @@ local initialize = function()
                             sparks.depth = actor.depth - 2
                             sparks.image_blend = Color.YELLOW
                         end
-                        if actorData.beamcharged == 1 then
-                            for i = 0, 1 do
+                        if actorData.beamcharged == 1 then--this should probably just say else
+                            for i = 0, 1 do--this is all a horrid monstrosity i created because i wanted my character to flash white while charged and i didn't know how to do that
                                 local chargemask = obj_chargemask:create(actor.x + actor.pHspeed, actor.y + actor.pVspeed)
                                 chargemask.statetime = 0
                                 chargemask.depth = actor.depth - 1
@@ -714,7 +714,7 @@ local initialize = function()
             --        end
             --    end
                 if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
-                    data.fired = 2
+                    data.fired = 2--since i'm firing a second beam
                     if actorData.beamcharged == 1 then
                         damage = damage * 5
                     end
@@ -730,7 +730,7 @@ local initialize = function()
                         GM._mod_sound_stop(snd_chargeloop)
                     end
                 end
-                if data.wannacharge < 10 then
+                if data.wannacharge < 10 then--if you let go of the button quickly because you didn't "wanna charge"
                     data.released = 1
                 end
             end
