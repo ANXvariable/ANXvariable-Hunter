@@ -70,7 +70,7 @@ local initialize = function()
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
     local spr_bomb = load_sprite("hunter_bomb", "sHunterBomb.png")
     local spr_powerbomb = load_sprite("hunter_powerbomb", "sHunterPowerBomb.png")
-    local spr_powerbomb_explosion = load_sprite("hunter_powerbomb_explosion", "sHunterPowerBombExplode.png", 1, 683, 384)
+    local spr_powerbomb_explosion = load_sprite("hunter_powerbomb_explosion", "sHunterPowerBombExplode.png", 8, 889, 499)
     
     -- Colour for the character's skill names on character select
     hunter:set_primary_color(Color.from_rgb(8, 253, 142))
@@ -409,6 +409,7 @@ local initialize = function()
                 powerbombex.image_xscale = 0
                 powerbombex.image_yscale = 0
                 powerbombex.image_alpha = 0.8
+                powerbombex.image_speed = 0.25
                 local powerbombex_data = powerbombex:get_data()
                 powerbombex_data.shadowclimb = data.shadowclimb
                 powerbombex_data.parent = data.parent
@@ -435,6 +436,9 @@ local initialize = function()
         if instance.image_xscale < 1 then
             instance.image_xscale = instance.image_xscale + 0.02
             instance.image_yscale = instance.image_yscale + 0.02
+            if instance.image_index >= 4 then
+                instance.image_index = 3
+            end
             if math.fmod(instance.statetime, 5) == 0 then
                 --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
                 for _, other_actor in ipairs(actor_collisions) do
@@ -470,6 +474,9 @@ local initialize = function()
                 data.fired = 1
             end
             instance.image_alpha = instance.image_alpha - 0.025
+            if instance.image_index >= 7 then
+                instance.image_index = 7
+            end
         end
         if instance.image_alpha <= 0 then
             instance:destroy()
@@ -570,18 +577,20 @@ local initialize = function()
         actor:skill_util_strafe_init()
         actor:skill_util_strafe_turn_init()
         local actorData = actor:get_data()
-        actor.image_index2 = 0 -- Make sure our animation starts on its first frame
-        -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
-        -- Our flag to prevent firing more than once per attack
-        data.fired = 0
-        data.charge = 0
-        actorData.beamcharged = 0
-        data.released = 0
-        data.wannacharge = 0
-        for i in pairs(played_sounds) do
-            played_sounds[i] = 0
+        if actor:is_authority() then
+            actor.image_index2 = 0 -- Make sure our animation starts on its first frame
+            -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
+            -- Our flag to prevent firing more than once per attack
+            data.fired = 0
+            data.charge = 0
+            actorData.beamcharged = 0
+            data.released = 0
+            data.wannacharge = 0
+            for i in pairs(played_sounds) do
+                played_sounds[i] = 0
+            end
+            actorData.sound_has_played = played_sounds
         end
-        actorData.sound_has_played = played_sounds
     
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
@@ -631,97 +640,100 @@ local initialize = function()
         local spawn_offset = 5 * direction
         local doproc = true
 
-        if actor.image_index2 >= 0 and data.fired == 0 then
-            data.fired = 1
-            if actor:skill_util_update_heaven_cracker(actor, damage) then
-                doproc = false
-            end
-                for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                    fireBeam(actor, spawn_offset, direction, damage, doproc, i)
-                end
-            actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 2 + math.random() * 0.1)
-        end
-
-        if not waterbucket and data.released == 0 then
-            data.wannacharge = data.wannacharge + 1
-            if actor.image_index2 > 0 then
-                actor.image_index2 = 0
-            end
-            if data.wannacharge >= 10 then
-                if data.charge < 50 then
-                    data.charge = data.charge + 1 - ((1 - actor.attack_speed) * 2)
-                    if actorData.sound_has_played["snd_charge"] == 0 then
-                        local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
-                        actorData.sound_has_played["snd_charge"] = 1
-                    end
-                else
-                    if actorData.beamcharged == 0 then
-                        actorData.beamcharged = 1
-                        actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
-                        actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
-                        if actor:is_authority() then
-                            local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
-                        end
-                        local sparks = GM.instance_create(actor.x + spawn_offset, actor.y - 10, gm.constants.oEfSparks)
-                        sparks.sprite_index = gm.constants.sSparks18
-                        sparks.depth = actor.depth - 2
-                        sparks.image_blend = Color.YELLOW
-                    end
-                    if actorData.beamcharged == 1 then
-                        for i = 0, 1 do
-                            local chargemask = obj_chargemask:create(actor.x + actor.pHspeed, actor.y + actor.pVspeed)
-                            chargemask.statetime = 0
-                            chargemask.depth = actor.depth - 1
-                            chargemask.image_index = actor.image_index2
-                            if i > 0 then
-                                chargemask.sprite_index = spr_walk_half_chargemask
-                                if actor.sprite_index == spr_idle_half then
-                                    chargemask.sprite_index = spr_idle_half_chargemask
-                                end
-                                chargemask.image_index = actor.image_index
-                                if GM.bool(actor.free) then
-                                    chargemask.sprite_index = spr_jump_half_chargemask
-                                    chargemask.image_index = 0
-                                end
-                            end
-                            chargemask.image_xscale = direction
-                            chargemask.image_alpha = 0.5 * (1 -(math.abs(3 - (math.fmod(data.wannacharge, 6)))) / 3)
-                            local chargemask_data = chargemask:get_data()
-                            chargemask_data.parent = actor
-                        end
-                    end
-                end
-            end
-        else
-        --    if GM._mod_net_isOnline() then
-        --        if GM._mod_net_isHost() then
-        --            GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
-        --        else
-        --            GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
-        --        end
-        --    end
-            if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
-                data.fired = 2
-                if actorData.beamcharged == 1 then
-                    damage = damage * 5
-                end
+        if actor:is_authority() then
+            if actor.image_index2 >= 0 and data.fired == 0 then
+                data.fired = 1
                 if actor:skill_util_update_heaven_cracker(actor, damage) then
                     doproc = false
                 end
                     for i=0, actor:buff_stack_count(buff_shadow_clone) do 
                         fireBeam(actor, spawn_offset, direction, damage, doproc, i)
                     end
-                actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 1.5 + math.random() * 0.1)
-                data.released = 1
-                if GM._mod_sound_isPlaying(snd_chargeloop) then
-                    GM._mod_sound_stop(snd_chargeloop)
+                actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 2 + math.random() * 0.1)
+            end
+
+            if not waterbucket and data.released == 0 then
+                data.wannacharge = data.wannacharge + 1
+                if actor.image_index2 > 0 then
+                    actor.image_index2 = 0
+                end
+                if data.wannacharge >= 10 then
+                    if data.charge < 50 then
+                        data.charge = data.charge + 1 - ((1 - actor.attack_speed) * 2)
+                        if actorData.sound_has_played["snd_charge"] == 0 then
+                            local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
+                            actorData.sound_has_played["snd_charge"] = 1
+                        end
+                    else
+                        if actorData.beamcharged == 0 then
+                            actorData.beamcharged = 1
+                            actor:sound_play(gm.constants.wSpiderSpawn, 1, 0.9)
+                            actor:sound_play(gm.constants.wSpiderHit, 1, 0.9)
+                            if actor:is_authority() then
+                                local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
+                            end
+                            local sparks = GM.instance_create(actor.x + spawn_offset, actor.y - 10, gm.constants.oEfSparks)
+                            sparks.sprite_index = gm.constants.sSparks18
+                            sparks.depth = actor.depth - 2
+                            sparks.image_blend = Color.YELLOW
+                        end
+                        if actorData.beamcharged == 1 then
+                            for i = 0, 1 do
+                                local chargemask = obj_chargemask:create(actor.x + actor.pHspeed, actor.y + actor.pVspeed)
+                                chargemask.statetime = 0
+                                chargemask.depth = actor.depth - 1
+                                chargemask.image_index = actor.image_index2
+                                if i > 0 then
+                                    chargemask.sprite_index = spr_walk_half_chargemask
+                                    if actor.sprite_index == spr_idle_half then
+                                        chargemask.sprite_index = spr_idle_half_chargemask
+                                    end
+                                    chargemask.image_index = actor.image_index
+                                    if GM.bool(actor.free) then
+                                        chargemask.sprite_index = spr_jump_half_chargemask
+                                        chargemask.image_index = 0
+                                    end
+                                end
+                                chargemask.image_xscale = direction
+                                chargemask.image_alpha = 0.5 * (1 -(math.abs(3 - (math.fmod(data.wannacharge, 6)))) / 3)
+                                local chargemask_data = chargemask:get_data()
+                                chargemask_data.parent = actor
+                            end
+                        end
+                    end
+                end
+            else
+            --    these lines were taken from nemmando to try to sync the characters holding down the skill button
+            --    however we discovered that it will set the image xscale for all actors of the same type so we removed it for now
+            --    if GM._mod_net_isOnline() then
+            --        if GM._mod_net_isHost() then
+            --            GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
+            --        else
+            --            GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
+            --        end
+            --    end
+                if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
+                    data.fired = 2
+                    if actorData.beamcharged == 1 then
+                        damage = damage * 5
+                    end
+                    if actor:skill_util_update_heaven_cracker(actor, damage) then
+                        doproc = false
+                    end
+                        for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                            fireBeam(actor, spawn_offset, direction, damage, doproc, i)
+                        end
+                    actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 1.5 + math.random() * 0.1)
+                    data.released = 1
+                    if GM._mod_sound_isPlaying(snd_chargeloop) then
+                        GM._mod_sound_stop(snd_chargeloop)
+                    end
+                end
+                if data.wannacharge < 10 then
+                    data.released = 1
                 end
             end
-            if data.wannacharge < 10 then
-                data.released = 1
-            end
         end
-
     
     
         -- A convenience function that exits this state automatically once the animation ends
