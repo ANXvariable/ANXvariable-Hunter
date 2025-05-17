@@ -592,6 +592,26 @@ local initialize = function()
             end
             actorData.sound_has_played = played_sounds
         --end
+    end)
+
+    -- Executed every game tick during this state
+    state_primary:onStep(function(actor, data)
+        actor.sprite_index2 = spr_shoot1_half
+        -- index2 is needed for strafe sprites to work
+        actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
+        actor:skill_util_step_strafe_sprites()
+        actor:skill_util_strafe_turn_update()
+        --actor:skill_util_strafe_turn_turn_if_direction_changed()--i used to want to turn while shooting but it didn't work so i commented it out until i find out how it works
+        local actorData = actor:get_data()
+        local release = not actor:control("skill1", 0)
+    --    if not actor:is_authority() then
+    --        release = gm.bool(actor.activity_var2)
+    --    end--i took some code from nemmando, this gets referenced later
+        local damage = actor:skill_get_damage(skill_primary)
+        local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
+        local buff_shadow_clone = Buff.find("ror", "shadowClone")
+        local spawn_offset = 5 * direction
+        local doproc = true--i stick this into the "can_proc" arg for fire_direct
         --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
@@ -620,26 +640,6 @@ local initialize = function()
             beam_data.damage_coefficient = damage
             beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onstep
         end
-    end)
-
-    -- Executed every game tick during this state
-    state_primary:onStep(function(actor, data)
-        actor.sprite_index2 = spr_shoot1_half
-        -- index2 is needed for strafe sprites to work
-        actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
-        actor:skill_util_step_strafe_sprites()
-        actor:skill_util_strafe_turn_update()
-        --actor:skill_util_strafe_turn_turn_if_direction_changed()--i used to want to turn while shooting but it didn't work so i commented it out until i find out how it works
-        local actorData = actor:get_data()
-        local release = not actor:control("skill1", 0)
-    --    if not actor:is_authority() then
-    --        release = gm.bool(actor.activity_var2)
-    --    end--i took some code from nemmando, this gets referenced later
-        local damage = actor:skill_get_damage(skill_primary)
-        local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
-        local buff_shadow_clone = Buff.find("ror", "shadowClone")
-        local spawn_offset = 5 * direction
-        local doproc = true--i stick this into the "can_proc" arg for fire_direct
 
         --if actor:is_authority() then
             if actor.image_index2 >= 0 and data.fired == 0 then--fire an uncharged beam as soon as the skill starts, it's just how i want the attack to work
