@@ -93,9 +93,6 @@ local initialize = function()
 
     local hunter_log = Survivor_Log.new(hunter, spr_log, sprites.walk)
 
-    local played_sounds = {
-        snd_charge = 0
-    }
 
     hunter:clear_callbacks()
     hunter:onInit(function(actor)
@@ -577,7 +574,11 @@ local initialize = function()
         actor:skill_util_strafe_init()
         actor:skill_util_strafe_turn_init()
         local actorData = actor:get_data()
-        if actor:is_authority() then
+    local played_sounds = {
+        snd_charge = 0
+    }
+        log.info(actorData)
+        --if actor:is_authority() then
             actor.image_index2 = 0 -- Make sure our animation starts on its first frame
             -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
             -- Our flag to prevent firing more than once per attack
@@ -590,7 +591,7 @@ local initialize = function()
                 played_sounds[i] = 0
             end
             actorData.sound_has_played = played_sounds
-        end
+        --end
     
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
@@ -604,12 +605,12 @@ local initialize = function()
                 if actor:is_authority() then
                     local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
                     attack.attack_info.climb = i * 8 + 16
-                    local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
-                    chargeflare.sprite_index = spr_beam_flare_0000
-                    chargeflare.image_xscale = direction
-                    chargeflare.image_yscale = 1
-                    chargeflare.image_speed = 0.25
                 end
+                local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
+                chargeflare.sprite_index = spr_beam_flare_0000
+                chargeflare.image_xscale = direction
+                chargeflare.image_yscale = 1
+                chargeflare.image_speed = 0.25
             end
             beam.statetime = 0
             beam.duration = math.min(actor.level * 10, 180)
@@ -640,7 +641,7 @@ local initialize = function()
         local spawn_offset = 5 * direction
         local doproc = true
 
-        if actor:is_authority() then
+        --if actor:is_authority() then
             if actor.image_index2 >= 0 and data.fired == 0 then
                 data.fired = 1
                 if actor:skill_util_update_heaven_cracker(actor, damage) then
@@ -733,7 +734,7 @@ local initialize = function()
                     data.released = 1
                 end
             end
-        end
+        --end
     
     
         -- A convenience function that exits this state automatically once the animation ends
