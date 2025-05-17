@@ -210,7 +210,7 @@ local initialize = function()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
-        instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed
+        instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
 
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -223,7 +223,7 @@ local initialize = function()
                 end
                 if data.parent:is_authority() then
                     local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
-                    attack.attack_info.climb = data.shadowclimb * 8
+                    attack.attack_info.climb = data.shadowclimb * 8--this is accounting for being from a shadow clone
                 end
 
                 -- Destroy the beam
@@ -253,7 +253,7 @@ local initialize = function()
             instance:destroy()
             return
         end
-        instance.statetime = instance.statetime + 1
+        instance.statetime = instance.statetime + 1--statetime tracks how long the beam has existed, duration is set by the creator
     end)
 
     local obj_missile = Object.new(NAMESPACE, "hunter_missile")
