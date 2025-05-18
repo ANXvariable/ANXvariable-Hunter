@@ -184,7 +184,7 @@ local initialize = function()
     --end
     --if actor.sprite_index == sprites.death and actor.image_index == 2 then
     --    actor:sound_play(snd_ondeath, 1, 1)
-    --end--actor onstep doesn't run when you die i guess
+    --end--actor onStep doesn't run when you die i guess
     end)
 
     local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
@@ -437,7 +437,12 @@ local initialize = function()
                 instance.image_index = 3
             end
             if math.fmod(instance.statetime, 5) == 0 then
-                --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                if instance.statetime == 0 then
+                    if data.parent:is_authority() then
+                        local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient / 10, spr_none, spr_none)
+                        attack.attack_info.climb = data.shadowclimb * 8
+                    end
+                end
                 for _, other_actor in ipairs(actor_collisions) do
                     if data.parent:attack_collision_canhit(other_actor) then
                         if other_actor.x == instance.x then
@@ -454,7 +459,7 @@ local initialize = function()
             end
         else
             if data.fired == 0 then
-                --data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, data.damage_coefficient / 10, spr_none, spr_none)
+                data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, 0, spr_none, spr_none)
                 for _, other_actor in ipairs(actor_collisions) do
                     if data.parent:attack_collision_canhit(other_actor) then
                         if other_actor.x == instance.x then
