@@ -636,13 +636,13 @@ local initialize = function()
                 chargeflare.image_yscale = 1
                 chargeflare.image_speed = 0.25
             end
-            beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onstep and i use it to do things
+            beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onStep and i use it to do things
             beam.duration = math.min(actor.level * 10, 180)--like compare it to this variable and destroy it if it has existed too long
             beam_data.shadowclimb = i
             beam_data.parent = actor
             beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
             beam_data.damage_coefficient = damage
-            beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onstep
+            beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
         end
 
         --if actor:is_authority() then
