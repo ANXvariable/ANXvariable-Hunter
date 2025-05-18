@@ -518,7 +518,8 @@ local initialize = function()
     skill_primary.require_key_press = true
     skill_primary.use_delay = 5
     skill_secondary:set_skill_properties(4.0, 120)
-    skill_secondary:set_skill_stock(5, 5, true, 1)
+    local base_stocks = 5
+    skill_secondary:set_skill_stock(base_stocks, base_stocks, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
     skill_utility.is_utility = true
@@ -559,6 +560,20 @@ local initialize = function()
     
     skill_secondary:onActivate(function(actor, skill, index)
         actor:enter_state(state_secondary)
+    end)
+
+    skill_secondary:onStep(function(actor, skill)
+        --skill.max_stock = base_stocks + actor.level - 1 + actor:item_stack_count(Item.find("ror", "backupMagazine"))
+        local mags = actor:item_stack_count(Item.find("ror", "backupMagazine"))
+        local data = actor:get_data()
+        if not data.actorLevelPrev then--initialize a rudimentary method to detect if my level has changed
+            data.actorLevelPrev = actor.level
+        elseif data.actorLevelPrev ~= actor.level then--i want this skill's stocks to increase if the actor levels up
+            data.actorLevelPrev = actor.level
+            skill.max_stock = skill.max_stock + actor.level - 1
+        elseif mags > 0 and skill.max_stock == base_stocks + mags then--trying to account for backup mags because picking one up keeps resetting my max stocks to the base before adding the mag count
+            skill.max_stock = base_stocks + actor.level - 1 + mags
+        end
     end)
     
     skill_utility:onActivate(function(actor, skill, index)
