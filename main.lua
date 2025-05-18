@@ -664,9 +664,9 @@ local initialize = function()
                 end
                 if data.wannacharge >= 10 then--the charge delay is 10 frames
                     if data.charge < 50 then--the charge windup is 50 frames at base attack speed
-                        data.charge = data.charge + 1 - ((1 - actor.attack_speed) * 2)
+                        data.charge = data.charge + 1 + ((actor.attack_speed - 1) * 2.5)
                         if actorData.sound_has_played["snd_charge"] == 0 then--play a sound and stop it from playing every frame. it's a table because i was planning on adding more
-                            local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 - ((1 - actor.attack_speed) * 2) - 0.24))
+                            local chargeinitsfx = actor:sound_play(gm.constants.wLoader_BulletPunch_Start, 1, math.max(0, 1 + ((actor.attack_speed - 1) * 2) - 0.24))
                             actorData.sound_has_played["snd_charge"] = 1
                         end
                     else--once you finish the 50 frame windup
@@ -844,7 +844,7 @@ local initialize = function()
         if actor.invincible < 10 then 
             actor.invincible = 10
         end
-        actor.pHspeed = direction * actor.pHmax * 6
+        actor.pHspeed = direction * actor.pHmax * 6 * actor.attack_speed
         actor.pVspeed = 0
         actor.y = actor.shiftedfrom
 
