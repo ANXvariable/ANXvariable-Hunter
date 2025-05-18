@@ -117,7 +117,7 @@ local initialize = function()
 
     hunter:set_stats_level({
         maxhp = 32,
-        damage = 3,
+        damage = 3.3125,
         regen = 0.002,
     })
 
