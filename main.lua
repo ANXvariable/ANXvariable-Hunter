@@ -16,6 +16,36 @@ local NAMESPACE = "ANXvariable"
 local initialize = function() 
     local hunter = Survivor.new(NAMESPACE, "hunter")
 
+    --tempsection
+        local hijump = Item.new(NAMESPACE, "hiJumpBoots", true)
+        hijump:set_sprite(gm.constants.sJetpack)
+        hijump:set_tier(5)
+        hijump:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
+        hijump:toggle_loot(false)
+        hijump.is_hidden = true
+        hijump:clear_callbacks()
+        hijump:onStatRecalc(function(actor, stack)
+            actor.pVmax = actor.pVmax + 2.4 * stack
+        end)
+
+        local missiletank = Item.new(NAMESPACE, "missileTank", true)
+        missiletank:set_sprite(gm.constants.sMissileBox)
+        missiletank:set_tier(5)
+        missiletank:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
+        missiletank:toggle_loot(false)
+        missiletank.is_hidden = true
+        missiletank:clear_callbacks()
+        missiletank:onAcquire(function(actor, stack)
+            local skill2 = actor:get_active_skill(Skill.SLOT.secondary)
+            skill2.stock = skill2.stock + 1
+        end)
+        missiletank:onStatRecalc(function(actor, stack)
+            local skill2 = actor:get_active_skill(Skill.SLOT.secondary)
+            skill2.max_stock = skill2.max_stock + stack
+        end)
+
+    --end-tempsection
+
     -- Utility function for getting paths concisely
     local load_sprite = function (id, filename, frames, orig_x, orig_y, speed, left, top, right, bottom) 
         local sprite_path = path.combine(PATH, "Sprites",  filename)
@@ -104,6 +134,10 @@ local initialize = function()
         actor.sprite_jump_peak_half = Array.new({sprites.jump_peak, spr_jump_peak_half, 0})
         actor.sprite_fall_half = Array.new({sprites.fall, spr_fall_half, 0})
 
+        data.mtanks = 0
+        data.HJB = 0
+        data.SpJB = 0
+
         actor:survivor_util_init_half_sprites()
     end)
 
@@ -176,6 +210,18 @@ local initialize = function()
     --    if actor:control("jump", 1) then
     --        log.info("jc on jump = "..actor.jump_count)
     --    end
+
+    --Missile tanks on -level
+    if actor:item_stack_count(missiletank) < actor.level then
+        actor:item_give(missiletank)
+        data.mtanks = actor:item_stack_count(missiletank)
+    end
+
+    --Hi-jump boots on-level
+    if actor.level >= 10 and not GM.bool(data.HJB) then
+        data.HJB = 1
+        actor:item_give(hijump)
+    end
 
     --onDeath
     --if actor:control("jump", 0) then
@@ -518,7 +564,7 @@ local initialize = function()
     skill_primary.require_key_press = true
     skill_primary.use_delay = 5
     skill_secondary:set_skill_properties(4.0, 120)
-    local base_stocks = 5
+    local base_stocks = 4
     skill_secondary:set_skill_stock(base_stocks, base_stocks, true, 1)
     skill_utility:set_skill_properties(0.0, 240)
     skill_utility:set_skill_stock(2, 2, true, 1)
@@ -563,17 +609,7 @@ local initialize = function()
     end)
 
     skill_secondary:onStep(function(actor, skill)
-        --skill.max_stock = base_stocks + actor.level - 1 + actor:item_stack_count(Item.find("ror", "backupMagazine"))
-        local mags = actor:item_stack_count(Item.find("ror", "backupMagazine"))
         local data = actor:get_data()
-        if not data.actorLevelPrev then--initialize a rudimentary method to detect if my level has changed
-            data.actorLevelPrev = actor.level
-        elseif data.actorLevelPrev ~= actor.level then--i want this skill's stocks to increase if the actor levels up
-            data.actorLevelPrev = actor.level
-            skill.max_stock = skill.max_stock + actor.level - 1
-        elseif mags > 0 and skill.max_stock == base_stocks + mags then--trying to account for backup mags because picking one up keeps resetting my max stocks to the base before adding the mag count
-            skill.max_stock = base_stocks + actor.level - 1 + mags
-        end
     end)
     
     skill_utility:onActivate(function(actor, skill, index)
