@@ -895,7 +895,7 @@ local initialize = function()
         if actor.invincible < 10 then 
             actor.invincible = 10
         end
-        actor.pHspeed = direction * actor.pHmax * 6 * actor.attack_speed
+        actor.pHspeed = direction * actor.pHmax * 6 * (math.min(actor.attack_speed, 3))
         actor.pVspeed = 0
         actor.y = actor.shiftedfrom
 
