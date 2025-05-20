@@ -44,6 +44,14 @@ local initialize = function()
             skill2.max_stock = skill2.max_stock + stack
         end)
 
+        local spazerbeam = Item.new(NAMESPACE, "spazerBeam", true)
+        spazerbeam:set_sprite(gm.constants.sJewel)
+        spazerbeam:set_tier(5)
+        spazerbeam:set_loot_tags(Item.LOOT_TAG.category_damage)
+        spazerbeam:toggle_loot(false)
+        spazerbeam.is_hidden = true
+        spazerbeam:clear_callbacks()
+
     --end-tempsection
 
     -- Utility function for getting paths concisely
@@ -95,6 +103,7 @@ local initialize = function()
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
     local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
+    local spr_beam_cs000 = load_sprite("hunter_beam_cs000", "sHunterBeamCS000.png", 4, 14, 4)
     local spr_beam_flare_0000 = load_sprite("hunter_beam_flare_0000", "sSparksHunterChargeFlare.png", 5, 12, 12)
     local spr_missile = load_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
@@ -137,6 +146,7 @@ local initialize = function()
         data.mtanks = 0
         data.HJB = 0
         data.SpJB = 0
+        data.spazer = 0
 
         actor:survivor_util_init_half_sprites()
     end)
@@ -223,6 +233,12 @@ local initialize = function()
         actor:item_give(hijump)
     end
 
+    --Spazer Beam on-level
+    if actor.level >= 12 and not GM.bool(data.spazer) then
+        data.spazer = 1
+        actor:item_give(spazerbeam)
+    end
+
     --onDeath
     --if actor:control("jump", 0) then
     --    log.info("asci = "..actor.actor_state_current_id)
@@ -257,6 +273,14 @@ local initialize = function()
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
+        if instance.statetime < 3 then
+            if data.shot == 2 then
+                instance.y = instance.y - 3
+            end
+            if data.shot == 3 then
+                instance.y = instance.y + 3
+            end
+        end
 
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -269,7 +293,7 @@ local initialize = function()
                 end
                 if data.parent:is_authority() then
                     local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
-                    attack.attack_info.climb = data.shadowclimb * 8--this is accounting for being from a shadow clone
+                    attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
                 end
 
                 -- Destroy the beam
@@ -668,32 +692,43 @@ local initialize = function()
         local spawn_offset = 5 * direction
         local doproc = true--i stick this into the "can_proc" arg for fire_direct
         --i make you shoot a beam up to 2 times in this state so i made it a function
+        actorData.shots = 1
+        if actorData.spazer > 0 then
+            actorData.shots = 3
+        end
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
-            local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
-            local beam_data = beam:get_data()
-            beam.image_speed = 0.25
-            beam.image_xscale = direction
-            if actorData.beamcharged == 1 then
-                beam.sprite_index = spr_beam_c0000--charged beam sprite
-                beam.mask_index = beam.sprite_index
-        
-                if actor:is_authority() then
-                    local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
-                    attack.attack_info.climb = i * 8 + 16
+            for b = 1, actorData.shots do
+                local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
+                local beam_data = beam:get_data()
+                beam.image_speed = 0.25
+                beam.image_xscale = direction
+                if actorData.beamcharged == 1 then
+                    beam.sprite_index = spr_beam_c0000--charged beam sprite
+                    beam.mask_index = beam.sprite_index
+                    if actorData.spazer == 1 then
+                        beam.sprite_index = spr_beam_cs000
+                        beam.mask_index = beam.sprite_index
+                    end
+                
+                    if actor:is_authority() then
+                        local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
+                        attack.attack_info.climb = i * 8 + 16
+                    end
+                    local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
+                    chargeflare.sprite_index = spr_beam_flare_0000
+                    chargeflare.image_xscale = direction
+                    chargeflare.image_yscale = 1
+                    chargeflare.image_speed = 0.25
                 end
-                local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
-                chargeflare.sprite_index = spr_beam_flare_0000
-                chargeflare.image_xscale = direction
-                chargeflare.image_yscale = 1
-                chargeflare.image_speed = 0.25
+                beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onStep and i use it to do things
+                beam.duration = math.min(actor.level * 10, 180)--like compare it to this variable and destroy it if it has existed too long
+                beam_data.shadowclimb = i
+                beam_data.parent = actor
+                beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
+                beam_data.damage_coefficient = damage
+                beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
+                beam_data.shot = b
             end
-            beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onStep and i use it to do things
-            beam.duration = math.min(actor.level * 10, 180)--like compare it to this variable and destroy it if it has existed too long
-            beam_data.shadowclimb = i
-            beam_data.parent = actor
-            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
-            beam_data.damage_coefficient = damage
-            beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
         end
 
         --if actor:is_authority() then
