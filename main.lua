@@ -287,6 +287,14 @@ local initialize = function()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
+        local all = Instance.find_all(obj_beam)--too many of these lag so we KILL them
+        for _, other_beam in ipairs(all) do
+            if _ > 18 then
+                instance:destroy()
+                return
+            end
+        end
+        
         local slow2 = Buff.find("ror-slow2")
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
         if instance.statetime < 3 then--this is to reposition extra beams from the spazer upgrade
