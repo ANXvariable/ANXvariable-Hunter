@@ -60,6 +60,14 @@ local initialize = function()
         icebeam.is_hidden = true
         icebeam:clear_callbacks()
 
+        local wavebeam = Item.new(NAMESPACE, "waveBeam", true)
+        wavebeam:set_sprite(gm.constants.sTesla)
+        wavebeam:set_tier(5)
+        wavebeam:set_loot_tags(Item.LOOT_TAG.category_damage)
+        wavebeam:toggle_loot(false)
+        wavebeam.is_hidden = true
+        wavebeam:clear_callbacks()
+
     --end-tempsection
 
     -- Utility function for getting paths concisely
@@ -156,6 +164,7 @@ local initialize = function()
         data.SpJB = 0
         data.spazer = 0
         data.ice = 0
+        data.wave = 0
 
         actor:survivor_util_init_half_sprites()
     end)
@@ -254,6 +263,13 @@ local initialize = function()
         actor:item_give(icebeam)
     end
 
+    --Wave Beam on-level
+    if actor.level >= 16 and not GM.bool(data.wave) then
+        data.wave = 1
+        actor:item_give(wavebeam)
+    end
+
+
     --onDeath
     --if actor:control("jump", 0) then
     --    log.info("asci = "..actor.actor_state_current_id)
@@ -297,12 +313,20 @@ local initialize = function()
         
         local slow2 = Buff.find("ror-slow2")
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
-        if instance.statetime < 3 then--this is to reposition extra beams from the spazer upgrade
+        if instance.statetime < 3 and not GM.bool(data.wave) then--this is to reposition extra beams from the spazer upgrade
             if data.shot == 2 then
                 instance.y = instance.y - 3
             end
             if data.shot == 3 then
                 instance.y = instance.y + 3
+            end
+        end
+        if GM.bool(data.wave) and GM.bool(data.spazer) then--wave shots move... in a wave
+            if data.shot == 2 then
+                instance.y = instance.y - GM.cos(instance.statetime / 10)
+            end
+            if data.shot == 3 then
+                instance.y = instance.y + GM.cos(instance.statetime / 10)
             end
         end
 
@@ -340,7 +364,7 @@ local initialize = function()
         end
 
         -- Hitting terrain destroys the beam
-        if instance:is_colliding(gm.constants.pSolidBulletCollision) then
+        if instance:is_colliding(gm.constants.pSolidBulletCollision) and not GM.bool(data.wave) then
             instance:destroy()
             return
         end
@@ -735,6 +759,9 @@ local initialize = function()
         if actorData.ice > 0 then
             damage = damage * 1.5
         end
+        if actorData.wave > 0 then
+            damage = damage * 1.5
+        end
         --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             for b = 1, actorData.shots do
@@ -773,6 +800,7 @@ local initialize = function()
                 beam_data.shot = b
                 beam_data.spazer = actorData.spazer
                 beam_data.ice = actorData.ice
+                beam_data.wave = actorData.wave
             end
         end
 
