@@ -289,7 +289,7 @@ local initialize = function()
         local data = instance:get_data()
         local slow2 = Buff.find("ror-slow2")
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
-        if instance.statetime < 3 then
+        if instance.statetime < 3 then--this is to reposition extra beams from the spazer upgrade
             if data.shot == 2 then
                 instance.y = instance.y - 3
             end
@@ -307,13 +307,13 @@ local initialize = function()
                 if data.horizontal_velocity < 0 then
                     damage_direction = 180
                 end
-                if data.parent:is_authority() then
+                if data.parent:is_authority() then--authoritative attack to prevent double networked hitboxes
                     local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
                     attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
                 end
-                if GM.bool(data.ice) then
+                if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss, but...
                     if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and other_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
-                        other_actor:buff_remove(slow2)
+                        other_actor:buff_remove(slow2)--...the previous line throws errors if the enemy is segmented, like a worm, or a bramble. i presume other_actor.hp is nil but idk how to avoid that
 				        Alarm.create(function()
                             if other_actor.hp > 0 then
                                 GM.apply_buff(other_actor, slow2, 4 * 60, 1)
