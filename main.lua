@@ -52,6 +52,14 @@ local initialize = function()
         spazerbeam.is_hidden = true
         spazerbeam:clear_callbacks()
 
+        local icebeam = Item.new(NAMESPACE, "iceBeam", true)
+        icebeam:set_sprite(gm.constants.sIceRelic)
+        icebeam:set_tier(5)
+        icebeam:set_loot_tags(Item.LOOT_TAG.category_damage)
+        icebeam:toggle_loot(false)
+        icebeam.is_hidden = true
+        icebeam:clear_callbacks()
+
     --end-tempsection
 
     -- Utility function for getting paths concisely
@@ -147,6 +155,7 @@ local initialize = function()
         data.HJB = 0
         data.SpJB = 0
         data.spazer = 0
+        data.ice = 0
 
         actor:survivor_util_init_half_sprites()
     end)
@@ -239,6 +248,12 @@ local initialize = function()
         actor:item_give(spazerbeam)
     end
 
+    --Ice Beam on-level
+    if actor.level >= 14 and not GM.bool(data.ice) then
+        data.ice = 1
+        actor:item_give(icebeam)
+    end
+
     --onDeath
     --if actor:control("jump", 0) then
     --    log.info("asci = "..actor.actor_state_current_id)
@@ -272,6 +287,7 @@ local initialize = function()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
+        local slow2 = Buff.find("ror-slow2")
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
         if instance.statetime < 3 then
             if data.shot == 2 then
@@ -294,6 +310,16 @@ local initialize = function()
                 if data.parent:is_authority() then
                     local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
                     attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
+                end
+                if GM.bool(data.ice) then
+                    if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and other_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
+                        other_actor:buff_remove(slow2)
+				        Alarm.create(function()
+                            if other_actor.hp > 0 then
+                                GM.apply_buff(other_actor, slow2, 4 * 60, 1)
+                            end
+                        end, 1)
+                    end
                 end
 
                 -- Destroy the beam
@@ -691,17 +717,23 @@ local initialize = function()
         local buff_shadow_clone = Buff.find("ror", "shadowClone")
         local spawn_offset = 5 * direction
         local doproc = true--i stick this into the "can_proc" arg for fire_direct
-        --i make you shoot a beam up to 2 times in this state so i made it a function
         actorData.shots = 1
         if actorData.spazer > 0 then
             actorData.shots = 3
         end
+        if actorData.ice > 0 then
+            damage = damage * 1.5
+        end
+        --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             for b = 1, actorData.shots do
                 local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
                 local beam_data = beam:get_data()
                 beam.image_speed = 0.25
                 beam.image_xscale = direction
+                if actorData.ice > 0 then
+                    beam.image_blend = Color.AQUA
+                end
                 if actorData.beamcharged == 1 then
                     beam.sprite_index = spr_beam_c0000--charged beam sprite
                     beam.mask_index = beam.sprite_index
@@ -728,6 +760,7 @@ local initialize = function()
                 beam_data.damage_coefficient = damage
                 beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
                 beam_data.shot = b
+                beam_data.ice = actorData.ice
             end
         end
 
