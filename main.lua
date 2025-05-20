@@ -68,6 +68,14 @@ local initialize = function()
         wavebeam.is_hidden = true
         wavebeam:clear_callbacks()
 
+        local plasmabeam = Item.new(NAMESPACE, "plasmaBeam", true)
+        plasmabeam:set_sprite(gm.constants.sOrbiter)
+        plasmabeam:set_tier(5)
+        plasmabeam:set_loot_tags(Item.LOOT_TAG.category_damage)
+        plasmabeam:toggle_loot(false)
+        plasmabeam.is_hidden = true
+        plasmabeam:clear_callbacks()
+
     --end-tempsection
 
     -- Utility function for getting paths concisely
@@ -165,6 +173,7 @@ local initialize = function()
         data.spazer = 0
         data.ice = 0
         data.wave = 0
+        data.plasma = 0
 
         actor:survivor_util_init_half_sprites()
     end)
@@ -269,6 +278,12 @@ local initialize = function()
         actor:item_give(wavebeam)
     end
 
+    --Plasma Beam on-level
+    if actor.level >= 17 and not GM.bool(data.plasma) then
+        data.plasma = 1
+        actor:item_give(plasmabeam)
+    end
+
 
     --onDeath
     --if actor:control("jump", 0) then
@@ -339,9 +354,10 @@ local initialize = function()
                 if data.horizontal_velocity < 0 then
                     damage_direction = 180
                 end
-                if data.parent:is_authority() then--authoritative attack to prevent double networked hitboxes
+                if data.parent:is_authority() and data.canhit >= 1 then--authoritative attack to prevent double networked hitboxes
                     local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
                     attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
+                    data.canhit = 0
                 end
                 if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss
                     if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and GM.attack_collision_resolve(other_actor).hp > 0 and not GM.actor_is_boss(other_actor) then
@@ -357,10 +373,16 @@ local initialize = function()
                     end
                 end
 
-                -- Destroy the beam
-                instance:destroy()
-                return
+                -- Destroy the beam if not plasma
+                if not GM.bool(data.plasma) or GM.actor_is_boss(other_actor) then
+                    instance:destroy()
+                    return
+                end
             end
+        end
+        local canhitwhen = 2
+        if GM.bool(data.plasma) and data.canhit < 1 then
+            data.canhit = data.canhit + (1 / canhitwhen)
         end
 
         -- Hitting terrain destroys the beam
@@ -762,6 +784,9 @@ local initialize = function()
         if actorData.wave > 0 then
             damage = damage * 1.25
         end
+        if actorData.plasma > 0 then
+            damage = damage * 1.25
+        end
         --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             for b = 1, actorData.shots do
@@ -797,10 +822,12 @@ local initialize = function()
                 beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
                 beam_data.damage_coefficient = damage
                 beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
+                beam_data.canhit = 1
                 beam_data.shot = b
                 beam_data.spazer = actorData.spazer
                 beam_data.ice = actorData.ice
                 beam_data.wave = actorData.wave
+                beam_data.plasma = actorData.plasma
             end
         end
 
