@@ -528,7 +528,7 @@ local initialize = function()
                 if parentalignx ~= instance.x then
                     data.parent.pHspeed = data.parent.pHspeed + 2.8 * GM.sign(diffx)
                 end
-                data.parent.pVspeed = data.parent.pVmax * -1.25
+                data.parent.pVspeed = -8
                 instance.hitowner = 1
             end
             if data.fired == 0 then
