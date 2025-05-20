@@ -768,6 +768,7 @@ local initialize = function()
                 beam_data.damage_coefficient = damage
                 beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
                 beam_data.shot = b
+                beam_data.spazer = actorData.spazer
                 beam_data.ice = actorData.ice
             end
         end
