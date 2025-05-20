@@ -323,8 +323,11 @@ local initialize = function()
                     if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and GM.attack_collision_resolve(other_actor).hp > 0 and not GM.actor_is_boss(other_actor) then
                         GM.remove_buff(GM.attack_collision_resolve(other_actor), slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
 				        Alarm.create(function()
-                            if GM.attack_collision_resolve(other_actor).hp > 0 then
+                            if not Instance.exists(other_actor) then
+                                return
+                            elseif GM.attack_collision_resolve(other_actor).hp > 0 then--i have redundant checks for if the actor is still alive but yknow
                                 GM.apply_buff(GM.attack_collision_resolve(other_actor), slow2, 4 * 60, 1)
+                                --log.info("success")
                             end
                         end, 1)
                     end
