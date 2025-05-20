@@ -320,11 +320,11 @@ local initialize = function()
                     attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
                 end
                 if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss, but...
-                    if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and other_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
-                        other_actor:buff_remove(slow2)--...the previous line throws errors if the enemy is segmented, like a worm, or a bramble. i presume other_actor.hp is nil but idk how to avoid that
+                    if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and GM.attack_collision_resolve(other_actor).hp > 0 and not GM.actor_is_boss(other_actor) then
+                        GM.remove_buff(GM.attack_collision_resolve(other_actor), slow2)--...the previous line throws errors if the enemy is segmented, like a worm, or a bramble. i presume other_actor.hp is nil but idk how to avoid that
 				        Alarm.create(function()
-                            if other_actor.hp > 0 then
-                                GM.apply_buff(other_actor, slow2, 4 * 60, 1)
+                            if GM.attack_collision_resolve(other_actor).hp > 0 then
+                                GM.apply_buff(GM.attack_collision_resolve(other_actor), slow2, 4 * 60, 1)
                             end
                         end, 1)
                     end
