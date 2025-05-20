@@ -757,10 +757,10 @@ local initialize = function()
             actorData.shots = 3
         end
         if actorData.ice > 0 then
-            damage = damage * 1.5
+            damage = damage * 1.25
         end
         if actorData.wave > 0 then
-            damage = damage * 1.5
+            damage = damage * 1.25
         end
         --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
