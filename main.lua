@@ -483,6 +483,9 @@ local initialize = function()
             data.canhit = data.canhit + (1 / canhitwhen)
         end
 
+        if instance:is_colliding(gm.constants.pEnvironmentShootable) then
+            data.parent:fire_explosion(instance.x, instance.y, 32, 32, 0, spr_none, spr_none, false)
+        end
         -- Hitting terrain destroys the beam
         if instance:is_colliding(gm.constants.pSolidBulletCollision) and not GM.bool(data.wave) then
             instance:destroy()
