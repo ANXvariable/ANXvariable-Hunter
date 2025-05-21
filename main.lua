@@ -422,6 +422,7 @@ local initialize = function()
         end
         
         local slow2 = Buff.find("ror-slow2")
+        local snare = Buff.find("ror-snare")
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
         if instance.statetime < 3 and not GM.bool(data.wave) then--this is to reposition extra beams from the spazer upgrade
             if data.shot == 2 then
@@ -458,6 +459,7 @@ local initialize = function()
                 if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss
                     if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and resolved_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
                         GM.remove_buff(resolved_actor, slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
+                        GM.apply_buff(resolved_actor, snare, 4 * 60, 1)
 				        Alarm.create(function()
                             if not Instance.exists(other_actor) or type(resolved_actor) == "number" then
                                 return
@@ -470,7 +472,7 @@ local initialize = function()
                 end
 
                 -- Destroy the beam if not plasma
-                if not GM.bool(data.plasma) or GM.actor_is_boss(other_actor) then
+                if not GM.bool(data.plasma) or GM.actor_is_boss(resolved_actor) then
                     instance:destroy()
                     return
                 end
