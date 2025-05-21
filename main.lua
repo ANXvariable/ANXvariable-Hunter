@@ -221,7 +221,7 @@ local initialize = function()
 
     hunter:onStep(function(actor)
         local data = actor:get_data()
-        local ssrData = actor:get_data("main", "ssr")
+        local ssrData = actor:get_data("main", "RobomandosLab-Starstorm Returns")
         local free = GM.bool(actor.free)
         local usedAllFeathers = actor.jump_count >= actor:item_stack_count(Item.find("ror-hopooFeather"))
         local climbing = GM.actor_state_is_climb_state(actor.actor_state_current_id)
@@ -236,14 +236,14 @@ local initialize = function()
         end
         local walljumpable = free and wallx ~= 0
 
-        if walljumpable and not data.hunterJump_feather_preserve and not data.iceTool_feather_preserve then
+        if walljumpable and not data.hunterJump_feather_preserve and not ssrData.iceTool_feather_preserve then
             data.hunterJump_feather_preserve = actor.jump_count
             actor.jump_count = math.huge
-        elseif walljumpable and not data.hunterJump_feather_preserve and data.iceTool_feather_preserve and data.iceTool_feather_preserve ~= math.huge then
-            data.hunterJump_feather_preserve = data.iceTool_feather_preserve
+        elseif walljumpable and not data.hunterJump_feather_preserve and ssrData.iceTool_feather_preserve and ssrData.iceTool_feather_preserve ~= math.huge then
+            data.hunterJump_feather_preserve = ssrData.iceTool_feather_preserve
         elseif walljumpable and not data.hunterJump_feather_preserve then
             data.hunterJump_feather_preserve = math.max(0, actor:item_stack_count(Item.find("ror", "hopooFeather")) - 1)
-        elseif not walljumpable and data.hunterJump_feather_preserve and data.iceTool_feather_preserve ~= math.huge and data.hunterJump_feather_preserve ~= math.huge then
+        elseif not walljumpable and data.hunterJump_feather_preserve and ssrData.iceTool_feather_preserve ~= math.huge and data.hunterJump_feather_preserve ~= math.huge then
             actor.jump_count = data.hunterJump_feather_preserve
             data.hunterJump_feather_preserve = nil
         end
@@ -251,16 +251,6 @@ local initialize = function()
     --        actor.jump_count = math.huge
     --    end
     --    the above lines stay commented or iceTool fucking kills me apparently even though that's where i got this from
-    --    if free and (actor:control("left", 0) or actor:control("right", 0)) and actor:item_stack_count(Item.find("ssr", "iceTool")) > 0 then
-    --        log.info("wallx =      "..wallx)
-    --        log.info("jump_count = "..actor.jump_count)
-    --        if data.hunterJump_feather_preserve then
-    --        log.info("HJFP = "..data.hunterJump_feather_preserve)
-    --        end
-            if data.iceTool_feather_preserve then
-            log.info("ITFP = "..data.iceTool_feather_preserve)
-            end
-    --    end--this info log stays uncommented because apparently data.iceTool_feather_preserve never returns true or something so I never saw this log. ever. so it stays while i test if it ever will work.
 
 
         if actor:control("jump", 1) and walljumpable and not cv then
