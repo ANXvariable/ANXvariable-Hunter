@@ -25,6 +25,7 @@ There is also a modGUI option to reduce the lag caused by having too many beams 
   - Azzy "AzulineSkye"
   - Miguelito
   - Team RobomandosLab
+  - Team ReturnsAPI
   - DixiE (Survivor Modding Guide)
 
 ## Multiplayer
