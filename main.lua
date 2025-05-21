@@ -354,10 +354,10 @@ local initialize = function()
         
         local maxbeams = 24
         if GM.bool(data.spazer) then
-            maxbeams = maxbeams - 6
+            maxbeams = maxbeams - 9
         end
         if GM.bool(data.plasma) then
-            maxbeams = maxbeams - 6
+            maxbeams = maxbeams - 3
         end
         local all = Instance.find_all(obj_beam)--too many of these lag so we KILL them
         for _, other_beam in ipairs(all) do
