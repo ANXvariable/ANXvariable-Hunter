@@ -132,10 +132,6 @@ local initialize = function()
     local spr_fall_half = load_sprite("hunter_fall_half", "sHunterJumpHalf.png", 1, 12, 24)
 
     local spr_shoot1_half = load_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 13, 25)
-    local spr_shoot1_half_chargemask = load_sprite("hunter_shoot1_half_chargemask", "sHunterShoot1HalfChargeMask.png", 4, 13, 25)
-    local spr_idle_half_chargemask = load_sprite("hunter_idle_half_chargemask", "sHunterIdleHalfChargeMask.png", 1, 14, 15)
-    local spr_walk_half_chargemask = load_sprite("hunter_walk_half_chargemask", "sHunterRunHalfChargeMask.png", 4, 12, 24)
-    local spr_jump_half_chargemask = load_sprite("hunter_jump_half_chargemask", "sHunterJumpHalfChargeMask.png", 1, 12, 24)
     
     --placeholder category, todo organize later
     local spr_skills = load_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
@@ -339,22 +335,6 @@ local initialize = function()
         --if actor.sprite_index == sprites.death and actor.image_index == 2 then
         --    actor:sound_play(snd_ondeath, 1, 1)
         --end--actor onStep doesn't run when you die i guess
-    end)
-
-    local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
-    obj_chargemask.obj_sprite = spr_shoot1_half_chargemask
-    obj_chargemask.obj_depth = -1
-    obj_chargemask:clear_callbacks()
-
-    obj_chargemask:onStep(function(instance)
-        local data = instance:get_data()
-        instance.x = data.parent.x
-        instance.y = data.parent.y
-        instance.statetime = instance.statetime + 1
-        if instance.statetime > 0 then
-            instance:destroy()
-            return
-        end
     end)
 
     local obj_beam = Object.new(NAMESPACE, "hunter_beam")
@@ -845,6 +825,7 @@ local initialize = function()
             end
             actorData.sound_has_played = played_sounds
         --end
+        data.statetime = 0
     end)
 
     -- Executed every game tick during this state
@@ -957,27 +938,12 @@ local initialize = function()
                             sparks.depth = actor.depth - 2
                             sparks.image_blend = Color.YELLOW
                         end
-                        if actorData.beamcharged == 1 then--this should probably just say else
-                            for i = 0, 1 do--this is all a horrid monstrosity i created because i wanted my character to flash white while charged and i didn't know how to do that
-                                local chargemask = obj_chargemask:create(actor.x + actor.pHspeed, actor.y + actor.pVspeed)
-                                chargemask.statetime = 0
-                                chargemask.depth = actor.depth - 1
-                                chargemask.image_index = actor.image_index2
-                                if i > 0 then
-                                    chargemask.sprite_index = spr_walk_half_chargemask
-                                    if actor.sprite_index == spr_idle_half then
-                                        chargemask.sprite_index = spr_idle_half_chargemask
-                                    end
-                                    chargemask.image_index = actor.image_index
-                                    if GM.bool(actor.free) then
-                                        chargemask.sprite_index = spr_jump_half_chargemask
-                                        chargemask.image_index = 0
-                                    end
-                                end
-                                chargemask.image_xscale = direction
-                                chargemask.image_alpha = 0.5 * (1 -(math.abs(3 - (math.fmod(data.wannacharge, 6)))) / 3)
-                                local chargemask_data = chargemask:get_data()
-                                chargemask_data.parent = actor
+                        if actorData.beamcharged == 1 then--this should probably just say else, i want you to flash while charging
+                            if math.fmod(data.wannacharge, 6) == 0 then
+                                local chargeflash = GM.instance_create(actor.x, actor.y, gm.constants.oEfFlash)
+			                    chargeflash.parent = actor
+			                    chargeflash.rate = 1 / 6
+			                    chargeflash.image_alpha = 0.5
                             end
                         end
                     end
@@ -1022,6 +988,7 @@ local initialize = function()
 
     state_primary:onExit(function(actor, data)
         actor:skill_util_strafe_exit()
+        data.statetime = 0
     end)
 
     -- Executed when state_secondary is entered
