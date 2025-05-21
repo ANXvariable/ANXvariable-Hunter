@@ -1289,3 +1289,32 @@ gm.post_script_hook(gm.constants.__input_system_tick, function(self, other, resu
     -- https://github.com/return-of-modding/ReturnOfModding/blob/master/docs/lua/tables/gm.md
     
 end)
+
+--stays commented until i learn how lava deals damage
+--local guarded = false
+--gm.pre_script_hook(gm.constants.anon_gml_Object_oLava_Collision_pActorCollisionBase_6832240_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
+--    if not gm.bool(self.invincible) then
+--        self.invincible = 1
+--        guarded = true
+--    end
+--    log.info("the first one")
+--end)
+--gm.post_script_hook(gm.constants.anon_gml_Object_oLava_Collision_pActorCollisionBase_6832240_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
+--    if guarded then
+--        self.invincible = 0
+--        guarded = false
+--    end
+--end)
+--gm.pre_script_hook(gm.constants.___struct___199_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
+--    if not gm.bool(self.invincible) then
+--        self.invincible = 1
+--        guarded = true
+--    end
+--    --log.info("the second one")
+--end)
+--gm.post_script_hook(gm.constants.___struct___199_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
+--    if guarded then
+--        self.invincible = 0
+--        guarded = false
+--    end
+--end)
