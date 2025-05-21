@@ -339,9 +339,29 @@ local initialize = function()
         if GM.bool(data.ice) then
             instance.image_blend = Color.WHITE
         end
+        if GM.bool(data.plasma) then
+            local trail = GM.instance_create(instance.x, instance.y, gm.constants.oEfTrail)
+            trail.sprite_index = instance.sprite_index
+            trail.image_index = 0
+            trail.image_alpha = 0.375
+            trail.image_blend = GM.merge_colour(Color.AQUA, Color.GREEN, 0.3)
+            trail.image_speed = instance.image_speed
+            trail.image_xscale = instance.image_xscale
+            trail.image_yscale = instance.image_yscale
+            trail.depth = instance.depth + 1
+            trail.rate = 0.25
+        end
+        
+        local maxbeams = 24
+        if GM.bool(data.spazer) then
+            maxbeams = maxbeams - 6
+        end
+        if GM.bool(data.plasma) then
+            maxbeams = maxbeams - 6
+        end
         local all = Instance.find_all(obj_beam)--too many of these lag so we KILL them
         for _, other_beam in ipairs(all) do
-            if _ > 18 then
+            if _ > maxbeams then
                 instance:destroy()
                 return
             end
@@ -882,7 +902,7 @@ local initialize = function()
                             if actor:is_authority() then
                                 local chargeloopsfx = GM.sound_loop(snd_chargeloop, 1)
                             end
-                            local sparks = GM.instance_create(actor.x + spawn_offset, actor.y - 10, gm.constants.oEfSparks)
+                            local sparks = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
                             sparks.sprite_index = gm.constants.sSparks18
                             sparks.depth = actor.depth - 2
                             sparks.image_blend = Color.YELLOW
