@@ -14,6 +14,8 @@ This mod is not yet finished, as I have many future plans for the Hunter and her
 
 Currently, she gains hidden powerups as her level increases.
 
+There is also a modGUI option to reduce the lag caused by having too many beams on screen. Enabling it will cause the oldest beams to be destroyed when there are too many.
+
 ## Credits
 
 - Most of the placeholder sprites are scaled-down images made by [TerminalMontage](https://www.youtube.com/@TerminalMontage).
