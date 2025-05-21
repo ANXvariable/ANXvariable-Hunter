@@ -25,7 +25,7 @@
 	"survivor" : {
 		"hunter" : {
             "endQuote" : "...and so she left, with another metroid to remake.",
-            "description" : "The <y>Hunter</c> has received a distress call from the <y>UES Contact Light</c>!",
+            "description" : "The <y>Hunter</c> is a galactic warrior who collects relics <r>(not yet implemented)</c> from an <y>ancient race</c> to <y>expand her abilities</c>. Use <y>Missiles</c> to blast huddled groups of enemies and <y>Morph Bombs</c> to lay a trap while making a clean getaway. Remember that you can <y>walljump</c> or propel yourself up with <y>Bombs</c> to scale heights!",
             "name" :  "Hunter",
             "nameUpper" : "HUNTER",
             "story" : "<ul>Passenger Details:\n<g>[Unexpected Benefactor]\n\n<ul>Luggage & Equipment: Passenger boarded at the time of invasion, equipped with an advanced exoskeleton modified for human use, which has been enhanced with multiple upgrades. The passenger's right arm possesses an adaptable cannon with an extensive arsenal. Individual was unable to be checked fully due to hostile circumstances.\n\n<b>[SECURITY RECALL]</c>\n<ul>[Event OM]</c> Individual intercepted UES Contact Light at the time of invasion. Further records lost.",
