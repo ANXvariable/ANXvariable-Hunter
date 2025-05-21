@@ -23,7 +23,7 @@ There is also a modGUI option to reduce the lag caused by having too many beams 
 - Special thanks to those on the [Return of Modding server](https://discord.gg/VjS57cszMq) for the tools and assistance to make this possible!
   - Kris "RandomCatDude"
   - Azzy "AzulineSkye"
-  - Miguelito
+  - Miguelito "SmoothSpatula"
   - Team RobomandosLab
   - Team ReturnsAPI
   - DixiE (Survivor Modding Guide)
