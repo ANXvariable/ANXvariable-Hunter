@@ -536,7 +536,7 @@ local initialize = function()
             --if instance.hitowner == 0 then
             --    log.info(instance:distance_to_point(data.parent.x, data.parent.y + 11))
             --end
-            if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 11 and instance.hitowner == 0 then
+            if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 22 and instance.hitowner == 0 then
                 if parentalignx ~= instance.x then
                     data.parent.pHspeed = data.parent.pHspeed + 2.8 * GM.sign(diffx)
                 end
