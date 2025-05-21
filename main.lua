@@ -126,8 +126,10 @@ local initialize = function()
     --local spr_morphandbomb = load_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
+    local spr_beam_gray = load_sprite("hunter_beam_gray", "sHunterBeamGray.png", 4)
     local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
     local spr_beam_cs000 = load_sprite("hunter_beam_cs000", "sHunterBeamCS000.png", 4, 14, 4)
+    local spr_beam_cs000_gray = load_sprite("hunter_beam_cs000_gray", "sHunterBeamCS000Gray.png", 4, 14, 4)
     local spr_beam_flare_0000 = load_sprite("hunter_beam_flare_0000", "sSparksHunterChargeFlare.png", 5, 12, 12)
     local spr_missile = load_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
@@ -315,9 +317,28 @@ local initialize = function()
     obj_beam.obj_sprite = spr_beam
     obj_beam.obj_depth = 1
     obj_beam:clear_callbacks()
+
+    obj_beam:onDraw(function(instance)
+        local data = instance:get_data()
+        local overlay = 1
+        if GM.bool(data.ice) and not GM.bool(data.plasma) then
+            if GM.bool(data.beamcharged) and GM.bool(data.spazer) then
+                instance.sprite_index = spr_beam_cs000_gray
+            else
+                instance.sprite_index = spr_beam_gray
+            end
+            GM.draw_sprite_ext(instance.sprite_index, instance.image_index, instance.x, instance.y, instance.image_xscale, instance.image_yscale, instance.image_angle, Color.WHITE, 1)
+            GM.draw_sprite_ext(instance.sprite_index, instance.image_index, instance.x, instance.y, instance.image_xscale, instance.image_yscale, instance.image_angle, Color.AQUA, 0.6)
+        elseif GM.bool(data.plasma) then
+            GM.draw_sprite_ext(instance.sprite_index, instance.image_index, instance.x, instance.y, instance.image_xscale, instance.image_yscale, instance.image_angle, GM.merge_colour(Color.AQUA, Color.GREEN, 0.3), 1)
+        end
+    end)
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
+        if GM.bool(data.ice) then
+            instance.image_blend = Color.WHITE
+        end
         local all = Instance.find_all(obj_beam)--too many of these lag so we KILL them
         for _, other_beam in ipairs(all) do
             if _ > 18 then
@@ -794,9 +815,6 @@ local initialize = function()
                 local beam_data = beam:get_data()
                 beam.image_speed = 0.25
                 beam.image_xscale = direction
-                if actorData.ice > 0 then
-                    beam.image_blend = Color.AQUA
-                end
                 if actorData.beamcharged == 1 then
                     beam.sprite_index = spr_beam_c0000--charged beam sprite
                     beam.mask_index = beam.sprite_index
@@ -824,6 +842,7 @@ local initialize = function()
                 beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
                 beam_data.canhit = 1
                 beam_data.shot = b
+                beam_data.beamcharged = actorData.beamcharged
                 beam_data.spazer = actorData.spazer
                 beam_data.ice = actorData.ice
                 beam_data.wave = actorData.wave
