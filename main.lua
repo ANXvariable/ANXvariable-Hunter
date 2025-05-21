@@ -263,38 +263,38 @@ local initialize = function()
     --    end
 
     --Missile tanks on -level
+    data.mtanks = actor:item_stack_count(missiletank)
     if actor:item_stack_count(missiletank) < actor.level then
         actor:item_give(missiletank)
-        data.mtanks = actor:item_stack_count(missiletank)
     end
 
     --Hi-jump boots on-level
+    data.HJB = actor:item_stack_count(hijump)
     if actor.level >= 10 and not GM.bool(data.HJB) then
-        data.HJB = 1
         actor:item_give(hijump)
     end
 
     --Spazer Beam on-level
+    data.spazer = actor:item_stack_count(spazerbeam)
     if actor.level >= 12 and not GM.bool(data.spazer) then
-        data.spazer = 1
         actor:item_give(spazerbeam)
     end
 
     --Ice Beam on-level
+    data.ice = actor:item_stack_count(icebeam)
     if actor.level >= 14 and not GM.bool(data.ice) then
-        data.ice = 1
         actor:item_give(icebeam)
     end
 
     --Wave Beam on-level
+    data.wave = actor:item_stack_count(wavebeam)
     if actor.level >= 16 and not GM.bool(data.wave) then
-        data.wave = 1
         actor:item_give(wavebeam)
     end
 
     --Plasma Beam on-level
+    data.plasma = actor:item_stack_count(plasmabeam)
     if actor.level >= 17 and not GM.bool(data.plasma) then
-        data.plasma = 1
         actor:item_give(plasmabeam)
     end
 
