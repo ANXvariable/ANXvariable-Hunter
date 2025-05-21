@@ -389,6 +389,7 @@ local initialize = function()
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
         for _, other_actor in ipairs(actor_collisions) do
+            local resolved_actor = GM.attack_collision_resolve(other_actor)
             if data.parent:attack_collision_canhit(other_actor) then
                 -- Deal damage
                 local damage_direction = 0
@@ -401,13 +402,13 @@ local initialize = function()
                     data.canhit = 0
                 end
                 if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss
-                    if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and GM.attack_collision_resolve(other_actor).hp > 0 and not GM.actor_is_boss(other_actor) then
-                        GM.remove_buff(GM.attack_collision_resolve(other_actor), slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
+                    if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and resolved_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
+                        GM.remove_buff(resolved_actor, slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
 				        Alarm.create(function()
-                            if not Instance.exists(other_actor) then
+                            if not Instance.exists(other_actor) or type(resolved_actor) == "number" then
                                 return
-                            elseif GM.attack_collision_resolve(other_actor).hp > 0 then--i have redundant checks for if the actor is still alive but yknow
-                                GM.apply_buff(GM.attack_collision_resolve(other_actor), slow2, 4 * 60, 1)
+                            elseif resolved_actor.hp > 0 then--i have redundant checks for if the actor is still alive but yknow
+                                GM.apply_buff(resolved_actor, slow2, 4 * 60, 1)
                                 --log.info("success")
                             end
                         end, 1)
