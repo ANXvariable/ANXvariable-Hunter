@@ -67,6 +67,26 @@ local initialize = function()
             actor.pGravity2 = actor.pGravity2 * (0.9 ^ (stack ^ 0.2))
         end)
 
+        local gravsuit = Item.new(NAMESPACE, "gravitySuit", true)
+        gravsuit:set_sprite(gm.constants.sPauldron)
+        gravsuit:set_tier(5)
+        gravsuit:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
+        gravsuit:toggle_loot(false)
+        gravsuit.is_hidden = true
+        gravsuit:clear_callbacks()
+        gravsuit:onPostDraw(function(actor, stack)
+            actor.image_blend = Color(0xFF00FF)
+        end)
+        gravsuit:onPostStep(function(actor, stack)
+            actor.buff_immune:set(Buff.find("ror-slowGoop"), true)
+        end)
+        gravsuit:onStatRecalc(function(actor, stack)
+            actor.armor = actor.armor + 50 * stack
+        end)
+        gravsuit:onRemove(function(actor, stack)
+            actor.image_blend = Color.WHITE
+        end)
+
         local spazerbeam = Item.new(NAMESPACE, "spazerBeam", true)
         spazerbeam:set_sprite(gm.constants.sJewel)
         spazerbeam:set_tier(5)
@@ -191,6 +211,7 @@ local initialize = function()
         data.mtanks = 0
         data.HJB = 0
         data.SpJB = 0
+        data.gravsuit = 0
         data.spazer = 0
         data.ice = 0
         data.wave = 0
@@ -300,6 +321,12 @@ local initialize = function()
         data.SpJB = actor:item_stack_count(spacejumpboots)
         if data.SpJB <= actor.level - 16 then
             actor:item_give(spacejumpboots)
+        end
+
+        --Gravity Suit on-level
+        data.gravsuit = actor:item_stack_count(gravsuit)
+        if actor.level >= 16 and not GM.bool(data.gravsuit) then
+            actor:item_give(gravsuit)
         end
 
         --Spazer Beam on-level
@@ -1152,6 +1179,7 @@ local initialize = function()
             local trail = GM.instance_create(actor.x, actor.y - 6, gm.constants.oEfTrail)
             trail.sprite_index = spr_morph
             trail.image_index = actor.image_index2
+            trail.image_blend = actor.image_blend
             trail.image_xscale = actor.image_xscale
             trail.image_alpha = 1 / 10
             trail.depth = actor.depth
