@@ -29,6 +29,22 @@ local initialize = function()
     local hunter = Survivor.new(NAMESPACE, "hunter")
 
     --tempsection
+        local missiletank = Item.new(NAMESPACE, "missileTank", true)
+        missiletank:set_sprite(gm.constants.sMissileBox)
+        missiletank:set_tier(5)
+        missiletank:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
+        missiletank:toggle_loot(false)
+        missiletank.is_hidden = true
+        missiletank:clear_callbacks()
+        missiletank:onAcquire(function(actor, stack)
+            local skill2 = actor:get_active_skill(Skill.SLOT.secondary)
+            skill2.stock = skill2.stock + 1
+        end)
+        missiletank:onStatRecalc(function(actor, stack)
+            local skill2 = actor:get_active_skill(Skill.SLOT.secondary)
+            skill2.max_stock = skill2.max_stock + stack
+        end)
+
         local hijump = Item.new(NAMESPACE, "hiJumpBoots", true)
         hijump:set_sprite(gm.constants.sStompers)
         hijump:set_tier(5)
@@ -49,22 +65,6 @@ local initialize = function()
         spacejumpboots:clear_callbacks()
         spacejumpboots:onPostStatRecalc(function(actor, stack)
             actor.pGravity2 = actor.pGravity2 * (0.9 ^ (stack ^ 0.2))
-        end)
-
-        local missiletank = Item.new(NAMESPACE, "missileTank", true)
-        missiletank:set_sprite(gm.constants.sMissileBox)
-        missiletank:set_tier(5)
-        missiletank:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
-        missiletank:toggle_loot(false)
-        missiletank.is_hidden = true
-        missiletank:clear_callbacks()
-        missiletank:onAcquire(function(actor, stack)
-            local skill2 = actor:get_active_skill(Skill.SLOT.secondary)
-            skill2.stock = skill2.stock + 1
-        end)
-        missiletank:onStatRecalc(function(actor, stack)
-            local skill2 = actor:get_active_skill(Skill.SLOT.secondary)
-            skill2.max_stock = skill2.max_stock + stack
         end)
 
         local spazerbeam = Item.new(NAMESPACE, "spazerBeam", true)
