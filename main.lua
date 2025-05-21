@@ -30,7 +30,7 @@ local initialize = function()
 
     --tempsection
         local hijump = Item.new(NAMESPACE, "hiJumpBoots", true)
-        hijump:set_sprite(gm.constants.sJetpack)
+        hijump:set_sprite(gm.constants.sStompers)
         hijump:set_tier(5)
         hijump:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
         hijump:toggle_loot(false)
@@ -38,6 +38,17 @@ local initialize = function()
         hijump:clear_callbacks()
         hijump:onStatRecalc(function(actor, stack)
             actor.pVmax = actor.pVmax + 2.4 * stack
+        end)
+
+        local spacejumpboots = Item.new(NAMESPACE, "spaceJumpBoots", true)
+        spacejumpboots:set_sprite(gm.constants.sJetpack)
+        spacejumpboots:set_tier(5)
+        spacejumpboots:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
+        spacejumpboots:toggle_loot(false)
+        spacejumpboots.is_hidden = true
+        spacejumpboots:clear_callbacks()
+        spacejumpboots:onPostStatRecalc(function(actor, stack)
+            actor.pGravity2 = actor.pGravity2 * (0.9 ^ (stack ^ 0.2))
         end)
 
         local missiletank = Item.new(NAMESPACE, "missileTank", true)
@@ -189,6 +200,8 @@ local initialize = function()
         data.wave = 0
         data.plasma = 0
 
+        data.spacejump_count = 0
+
         actor:survivor_util_init_half_sprites()
     end)
 
@@ -207,9 +220,13 @@ local initialize = function()
     })
 
     hunter:onStep(function(actor)
-        --walljumping
         local data = actor:get_data()
+        local ssrData = actor:get_data("main", "ssr")
         local free = GM.bool(actor.free)
+        local usedAllFeathers = actor.jump_count >= actor:item_stack_count(Item.find("ror-hopooFeather"))
+        local climbing = GM.actor_state_is_climb_state(actor.actor_state_current_id)
+        local cv = actor.actor_state_current_id == State.find(NAMESPACE, "hunterC").value or actor.actor_state_current_id == State.find(NAMESPACE, "hunterV").value
+        --walljumping
         local wallx = 0
 
         if actor:is_colliding(gm.constants.pSolidBulletCollision, actor.x - 3 - actor.pHmax / 2.8) and actor:control("right", 0) then
@@ -245,7 +262,8 @@ local initialize = function()
             end
     --    end--this info log stays uncommented because apparently data.iceTool_feather_preserve never returns true or something so I never saw this log. ever. so it stays while i test if it ever will work.
 
-        if actor:control("jump", 1) and walljumpable and actor.actor_state_current_id ~= State.find(NAMESPACE, "hunterV").value then
+
+        if actor:control("jump", 1) and walljumpable and not cv then
             actor.pVspeed = -actor.pVmax - 1.5
 	    	actor.free_jump_timer = 0
 	    	actor.jumping = true
@@ -254,59 +272,83 @@ local initialize = function()
 
 	    	actor.pHspeed = -actor.pHmax * wallx
 	    	actor.image_xscale = -wallx
-            if not GM.actor_state_is_climb_state(actor.actor_state_current_id) then
+	    	actor.image_xscale2 = -wallx
+            if not climbing then
                 actor:sound_play(gm.constants.wClayHit, 1, 1.25)
             end
         end
-    --    if actor:control("jump", 1) then
-    --        log.info("jc on jump = "..actor.jump_count)
-    --    end
 
-    --Missile tanks on -level
-    data.mtanks = actor:item_stack_count(missiletank)
-    if actor:item_stack_count(missiletank) < actor.level then
-        actor:item_give(missiletank)
-    end
+        --Space Jumping (boots)
+        if not free or climbing then
+            data.spacejump_count = 0
+        end
+        local spacejumpable = free and actor.pVspeed > 0 and usedAllFeathers and data.spacejump_count < data.SpJB and not (walljumpable or cv or actor.jump_count == math.huge)
+        if actor:control("jump", 1) and spacejumpable then
+            actor.pVspeed = -actor.pVmax
+	    	actor.free_jump_timer = 0
+	    	actor.jumping = true
+	    	actor.moveUp = false
+	    	actor.moveUp_buffered = false
+            data.spacejump_count = data.spacejump_count + 1
+            local SJfx = GM.instance_create(actor.x, actor.y + 11, gm.constants.oEfTrail)
+            SJfx.parent = actor
+            SJfx.image_yscale = 0.5
+            SJfx.sprite_index = gm.constants.sEfJetpack
+            SJfx.image_speed = 0.25
+            SJfx.image_alpha = 0.75
+        end
 
-    --Hi-jump boots on-level
-    data.HJB = actor:item_stack_count(hijump)
-    if actor.level >= 10 and not GM.bool(data.HJB) then
-        actor:item_give(hijump)
-    end
+        --Missile tanks on-level
+        data.mtanks = actor:item_stack_count(missiletank)
+        if data.mtanks < actor.level then
+            actor:item_give(missiletank)
+        end
 
-    --Spazer Beam on-level
-    data.spazer = actor:item_stack_count(spazerbeam)
-    if actor.level >= 12 and not GM.bool(data.spazer) then
-        actor:item_give(spazerbeam)
-    end
+        --Hi-jump boots on-level
+        data.HJB = actor:item_stack_count(hijump)
+        if actor.level >= 8 and not GM.bool(data.HJB) then
+            actor:item_give(hijump)
+        end
 
-    --Ice Beam on-level
-    data.ice = actor:item_stack_count(icebeam)
-    if actor.level >= 14 and not GM.bool(data.ice) then
-        actor:item_give(icebeam)
-    end
+        --Space Jump boots on-level
+        data.SpJB = actor:item_stack_count(spacejumpboots)
+        if data.SpJB <= actor.level - 16 then
+            actor:item_give(spacejumpboots)
+        end
 
-    --Wave Beam on-level
-    data.wave = actor:item_stack_count(wavebeam)
-    if actor.level >= 16 and not GM.bool(data.wave) then
-        actor:item_give(wavebeam)
-    end
+        --Spazer Beam on-level
+        data.spazer = actor:item_stack_count(spazerbeam)
+        if actor.level >= 11 and not GM.bool(data.spazer) then
+            actor:item_give(spazerbeam)
+        end
 
-    --Plasma Beam on-level
-    data.plasma = actor:item_stack_count(plasmabeam)
-    if actor.level >= 17 and not GM.bool(data.plasma) then
-        actor:item_give(plasmabeam)
-    end
+        --Ice Beam on-level
+        data.ice = actor:item_stack_count(icebeam)
+        if actor.level >= 13 and not GM.bool(data.ice) then
+            actor:item_give(icebeam)
+        end
+
+        --Wave Beam on-level
+        data.wave = actor:item_stack_count(wavebeam)
+        if actor.level >= 15 and not GM.bool(data.wave) then
+            actor:item_give(wavebeam)
+        end
+
+        --Plasma Beam on-level
+        data.plasma = actor:item_stack_count(plasmabeam)
+        if actor.level >= 17 and not GM.bool(data.plasma) then
+            actor:item_give(plasmabeam)
+        end
 
 
-    --onDeath
-    --if actor:control("jump", 0) then
-    --    log.info("asci = "..actor.actor_state_current_id)
-    --    log.info(State.find(NAMESPACE, "hunterV").value)
-    --end
-    --if actor.sprite_index == sprites.death and actor.image_index == 2 then
-    --    actor:sound_play(snd_ondeath, 1, 1)
-    --end--actor onStep doesn't run when you die i guess
+        --onDeath
+        --if actor:control("jump", 0) then
+        --    log.info("asci = "..actor.actor_state_current_id)
+        --    log.info(State.find(NAMESPACE, "hunterV").value)
+        --end
+        --if actor.sprite_index == sprites.death and actor.image_index == 2 then
+        --    actor:sound_play(snd_ondeath, 1, 1)
+        --end--actor onStep doesn't run when you die i guess
     end)
 
     local obj_chargemask = Object.new(NAMESPACE, "hunter_chargemask")
