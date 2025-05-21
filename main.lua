@@ -9,6 +9,18 @@ mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
 local PATH = _ENV["!plugins_mod_folder_path"]
 local NAMESPACE = "ANXvariable"
 
+local lag_reduce = false
+local gui_maxbeams = math.huge
+
+gui.add_to_menu_bar(function()
+	lag_reduce, pressed = ImGui.Checkbox("Enable Beam Lag Reduction", lag_reduce)
+	if pressed or lag_reduce then
+		gui_maxbeams = 24
+    else
+        gui_maxbeams = math.huge
+	end
+end)
+
 
 
 -- ========== Main ==========
@@ -352,7 +364,7 @@ local initialize = function()
             trail.rate = 0.25
         end
         
-        local maxbeams = 24
+        local maxbeams = gui_maxbeams
         if GM.bool(data.spazer) then
             maxbeams = maxbeams - 9
         end
