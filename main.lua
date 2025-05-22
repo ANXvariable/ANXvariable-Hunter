@@ -89,7 +89,15 @@ local initialize = function()
         gravsuit.is_hidden = true
         gravsuit:clear_callbacks()
         gravsuit:onPostDraw(function(actor, stack)
-            actor.image_blend = Color(0xFF00FF)
+            actor.image_alpha = 1
+            local rx = (0.5 - math.random()) * 2
+            local ry = (0.5 - math.random()) * 2
+            GM.gpu_set_blendmode(2)
+            GM.draw_set_alpha(0.5)
+            GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
+            GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
+            GM.draw_set_alpha(1)
+            GM.gpu_set_blendmode(0)
         end)
         gravsuit:onPostStep(function(actor, stack)
             actor.buff_immune:set(Buff.find("ror-slowGoop"), true)
