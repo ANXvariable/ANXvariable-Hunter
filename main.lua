@@ -67,6 +67,20 @@ local initialize = function()
             actor.pGravity2 = actor.pGravity2 * (0.9 ^ (stack ^ 0.2))
         end)
 
+        local varsuit = Item.new(NAMESPACE, "variaSuit", true)
+        varsuit:set_sprite(gm.constants.sShellPiece)
+        varsuit:set_tier(5)
+        varsuit:set_loot_tags(Item.LOOT_TAG.item_blacklist_engi_turrets)
+        varsuit:toggle_loot(false)
+        varsuit.is_hidden = true
+        varsuit:clear_callbacks()
+        varsuit:onPostStep(function(actor, stack)
+            actor.buff_immune:set(Buff.find("ror-slow2"), true)
+        end)
+        varsuit:onStatRecalc(function(actor, stack)
+            actor.armor = actor.armor + 50 * stack
+        end)
+
         local gravsuit = Item.new(NAMESPACE, "gravitySuit", true)
         gravsuit:set_sprite(gm.constants.sPauldron)
         gravsuit:set_tier(5)
@@ -211,6 +225,7 @@ local initialize = function()
         data.mtanks = 0
         data.HJB = 0
         data.SpJB = 0
+        data.varsuit = 0
         data.gravsuit = 0
         data.spazer = 0
         data.ice = 0
@@ -234,6 +249,7 @@ local initialize = function()
         maxhp = 32,
         damage = 3.3125,
         regen = 0.002,
+        armor = 0,
     })
 
     hunter:onStep(function(actor)
@@ -321,6 +337,12 @@ local initialize = function()
         data.SpJB = actor:item_stack_count(spacejumpboots)
         if data.SpJB <= actor.level - 16 then
             actor:item_give(spacejumpboots)
+        end
+
+        --Varia Suit on-level
+        data.varsuit = actor:item_stack_count(varsuit)
+        if actor.level >= 12 and not GM.bool(data.varsuit) then
+            actor:item_give(varsuit)
         end
 
         --Gravity Suit on-level
