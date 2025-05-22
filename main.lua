@@ -1293,7 +1293,7 @@ end)
 gm.pre_code_execute("gml_Object_oLava_Collision_pActorCollisionBase", function (self, other, result, args)
     local actor = gm.attack_collision_resolve(other)
     if actor ~= -4 then
-        if gm.item_count(actor, Item.find(NAMESPACE, "gravitySuit").value, Item.STACK_KIND.any) then
+        if gm.item_count(actor, Item.find(NAMESPACE, "gravitySuit").value, Item.STACK_KIND.any) > 0 then
             return false
         end
     end
