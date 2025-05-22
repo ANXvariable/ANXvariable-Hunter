@@ -1290,31 +1290,11 @@ gm.post_script_hook(gm.constants.__input_system_tick, function(self, other, resu
     
 end)
 
---stays commented until i learn how lava deals damage
---local guarded = false
---gm.pre_script_hook(gm.constants.anon_gml_Object_oLava_Collision_pActorCollisionBase_6832240_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
---    if not gm.bool(self.invincible) then
---        self.invincible = 1
---        guarded = true
---    end
---    log.info("the first one")
---end)
---gm.post_script_hook(gm.constants.anon_gml_Object_oLava_Collision_pActorCollisionBase_6832240_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
---    if guarded then
---        self.invincible = 0
---        guarded = false
---    end
---end)
---gm.pre_script_hook(gm.constants.___struct___199_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
---    if not gm.bool(self.invincible) then
---        self.invincible = 1
---        guarded = true
---    end
---    --log.info("the second one")
---end)
---gm.post_script_hook(gm.constants.___struct___199_gml_Object_oLava_Collision_pActorCollisionBase, function(self, other, result, args)
---    if guarded then
---        self.invincible = 0
---        guarded = false
---    end
---end)
+gm.pre_code_execute("gml_Object_oLava_Collision_pActorCollisionBase", function (self, other, result, args)
+    local actor = gm.attack_collision_resolve(other)
+    if actor ~= -4 then
+        if gm.item_count(actor, Item.find(NAMESPACE, "gravitySuit").value, Item.STACK_KIND.any) then
+            return false
+        end
+    end
+end)
