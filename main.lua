@@ -178,6 +178,7 @@ local initialize = function()
     local spr_flashshifttrail = load_sprite("hunter_flashshifttrail", "sHunterFlashShift.png", 4, 19, 17)
     --local spr_morphandbomb = load_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
+    local spr_morph2 = load_sprite("hunter_morph2", "sHunterMorph2.png", 8, 6, 12)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
     local spr_beam_gray = load_sprite("hunter_beam_gray", "sHunterBeamGray.png", 4)
     local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
@@ -221,6 +222,7 @@ local initialize = function()
         actor.sprite_jump_half = Array.new({sprites.jump, spr_jump_half, 0})
         actor.sprite_jump_peak_half = Array.new({sprites.jump_peak, spr_jump_peak_half, 0})
         actor.sprite_fall_half = Array.new({sprites.fall, spr_fall_half, 0})
+        actor.sprite_morph_half_anxvariable = Array.new({spr_morph2, spr_morph2, 0})
 
         data.mtanks = 0
         data.HJB = 0
@@ -1160,12 +1162,23 @@ local initialize = function()
 
     -- Executed when state_special is entered
     state_special:onEnter(function(actor, data)
+        local actorData = actor:get_data()
+        actorData.sprite_idle_half_prev = actor.sprite_idle_half
+        actorData.sprite_walk_half_prev = actor.sprite_walk_half
+        actorData.sprite_jump_half_prev = actor.sprite_jump_half
+        actorData.sprite_jump_peak_half_prev = actor.sprite_jump_peak_half
+        actorData.sprite_fall_half_prev = actor.sprite_fall_half
+        actor.sprite_idle_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_walk_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_jump_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_jump_peak_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_fall_half = actor.sprite_morph_half_anxvariable
+        actor:survivor_util_init_half_sprites()
         actor:skill_util_strafe_init()
         actor:skill_util_strafe_turn_init()
         actor.image_index2 = 0 -- Make sure our animation starts on its first frame
         -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
-        actor.image_alpha = 0
         actor.image_yscale = 0.5
         actor.y = actor.y + 6
         data.fired = 0
@@ -1174,7 +1187,7 @@ local initialize = function()
     
     -- Executed every game tick during this state
     state_special:onStep(function(actor, data)
-        actor.sprite_index2 = spr_morph
+        actor.sprite_index2 = spr_morph2
         -- index2 is needed for strafe sprites to work
         actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
         actor:skill_util_step_strafe_sprites()
@@ -1196,16 +1209,6 @@ local initialize = function()
                 bomb_data.fired = 0
             end
         end
-
-        for i=0, 20 do
-            local trail = GM.instance_create(actor.x, actor.y - 6, gm.constants.oEfTrail)
-            trail.sprite_index = spr_morph
-            trail.image_index = actor.image_index2
-            trail.image_blend = actor.image_blend
-            trail.image_xscale = actor.image_xscale
-            trail.image_alpha = 1 / 10
-            trail.depth = actor.depth
-        end--this will probably be very laggy
             
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
@@ -1213,9 +1216,20 @@ local initialize = function()
 
     state_special:onExit(function(actor, data)
         actor:skill_util_strafe_exit()
+        local actorData = actor:get_data()
+        actor.sprite_idle_half = actorData.sprite_idle_half_prev
+        actor.sprite_walk_half = actorData.sprite_walk_half_prev
+        actor.sprite_jump_half = actorData.sprite_jump_half_prev
+        actor.sprite_jump_peak_half = actorData.sprite_jump_peak_half_prev
+        actor.sprite_fall_half = actorData.sprite_fall_half_prev
+        actorData.sprite_idle_half_prev = nil
+        actorData.sprite_walk_half_prev = nil
+        actorData.sprite_jump_half_prev = nil
+        actorData.sprite_jump_peak_half_prev = nil
+        actorData.sprite_fall_half_prev = nil
+        actor:survivor_util_init_half_sprites()
         actor.image_yscale = 1
         actor.y = actor.y - 6
-        actor.image_alpha = 1
     end)
 
     state_special:onGetInterruptPriority(function(actor, data)
@@ -1228,12 +1242,23 @@ local initialize = function()
 
     -- Executed when state_scepter_special is entered
     state_scepter_special:onEnter(function(actor, data)
+        local actorData = actor:get_data()
+        actorData.sprite_idle_half_prev = actor.sprite_idle_half
+        actorData.sprite_walk_half_prev = actor.sprite_walk_half
+        actorData.sprite_jump_half_prev = actor.sprite_jump_half
+        actorData.sprite_jump_peak_half_prev = actor.sprite_jump_peak_half
+        actorData.sprite_fall_half_prev = actor.sprite_fall_half
+        actor.sprite_idle_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_walk_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_jump_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_jump_peak_half = actor.sprite_morph_half_anxvariable
+        actor.sprite_fall_half = actor.sprite_morph_half_anxvariable
+        actor:survivor_util_init_half_sprites()
         actor:skill_util_strafe_init()
         actor:skill_util_strafe_turn_init()
         actor.image_index2 = 0 -- Make sure our animation starts on its first frame
         -- index2 is needed for strafe sprites to work. From here we can setup custom data that we might want to refer back to in onStep
         -- Our flag to prevent firing more than once per attack
-        actor.image_alpha = 0
         actor.image_yscale = 0.5
         actor.y = actor.y + 6
         data.fired = 0
@@ -1242,7 +1267,7 @@ local initialize = function()
     
     -- Executed every game tick during this state
     state_scepter_special:onStep(function(actor, data)
-        actor.sprite_index2 = spr_morph
+        actor.sprite_index2 = spr_morph2
         -- index2 is needed for strafe sprites to work
         actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
         actor:skill_util_step_strafe_sprites()
@@ -1264,15 +1289,6 @@ local initialize = function()
                 powerbomb_data.fired = 0
             end
         end
-
-        for i=0, 20 do
-            local trail = GM.instance_create(actor.x, actor.y - 6, gm.constants.oEfTrail)
-            trail.sprite_index = spr_morph
-            trail.image_index = actor.image_index2
-            trail.image_xscale = actor.image_xscale
-            trail.image_alpha = 1 / 10
-            trail.depth = actor.depth
-        end--this will probably be very laggy
             
         -- A convenience function that exits this state automatically once the animation ends
         actor:skill_util_exit_state_on_anim_end()
@@ -1280,9 +1296,21 @@ local initialize = function()
 
     state_scepter_special:onExit(function(actor, data)
         actor:skill_util_strafe_exit()
+        local actorData = actor:get_data()
+        actor.sprite_idle_half = actorData.sprite_idle_half_prev
+        actor.sprite_walk_half = actorData.sprite_walk_half_prev
+        actor.sprite_jump_half = actorData.sprite_jump_half_prev
+        actor.sprite_jump_peak_half = actorData.sprite_jump_peak_half_prev
+        actor.sprite_fall_half = actorData.sprite_fall_half_prev
+        actorData.sprite_idle_half_prev = nil
+        actorData.sprite_walk_half_prev = nil
+        actorData.sprite_jump_half_prev = nil
+        actorData.sprite_jump_peak_half_prev = nil
+        actorData.sprite_fall_half_prev = nil
+        actor:survivor_util_init_half_sprites()
+        actor:skill_util_strafe_exit()
         actor.image_yscale = 1
         actor.y = actor.y - 6
-        actor.image_alpha = 1
     end)
 
     state_scepter_special:onGetInterruptPriority(function(actor, data)
