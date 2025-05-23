@@ -11,11 +11,15 @@ local NAMESPACE = "ANXvariable"
 
 local lag_reduce = false
 local gui_maxbeams = math.huge
+local input_maxbeams = 12
+--local has_spazer = false
+--local has_plasma = false
 
 gui.add_to_menu_bar(function()
 	lag_reduce, pressed = ImGui.Checkbox("Enable Beam Lag Reduction", lag_reduce)
+    input_maxbeams = ImGui.DragFloat("Max Beams", input_maxbeams, 1, 0, 600)
 	if pressed or lag_reduce then
-		gui_maxbeams = 24
+		gui_maxbeams = math.max(0, math.floor(input_maxbeams))
     else
         gui_maxbeams = math.huge
 	end
@@ -466,10 +470,10 @@ local initialize = function()
         
         local maxbeams = gui_maxbeams
         if GM.bool(data.spazer) then
-            maxbeams = maxbeams - 9
+            --has_spazer = true
         end
         if GM.bool(data.plasma) then
-            maxbeams = maxbeams - 3
+            --has_plasma = true
         end
         local all = Instance.find_all(obj_beam)--too many of these lag so we KILL them
         for _, other_beam in ipairs(all) do
