@@ -345,7 +345,7 @@ local initialize = function()
         end
 
         --Space Jumping (boots)
-        if not free or climbing then
+        if not free or climbing or actor:is_colliding(gm.constants.oGeyser) then
             data.spacejump_count = 0
         end
         local spacejumpable = free and actor.pVspeed > 0 and usedAllFeathers and data.spacejump_count < data.SpJB and not (walljumpable or cv or actor.jump_count == math.huge)
