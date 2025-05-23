@@ -99,8 +99,37 @@ local initialize = function()
             GM.draw_set_alpha(1)
             GM.gpu_set_blendmode(0)
         end)
+        local wetprev = -1--initialize a method to detect if the variable "wet" has changed
+        local shouldStatRecalc = false--my data.fired for calling a stats recalc
         gravsuit:onPostStep(function(actor, stack)
+            --log.info("begin post step")
             actor.buff_immune:set(Buff.find("ror-slowGoop"), true)
+
+            if wetprev ~= actor.wet then--now we make the gravity suit make you immune to the effects of water. if you choose.
+                wetprev = actor.wet
+                if not actor:control("jump", 0) and actor.pVspeed > 0 then--you choose by not holding the jump button
+                    --log.info("notjump")
+                    actor.pGravity1 = actor.pGravity1_base * 2
+                    shouldStatRecalc = true
+                    --log.info(shouldStatRecalc)
+                elseif shouldStatRecalc then--the reason i call stats recalc is because i think it works better if other mods are also modifying pGravity1?
+                    --log.info("jump")
+                    actor.pGravity1 = actor.pGravity1_base
+                    actor:recalculate_stats()
+                    --log.info(shouldStatRecalc)
+                    shouldStatRecalc = nil
+                end
+                --log.info("underwater")
+                --log.info(shouldStatRecalc)
+            elseif shouldStatRecalc then
+                actor.pGravity1 = actor.pGravity1_base
+                actor:recalculate_stats()
+                shouldStatRecalc = nil
+            end
+            --log.info("also, gravity1 is")
+            --log.info(actor.pGravity1)
+            --log.info("vspeed = "..math.floor(actor.pVspeed*100)/100)
+            --log.info("vmax = "..actor.pVmax)            
         end)
         gravsuit:onStatRecalc(function(actor, stack)
             actor.armor = actor.armor + 50 * stack
