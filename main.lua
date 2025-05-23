@@ -100,6 +100,10 @@ local initialize = function()
             GM.draw_set_alpha(0.5)
             GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
             GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
+            if actor.actor_state_current_id ~= -1 and not actor:actor_state_is_climb_state(actor.actor_state_current_id) then
+                GM.draw_sprite_ext(actor.sprite_index2, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
+                GM.draw_sprite_ext(actor.sprite_index2, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
+            end
             GM.draw_set_alpha(1)
             GM.gpu_set_blendmode(0)
         end)
@@ -193,7 +197,7 @@ local initialize = function()
         jump = load_sprite("hunter_jump", "sHunterSault.png", 4, 14, 14),
         jump_peak = load_sprite("hunter_jump_peak", "sHunterSault.png", 4, 14, 14),
         fall = load_sprite("hunter_fall", "sHunterSault.png", 4, 14, 14),
-        climb = load_sprite("hunter_climb", "sHunterElevator.png", 1, 14, 18),
+        climb = load_sprite("hunter_climb", "sHunterElevator.png", 1, 14, 15),
         climb_hurt = load_sprite("hunter_climb_hurt", "sHunterElevator.png", 1, 14, 18), 
         death = load_sprite("hunter_death", "sHunterDeath.png", 20, 34, 58),
         decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 14, 24),
