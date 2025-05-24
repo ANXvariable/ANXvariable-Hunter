@@ -37,7 +37,7 @@ Multiplayer technically works, but there may be multiplayer-specific bugs. Pleas
 ## Contact
 
 If you experience any bugs or issues, ping me (@anxvariable) on the 
-[Return of Modding server](https://discord.gg/VjS57cszMq). Try to include the log of the issue and as much info as possible about what was happening at the time.
+[Return of Modding server](https://discord.gg/VjS57cszMq), or use the issues section of the mod's GitHub. Try to include the log of the issue and as much info as possible about what was happening at the time.
 
 ---
 
