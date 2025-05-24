@@ -1,5 +1,4 @@
 -- Hunter
--- check how you can make immune to debuffs. and water
 
 log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["LuaENVY-ENVY"]
@@ -518,6 +517,9 @@ local initialize = function()
                     damage_direction = 180
                 end
                 if data.parent:is_authority() and data.canhit >= 1 then--authoritative attack to prevent double networked hitboxes
+                    if GM.actor_is_boss(resolved_actor) and GM.bool(data.beamcharged) then
+                        data.damage_coefficient = data.damage_coefficient * 1.25
+                    end
                     local attack = data.parent:fire_direct(other_actor, data.damage_coefficient, damage_direction, instance.x, instance.y, spr_none, data.doproc)
                     attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
                     data.canhit = 0
@@ -947,9 +949,6 @@ local initialize = function()
             damage = damage * 1.25
         end
         if actorData.wave > 0 then
-            damage = damage * 1.25
-        end
-        if actorData.plasma > 0 then
             damage = damage * 1.25
         end
         --i make you shoot a beam up to 2 times in this state so i made it a function
