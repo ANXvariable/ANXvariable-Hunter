@@ -9,7 +9,7 @@ local PATH = _ENV["!plugins_mod_folder_path"]
 local NAMESPACE = "ANXvariable"
 
 local lag_reduce = true
-local gui_maxbeams = math.huge
+local gui_maxbeams = 12
 local input_maxbeams = 12
 --local has_spazer = false
 --local has_plasma = false
