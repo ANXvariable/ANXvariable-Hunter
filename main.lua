@@ -96,18 +96,20 @@ local initialize = function()
         gravsuit.is_hidden = true
         gravsuit:clear_callbacks()
         gravsuit:onPostDraw(function(actor, stack)
-            actor.image_alpha = 1
+            local fxalpha = 1
             local rx = (0.5 - math.random()) * 2
             local ry = (0.5 - math.random()) * 2
-            GM.gpu_set_blendmode(2)
+            GM.gpu_set_blendmode(bm_add)
+            GM.gpu_set_fog(1, Color.PURPLE, 0, 0)
             GM.draw_set_alpha(0.5)
-            GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
-            GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
-            if actor.actor_state_current_id ~= -1 and not actor:actor_state_is_climb_state(actor.actor_state_current_id) then
-                GM.draw_sprite_ext(actor.sprite_index2, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
-                GM.draw_sprite_ext(actor.sprite_index2, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.FUCHSIA, 1)
+            GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.PURPLE, fxalpha)
+            GM.draw_sprite_ext(actor.sprite_index, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.PURPLE, fxalpha)
+            if actor.actor_state_current_id ~= -1 and not actor:actor_state_is_climb_state(actor.actor_state_current_id) and actor.sprite_index2 then
+                GM.draw_sprite_ext(actor.sprite_index2, actor.image_index, actor.x, actor.y, actor.image_xscale * 1.1 + rx/8, actor.image_yscale * 1.1 + ry/8, actor.image_angle, Color.PURPLE, fxalpha)
+                GM.draw_sprite_ext(actor.sprite_index2, actor.image_index, actor.x, actor.y, actor.image_xscale / 1.2 + rx/8, actor.image_yscale / 1.2 + ry/8, actor.image_angle, Color.PURPLE, fxalpha)
             end
             GM.draw_set_alpha(1)
+            GM.gpu_set_fog(0, Color.BLACK, 0, 0)
             GM.gpu_set_blendmode(0)
         end)
         local wetprev = -1--initialize a method to detect if the variable "wet" has changed
