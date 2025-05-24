@@ -24,6 +24,10 @@ gui.add_to_menu_bar(function()
 	end
 end)
 
+local bm_normal = 0
+local bm_add = 1
+local bm_max = 2
+local bm_subtract = 3
 
 
 -- ========== Main ==========
