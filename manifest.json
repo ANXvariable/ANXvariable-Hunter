@@ -1,8 +1,8 @@
 ﻿{
 	"name": "Hunter",
-	"version_number": "0.1.0",
-	"website_url": "https://github.com/ANXvariable/ANXvariable-Samus",
-	"description": "This is a mod for Risk of Rain Returns.",
+	"version_number": "0.2.0",
+	"website_url": "https://github.com/ANXvariable/ANXvariable-Hunter",
+	"description": "She's sent an emergency directive: ''Join the fight!''",
 	"dependencies": [
 		"ReturnOfModding-ReturnOfModding-1.0.53",
 		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.2.0",
