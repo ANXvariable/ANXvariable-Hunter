@@ -13,6 +13,15 @@ To walljump, you must be airborne and touching a wall, then hold away from the w
 This mod is not yet finished, as I have many future plans for the Hunter and her capabilities. This first release just has everything I believe I need to make a working survivor.
 
 Currently, she gains hidden powerups as her level increases.
+- Missiles: Gain an extra stock of your secondary skill every level.
+- Hi-Jump Boots: At level 8, gain a significant boost to jump height.
+- Space Jump Boots: Starting at level 16, gain one extra midair jump every level.
+- Varia: At level 12, gain 50 armor.
+- Gravity: At level 16, gain 50 armor. Become immune to the slow-goop debuff from Hive Cluster and the lava in Magma Barracks, and increased fall speed in water.
+- Spazer: At level 11, fire 2 extra beams from your primary.
+- Ice: At level 13, have a chance to freeze and snare enemies with beams.
+- Wave: At level 15, beams travel through walls.
+- Plasma: At level 17, beams travel through non-boss enemies, dealing massive damage.
 
 There is also a modGUI option to reduce the lag caused by having too many beams on screen. Enabling it will cause the oldest beams to be destroyed when there are too many.
 
@@ -31,7 +40,8 @@ There is also a modGUI option to reduce the lag caused by having too many beams 
 
 ## Multiplayer
 
-Multiplayer technically works, but there may be multiplayer-specific bugs. Please contact me if you encounter any issues. 
+Multiplayer technically works, but there may be multiplayer-specific bugs. Please contact me if you encounter any issues.
+ - Known: You cannot see other players charging beams or firing charged beams.
 
 
 ## Contact
