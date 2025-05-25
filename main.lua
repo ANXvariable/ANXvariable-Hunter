@@ -230,10 +230,15 @@ local initialize = function()
     local spr_morph = load_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_morph2 = load_sprite("hunter_morph2", "sHunterMorph2.png", 8, 6, 12)
     local spr_beam = load_sprite("hunter_beam", "sHunterBeam.png", 4)
-    local spr_beam_gray = load_sprite("hunter_beam_gray", "sHunterBeamGray.png", 4)
     local spr_beam_c0000 = load_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
-    local spr_beam_cs000 = load_sprite("hunter_beam_cs000", "sHunterBeamCS000.png", 4, 14, 4)
-    local spr_beam_cs000_gray = load_sprite("hunter_beam_cs000_gray", "sHunterBeamCS000Gray.png", 4, 14, 4)
+    local spr_beam_cs000 = load_sprite("hunter_beam_cs000", "sHunterBeamCS000.png", 4, 14, 2)
+    local spr_beam_csi00 = load_sprite("hunter_beam_csi00", "sHunterBeamCSI00.png", 4, 14, 2)
+    local spr_beam_csiw0 = load_sprite("hunter_beam_csiw0", "sHunterBeamCSIW0.png", 4, 14, 2)
+    local spr_beam_csiwp = load_sprite("hunter_beam_csiwp", "sHunterBeamCSIWP.png", 4, 14, 2)
+    local spr_beam_0s000 = load_sprite("hunter_beam_0s000", "sHunterBeam0S000.png", 4)
+    local spr_beam_0si00 = load_sprite("hunter_beam_0si00", "sHunterBeam0SI00.png", 4)
+    local spr_beam_0siw0 = load_sprite("hunter_beam_0siw0", "sHunterBeam0SIW0.png", 4)
+    local spr_beam_0siwp = load_sprite("hunter_beam_0siwp", "sHunterBeam0SIWP.png", 4)
     local spr_beam_flare_0000 = load_sprite("hunter_beam_flare_0000", "sSparksHunterChargeFlare.png", 5, 12, 12)
     local spr_missile = load_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
@@ -442,22 +447,6 @@ local initialize = function()
     obj_beam.obj_sprite = spr_beam
     obj_beam.obj_depth = 1
     obj_beam:clear_callbacks()
-
-    obj_beam:onDraw(function(instance)
-        local data = instance:get_data()
-        local overlay = 1
-        if GM.bool(data.ice) and not GM.bool(data.plasma) then
-            if GM.bool(data.beamcharged) and GM.bool(data.spazer) then
-                instance.sprite_index = spr_beam_cs000_gray
-            else
-                instance.sprite_index = spr_beam_gray
-            end
-            GM.draw_sprite_ext(instance.sprite_index, instance.image_index, instance.x, instance.y, instance.image_xscale, instance.image_yscale, instance.image_angle, Color.WHITE, 1)
-            GM.draw_sprite_ext(instance.sprite_index, instance.image_index, instance.x, instance.y, instance.image_xscale, instance.image_yscale, instance.image_angle, Color.AQUA, 0.6)
-        elseif GM.bool(data.plasma) then
-            GM.draw_sprite_ext(instance.sprite_index, instance.image_index, instance.x, instance.y, instance.image_xscale, instance.image_yscale, instance.image_angle, GM.merge_colour(Color.AQUA, Color.GREEN, 0.3), 1)
-        end
-    end)
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
@@ -960,18 +949,29 @@ local initialize = function()
         --i make you shoot a beam up to 2 times in this state so i made it a function
         function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
             for b = 1, actorData.shots do
-                local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10)
+                local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10 + math.min(actorData.spazer, 1))
                 local beam_data = beam:get_data()
                 beam.image_speed = 0.25
                 beam.image_xscale = direction
+                --lots of jank to set the sprite of the beam depending on what kind of beam you're firing
                 if actorData.beamcharged == 1 then
-                    beam.sprite_index = spr_beam_c0000--charged beam sprite
+                    beam.sprite_index = spr_beam_c0000
                     beam.mask_index = beam.sprite_index
-                    if actorData.spazer == 1 then
+                    if actorData.spazer >= 1 then
                         beam.sprite_index = spr_beam_cs000
                         beam.mask_index = beam.sprite_index
+                        if actorData.ice >= 1 then
+                            beam.sprite_index = spr_beam_csi00
+                            beam.mask_index = beam.sprite_index
+                            if actorData.wave >= 1 then
+                                beam.sprite_index = spr_beam_csiw0
+                                if actorData.plasma >= 1 then
+                                    beam.sprite_index = spr_beam_csiwp
+                                end
+                            end
+                        end
                     end
-                
+                    --firing a charged beam creates a damaging flare at your muzzle
                     if actor:is_authority() then
                         local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
                         attack.attack_info.climb = i * 8 + 16
@@ -981,6 +981,18 @@ local initialize = function()
                     chargeflare.image_xscale = direction
                     chargeflare.image_yscale = 1
                     chargeflare.image_speed = 0.25
+                elseif actorData.spazer == 1 then
+                    beam.sprite_index = spr_beam_0s000
+                    if actorData.ice == 1 then
+                        beam.sprite_index = spr_beam_0si00
+                        beam.mask_index = beam.sprite_index
+                        if actorData.wave >= 1 then
+                            beam.sprite_index = spr_beam_0siw0
+                            if actorData.plasma >= 1 then
+                                beam.sprite_index = spr_beam_0siwp
+                            end
+                        end
+                    end
                 end
                 beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onStep and i use it to do things
                 beam.duration = math.min(actor.level * 10, 170)--like compare it to this variable and destroy it if it has existed too long
