@@ -205,7 +205,7 @@ local initialize = function()
         climb = load_sprite("hunter_climb", "sHunterElevator.png", 1, 14, 15),
         climb_hurt = load_sprite("hunter_climb_hurt", "sHunterElevator.png", 1, 14, 18), 
         death = load_sprite("hunter_death", "sHunterDeath.png", 20, 34, 58),
-        decoy = load_sprite("hunter_decoy", "sHunterRun.png", 4, 14, 24),
+        decoy = load_sprite("hunter_decoy", "sHunterDecoy.png", 1, 17, 20),
     }
 
     --spr_half
@@ -219,7 +219,7 @@ local initialize = function()
     
     --placeholder category, todo organize later
     local spr_skills = load_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
-    local spr_loadout = load_sprite("hunter_loadout", "sSelectHunter.png", 4, 28)
+    local spr_loadout = load_sprite("hunter_loadout", "sSelectHunter.png", 18, 28)
     local spr_portrait = load_sprite("hunter_portrait", "sHunterPortrait.png", 3)
     local spr_portrait_small = load_sprite("hunter_portrait_small", "sHunterPortraitSmall.png")
     local spr_portrait_cropped = load_sprite("hunter_portrait_cropped", "sHunterPortraitC.png")
