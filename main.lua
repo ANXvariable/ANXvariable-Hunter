@@ -309,6 +309,76 @@ local initialize = function()
         armor = 0,
     })
 
+    local obj_beam = Object.new(NAMESPACE, "hunter_beam")
+    obj_beam.obj_sprite = spr_beam
+    obj_beam.obj_depth = 1
+    obj_beam:clear_callbacks()
+
+    --i make you shoot a beam in multiple places so i made it a function
+    function fireBeam(actorData, actor, spawn_offset, direction, damage, doproc, i)
+        for b = 1, actorData.shots do
+            local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10 + math.min(actorData.spazer, 1))
+            local beam_data = beam:get_data()
+            beam.image_speed = 0.25
+            beam.image_xscale = direction
+            --lots of jank to set the sprite of the beam depending on what kind of beam you're firing
+            if actorData.beamcharged == 1 then
+                beam.sprite_index = spr_beam_c0000
+                beam.mask_index = beam.sprite_index
+                if actorData.spazer >= 1 then
+                    beam.sprite_index = spr_beam_cs000
+                    beam.mask_index = beam.sprite_index
+                    if actorData.ice >= 1 then
+                        beam.sprite_index = spr_beam_csi00
+                        beam.mask_index = beam.sprite_index
+                        if actorData.wave >= 1 then
+                            beam.sprite_index = spr_beam_csiw0
+                            if actorData.plasma >= 1 then
+                                beam.sprite_index = spr_beam_csiwp
+                            end
+                        end
+                    end
+                end
+                --firing a charged beam creates a damaging flare at your muzzle
+                if actor:is_authority() then
+                    local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
+                    attack.attack_info.climb = i * 8 + 16
+                end
+                local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
+                chargeflare.sprite_index = spr_beam_flare_0000
+                chargeflare.image_xscale = direction
+                chargeflare.image_yscale = 1
+                chargeflare.image_speed = 0.25
+            elseif actorData.spazer == 1 then
+                beam.sprite_index = spr_beam_0s000
+                if actorData.ice == 1 then
+                    beam.sprite_index = spr_beam_0si00
+                    beam.mask_index = beam.sprite_index
+                    if actorData.wave >= 1 then
+                        beam.sprite_index = spr_beam_0siw0
+                        if actorData.plasma >= 1 then
+                            beam.sprite_index = spr_beam_0siwp
+                        end
+                    end
+                end
+            end
+            beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onStep and i use it to do things
+            beam.duration = math.min(actor.level * 10, 170)--like compare it to this variable and destroy it if it has existed too long
+            beam_data.shadowclimb = i
+            beam_data.parent = actor
+            beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
+            beam_data.damage_coefficient = damage
+            beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
+            beam_data.canhit = 1
+            beam_data.shot = b
+            beam_data.beamcharged = actorData.beamcharged
+            beam_data.spazer = actorData.spazer
+            beam_data.ice = actorData.ice
+            beam_data.wave = actorData.wave
+            beam_data.plasma = actorData.plasma
+        end
+    end
+
     hunter:onStep(function(actor)
         local data = actor:get_data()
         local ssrData = actor:get_data("main", "RobomandosLab-Starstorm Returns")
@@ -442,16 +512,11 @@ local initialize = function()
         --    actor:sound_play(snd_ondeath, 1, 1)
         --end--actor onStep doesn't run when you die i guess
     end)
-
-    local obj_beam = Object.new(NAMESPACE, "hunter_beam")
-    obj_beam.obj_sprite = spr_beam
-    obj_beam.obj_depth = 1
-    obj_beam:clear_callbacks()
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
-        if GM.bool(data.ice) then
-            instance.image_blend = Color.WHITE
+        if GM.bool(data.wave) and instance.depth > -300 then
+            instance.depth = -301
         end
         if GM.bool(data.plasma) and gui_maxbeams == math.huge then
             local trail = GM.instance_create(instance.x, instance.y, gm.constants.oEfTrail)
@@ -473,7 +538,7 @@ local initialize = function()
         if GM.bool(data.plasma) then
             --has_plasma = true
         end
-        local all = Instance.find_all(obj_beam)--too many of these lag so we KILL them
+        local all, _ = Instance.find_all(obj_beam)--too many of these lag so we KILL them
         for _, other_beam in ipairs(all) do
             if _ > maxbeams then
                 instance:destroy()
@@ -892,7 +957,6 @@ local initialize = function()
         actor:enter_state(state_scepter_special)
     end)
 
-
     -- Executed when state_primary is entered
     state_primary:onEnter(function(actor, data)
         actor:skill_util_strafe_init()
@@ -946,70 +1010,6 @@ local initialize = function()
         if actorData.wave > 0 then
             damage = damage * 1.25
         end
-        --i make you shoot a beam up to 2 times in this state so i made it a function
-        function fireBeam(actor, spawn_offset, direction, damage, doproc, i)
-            for b = 1, actorData.shots do
-                local beam = obj_beam:create(actor.x + spawn_offset, actor.y - 10 + math.min(actorData.spazer, 1))
-                local beam_data = beam:get_data()
-                beam.image_speed = 0.25
-                beam.image_xscale = direction
-                --lots of jank to set the sprite of the beam depending on what kind of beam you're firing
-                if actorData.beamcharged == 1 then
-                    beam.sprite_index = spr_beam_c0000
-                    beam.mask_index = beam.sprite_index
-                    if actorData.spazer >= 1 then
-                        beam.sprite_index = spr_beam_cs000
-                        beam.mask_index = beam.sprite_index
-                        if actorData.ice >= 1 then
-                            beam.sprite_index = spr_beam_csi00
-                            beam.mask_index = beam.sprite_index
-                            if actorData.wave >= 1 then
-                                beam.sprite_index = spr_beam_csiw0
-                                if actorData.plasma >= 1 then
-                                    beam.sprite_index = spr_beam_csiwp
-                                end
-                            end
-                        end
-                    end
-                    --firing a charged beam creates a damaging flare at your muzzle
-                    if actor:is_authority() then
-                        local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
-                        attack.attack_info.climb = i * 8 + 16
-                    end
-                    local chargeflare = GM.instance_create(actor.x + spawn_offset + direction * 5, actor.y - 6, gm.constants.oEfSparks)
-                    chargeflare.sprite_index = spr_beam_flare_0000
-                    chargeflare.image_xscale = direction
-                    chargeflare.image_yscale = 1
-                    chargeflare.image_speed = 0.25
-                elseif actorData.spazer == 1 then
-                    beam.sprite_index = spr_beam_0s000
-                    if actorData.ice == 1 then
-                        beam.sprite_index = spr_beam_0si00
-                        beam.mask_index = beam.sprite_index
-                        if actorData.wave >= 1 then
-                            beam.sprite_index = spr_beam_0siw0
-                            if actorData.plasma >= 1 then
-                                beam.sprite_index = spr_beam_0siwp
-                            end
-                        end
-                    end
-                end
-                beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam onStep and i use it to do things
-                beam.duration = math.min(actor.level * 10, 170)--like compare it to this variable and destroy it if it has existed too long
-                beam_data.shadowclimb = i
-                beam_data.parent = actor
-                beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
-                beam_data.damage_coefficient = damage
-                beam_data.doproc = doproc--damage, doproc, and i get defined in state_primary onStep
-                beam_data.canhit = 1
-                beam_data.shot = b
-                beam_data.beamcharged = actorData.beamcharged
-                beam_data.spazer = actorData.spazer
-                beam_data.ice = actorData.ice
-                beam_data.wave = actorData.wave
-                beam_data.plasma = actorData.plasma
-            end
-        end
 
         --if actor:is_authority() then
             if actor.image_index2 >= 0 and data.fired == 0 then--fire an uncharged beam as soon as the skill starts, it's just how i want the attack to work
@@ -1018,7 +1018,7 @@ local initialize = function()
                     doproc = false
                 end
                     for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                        fireBeam(actor, spawn_offset, direction, damage, doproc, i)
+                        fireBeam(actorData, actor, spawn_offset, direction, damage, doproc, i)
                     end
                 actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 2 + math.random() * 0.1)
             end
@@ -1077,7 +1077,7 @@ local initialize = function()
                         doproc = false
                     end
                         for i=0, actor:buff_stack_count(buff_shadow_clone) do 
-                            fireBeam(actor, spawn_offset, direction, damage, doproc, i)
+                            fireBeam(actorData, actor, spawn_offset, direction, damage, doproc, i)
                         end
                     actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 1.5 + math.random() * 0.1)
                     data.released = 1
