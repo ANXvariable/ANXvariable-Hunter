@@ -8,22 +8,26 @@ mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
 local PATH = _ENV["!plugins_mod_folder_path"]
 local NAMESPACE = "ANXvariable"
 
-local lag_reduce = true
+--gui settings
+local beam_limit = false
+local offscr_destroy = true
 local gui_maxbeams = 12
 local input_maxbeams = 12
 --local has_spazer = false
 --local has_plasma = false
 
 gui.add_to_menu_bar(function()
-	lag_reduce, pressed = ImGui.Checkbox("Enable Beam Lag Reduction", lag_reduce)
+	beam_limit, pressed = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", beam_limit)
     input_maxbeams = ImGui.DragFloat("Max Beams", input_maxbeams, 1, 0, 600)
-	if pressed or lag_reduce then
+	if pressed or beam_limit then
 		gui_maxbeams = math.max(0, math.floor(input_maxbeams))
     else
         gui_maxbeams = math.huge
 	end
+    offscr_destroy, pressed2 = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
 end)
 
+--blendmodes from gm
 local bm_normal = 0
 local bm_add = 1
 local bm_max = 2
@@ -538,11 +542,13 @@ local initialize = function()
         if GM.bool(data.plasma) then
             --has_plasma = true
         end
-        local all, _ = Instance.find_all(obj_beam)--too many of these lag so we KILL them
-        for _, other_beam in ipairs(all) do
-            if _ > maxbeams then
-                instance:destroy()
-                return
+        if beam_limit or pressed then
+            local all, _ = Instance.find_all(obj_beam)--too many of these lag so we KILL them
+            for _, other_beam in ipairs(all) do
+                if _ > maxbeams then
+                    instance:destroy()
+                    return
+                end
             end
         end
         
@@ -626,6 +632,11 @@ local initialize = function()
         if instance.x < -16 or instance.x > stage_width + 16 
            or instance.y < -16 or instance.y > stage_height + 16 
         then 
+            instance:destroy()
+            return
+        end
+        --Check if we've gone offscreen if the "Destroy Offscreen Beams" GUI option is set
+        if (offscr_destroy or pressed2) and not GM.bool(GM.inside_view(instance.x, instance.y)) then
             instance:destroy()
             return
         end
