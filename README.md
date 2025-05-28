@@ -23,7 +23,7 @@ Currently, she gains hidden powerups as her level increases.
 - Wave: At level 15, beams travel through walls.
 - Plasma: At level 17, beams travel through non-boss enemies, dealing massive damage.
 
-There is also a modGUI option to reduce the lag caused by having too many beams on screen. Enabling it will cause the oldest beams to be destroyed when there are too many.
+There are also a modGUI options to reduce the lag caused by having too many beams.
 
 ## Credits
 
@@ -41,7 +41,9 @@ There is also a modGUI option to reduce the lag caused by having too many beams 
 ## Multiplayer
 
 Multiplayer technically works, but there may be multiplayer-specific bugs. Please contact me if you encounter any issues.
- - Known: You cannot see other players charging beams or firing charged beams.
+ - Known:
+   - You cannot see other players charging beams or firing charged beams.
+   - The Beam Limit setting may occasionally crash clients in multiplayer in late stages of the run.
 
 
 ## Contact
