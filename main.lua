@@ -640,10 +640,12 @@ local initialize = function()
             return
         end
         --Check if we've gone offscreen if the "Destroy Offscreen Beams" GUI option is set
-        if (offscr_destroy or pressed2) and not GM.bool(GM.inside_view(instance.x, instance.y)) or instance.offscreen > 0 then
-            instance.offscreen = 1
+        if instance.offscreen > 0 then
             instance:destroy()
             return
+        end
+        if (offscr_destroy or pressed2) and not GM.bool(GM.inside_view(instance.x, instance.y)) then
+            instance.offscreen = 1
         end
 
         -- The beam cannot exist for too long
