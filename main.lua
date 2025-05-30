@@ -517,6 +517,10 @@ local initialize = function()
         --end--actor onStep doesn't run when you die i guess
     end)
     
+    obj_beam:onCreate(function(instance)
+        instance.offscreen = 0
+    end)
+
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
         if GM.bool(data.wave) and instance.depth > -300 then
@@ -636,7 +640,8 @@ local initialize = function()
             return
         end
         --Check if we've gone offscreen if the "Destroy Offscreen Beams" GUI option is set
-        if (offscr_destroy or pressed2) and not GM.bool(GM.inside_view(instance.x, instance.y)) then
+        if (offscr_destroy or pressed2) and not GM.bool(GM.inside_view(instance.x, instance.y)) or instance.offscreen > 0 then
+            instance.offscreen = 1
             instance:destroy()
             return
         end
@@ -647,6 +652,14 @@ local initialize = function()
             return
         end
         instance.statetime = instance.statetime + 1--statetime tracks how long the beam has existed, duration is set by the creator
+    end)
+
+    obj_beam:onSerialize(function(instance, buffer)
+        buffer:write_byte(instance.offscreen)
+    end)
+
+    obj_beam:onDeserialize(function(instance, buffer)
+        instance.offscreen = buffer:read_byte()
     end)
 
     local obj_missile = Object.new(NAMESPACE, "hunter_missile")
