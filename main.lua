@@ -1393,7 +1393,6 @@ local initialize = function()
         actorData.sprite_jump_peak_half_prev = nil
         actorData.sprite_fall_half_prev = nil
         actor:survivor_util_init_half_sprites()
-        actor:skill_util_strafe_exit()
         actor.image_yscale = 1
         actor.y = actor.y - 6
     end)
