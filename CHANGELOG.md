@@ -1,3 +1,7 @@
+### v0.2.2
+* Fixed an issue in the Power Bomb state that could cause a crash when exiting the state.
+* Online beams should now be destroyed for all players if the beam has left the firing player's screen.
+
 ### v0.2.1
 * Updated beam sprites
 * Make wave beam's depth `-301` so it appears in front of most objects
