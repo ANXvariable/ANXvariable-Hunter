@@ -642,6 +642,10 @@ local initialize = function()
         end
 
         -- The beam cannot exist for too long
+        if (offscr_destroy or pressed2) and gm._mod_net_isOnline() and not actor:is_authority() and instance.statetime >= 20 then
+            instance:destroy()
+            return
+        end
         if instance.statetime >= 20 + (instance.duration) then
             instance:destroy()
             return
