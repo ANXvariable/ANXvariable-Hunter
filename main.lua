@@ -523,7 +523,7 @@ local initialize = function()
         if GM.bool(data.wave) and instance.depth > -300 then
             instance.depth = -301
         end
-        if GM.bool(data.plasma) and gui_maxbeams == math.huge then
+        if GM.bool(data.plasma) and not (beam_limit or pressed or offscr_destroy or pressed2) then
             local trail = GM.instance_create(instance.x, instance.y, gm.constants.oEfTrail)
             trail.sprite_index = instance.sprite_index
             trail.image_index = 0
