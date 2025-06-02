@@ -1,6 +1,6 @@
 ### v0.2.2
 * Fixed an issue in the Power Bomb state that could cause a crash when exiting the state.
-* Online beams should now be destroyed for all players if the beam has left the firing player's screen.
+* "Destroy offscreen beams" will stop rendering other player's beams online after a moment for lag purposes.
 
 ### v0.2.1
 * Updated beam sprites
