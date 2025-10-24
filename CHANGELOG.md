@@ -1,3 +1,7 @@
+### v0.2.3
+* Ice beam now has a custom debuff instead of using a combination of vanilla debuffs; it now stops enemies in their tracks and allows the player to stand on them.
+* Fixed an issue with charge flare that caused it to deal triple the intended damage.
+
 ### v0.2.2
 * Fixed an issue in the Power Bomb state that could cause a crash when exiting the state.
 * "Destroy offscreen beams" will stop rendering other player's beams online after a moment for lag purposes.
