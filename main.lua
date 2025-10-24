@@ -507,10 +507,10 @@ local initialize = function()
         end
 
 
-        --onDeath
-        --if actor:control("jump", 0) then
-        --    log.info("asci = "..actor.actor_state_current_id)
-        --    log.info(State.find(NAMESPACE, "hunterV").value)
+        --if actor:control("jump", 1) then
+        --    local director = GM._mod_game_getDirector()
+        --    Helper.log_struct(director)
+        --    log.info(GM._mod_game_getDifficulty())
         --end
         --if actor.sprite_index == sprites.death and actor.image_index == 2 then
         --    actor:sound_play(snd_ondeath, 1, 1)
@@ -956,9 +956,9 @@ local initialize = function()
         actor:enter_state(state_secondary)
     end)
 
-    skill_secondary:onStep(function(actor, skill)
-        local data = actor:get_data()
-    end)
+    --skill_secondary:onStep(function(actor, skill)
+    --    local data = actor:get_data()
+    --end)
     
     skill_utility:onActivate(function(actor, skill, index)
         actor:enter_state(state_utility)
@@ -1400,18 +1400,8 @@ end
 Initialize(initialize)
 
 -- ** Uncomment the two lines below to re-call initialize() on hotload **
- if hotload then initialize() end
- hotload = true
-
-
-gm.post_script_hook(gm.constants.__input_system_tick, function(self, other, result, args)
-    -- This is an example of a hook
-    -- This hook in particular will run every frame after it has finished loading (i.e., "Hopoo Games" appears)
-    -- You can hook into any function in the game
-    -- Use pre_script_hook 'stead to run code before the function
-    -- https://github.com/return-of-modding/ReturnOfModding/blob/master/docs/lua/tables/gm.md
-    
-end)
+if hotload then initialize() end
+hotload = true
 
 gm.pre_code_execute("gml_Object_oLava_Collision_pActorCollisionBase", function (self, other, result, args)
     local actor = gm.attack_collision_resolve(other)
