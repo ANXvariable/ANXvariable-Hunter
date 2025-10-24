@@ -1,4 +1,7 @@
 -- Hunter
+-- good morning morioh-cho
+-- i tried leaving comments here and there to clear some things up, plus some old comments from copying dixie's tutorial (skull emoji)
+-- if you have questions let me know so i can try to expand my comments more
 
 log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["LuaENVY-ENVY"]
@@ -40,6 +43,7 @@ local initialize = function()
     local hunter = Survivor.new(NAMESPACE, "hunter")
 
     --tempsection
+    --all the upgrades are hidden items
         local missiletank = Item.new(NAMESPACE, "missileTank", true)
         missiletank:set_sprite(gm.constants.sMissileBox)
         missiletank:set_tier(5)
@@ -390,7 +394,7 @@ local initialize = function()
         local usedAllFeathers = actor.jump_count >= actor:item_stack_count(Item.find("ror-hopooFeather"))
         local climbing = GM.actor_state_is_climb_state(actor.actor_state_current_id)
         local cv = actor.actor_state_current_id == State.find(NAMESPACE, "hunterC").value or actor.actor_state_current_id == State.find(NAMESPACE, "hunterV").value
-        --walljumping
+        --walljumping, i used iceTool's but i tried to make it feel more like walljumping from the survivor's game of origin
         local wallx = 0
 
         if actor:is_colliding(gm.constants.pSolidBulletCollision, actor.x - 3 - actor.pHmax / 2.8) and actor:control("right", 0) then
@@ -433,6 +437,7 @@ local initialize = function()
         end
 
         --Space Jumping (boots)
+        --You can only Space Jump while falling just as it was originally
         if not free or climbing or actor:is_colliding(gm.constants.oGeyser) then
             data.spacejump_count = 0
         end
@@ -518,6 +523,7 @@ local initialize = function()
     end)
 
     --ice beam debuff
+    --bunch of jank to be able to freeze an enemy completely and stand on them
     local freeze86 = Buff.new(NAMESPACE, "freeze86")
     freeze86.icon_sprite = gm.constants.sBuffs
     freeze86.icon_subimage = 7
@@ -531,13 +537,13 @@ local initialize = function()
     block = Object.find("ror-bNoSpawn")
 
     --BEHOLD THE WORST POSSIBLE IMPLEMENTATION OF CUSTOM SOLID??
+    --first, we make a custom object that has the behavior i want but isn't actually solid because i can't make it i guess. i need it to move with the actor and disappear if they die.
 
     obj_iceBlock_86:onCreate(function(instance)
         instance.visible = false
         --instance.solid = true--this doesn't do anything
         instance.parent = -4
         instance.trueblock = -4
-        --instance.pos_changed = false
     end)
 
     obj_iceBlock_86:onDestroy(function(instance)
@@ -567,6 +573,7 @@ local initialize = function()
             actor._myblock_freeze86_anx.sprite_index = actor.sprite_index
         end
         actor._myblock_freeze86_anx.parent = actor
+        --then we create a real solid from the game that you can actually stand on and just put it where the custom object is. like an insane person would, i think
         actor._myblock_freeze86_anx.trueblock = block:create(actor.x, actor.y)
         actor._myblock_freeze86_anx.trueblock.sprite_index = actor._myblock_freeze86_anx.sprite_index
         if not GM.actor_drawscript_attached(actor, Global.DrawScript_actor_frozen) then
@@ -611,8 +618,6 @@ local initialize = function()
             return
         end
     end)
-
-    --after all this, evolved lemurians will STILL ATTACK YOU WHILE FROZEN
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
@@ -687,19 +692,7 @@ local initialize = function()
                     attack.attack_info.climb = (data.shadowclimb + data.shot - 1) * 8--this is accounting for being from a shadow clone and which beam it is
                     data.canhit = 0
                 end
-                if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss
-                    --if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and resolved_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
-                    --    GM.remove_buff(resolved_actor, slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
-                    --    GM.apply_buff(resolved_actor, snare, 4 * 60, 1)
-				    --    Alarm.create(function()
-                    --        if not Instance.exists(other_actor) or type(resolved_actor) == "number" then
-                    --            return
-                    --        elseif resolved_actor.hp > 0 then--i have redundant checks for if the actor is still alive but yknow
-                    --            GM.apply_buff(resolved_actor, slow2, 4 * 60, 1)
-                    --            --log.info("success")
-                    --        end
-                    --    end, 1)
-                    --end
+                if GM.bool(data.ice) then--the following is supposed to apply the ice debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss
                     if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and resolved_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
                         if resolved_actor:buff_stack_count(freeze86) == 0 then
                             GM.apply_buff(resolved_actor, freeze86, 4 * 60, 1)
@@ -720,7 +713,7 @@ local initialize = function()
         if GM.bool(data.plasma) and data.canhit < 1 then
             data.canhit = data.canhit + (1 / canhitwhen)
         end
-
+        --i want the beam to break blocks and hit buttons, so i made it fire a damageless explosion when it collides with one
         if instance:is_colliding(gm.constants.pEnvironmentShootable) then
             data.parent:fire_explosion(instance.x, instance.y, 32, 32, 0, spr_none, spr_none, false)
         end
@@ -839,9 +832,7 @@ local initialize = function()
         if instance.statetime >= 30 then
             local parentalignx = data.parent.x - 4
             local diffx = parentalignx - instance.x
-            --if instance.hitowner == 0 then
-            --    log.info(instance:distance_to_point(data.parent.x, data.parent.y + 11))
-            --end
+            --bomb jumping
             if instance:distance_to_point(data.parent.x, data.parent.y + 11) <= 22 and instance.hitowner == 0 then
                 if parentalignx ~= instance.x then
                     data.parent.pHspeed = data.parent.pHspeed + 2.8 * GM.sign(diffx)
@@ -855,9 +846,11 @@ local initialize = function()
                     attack.attack_info.climb = data.shadowclimb * 8
                 end
                 if data.parent:item_stack_count(Item.find("ror", "brilliantBehemoth")) == 0 then
+                    --to make sure it doesn't play the sound twice
                     instance:sound_play(gm.constants.wExplosiveShot, 0.8, 1)
                 end
                 instance.image_alpha = 0
+                --return stocks to the user after exploding
                 local skill4 = data.parent:get_active_skill(Skill.SLOT.special)
                 if data.shadowclimb < 1 then
                     skill4.stock = skill4.stock + 1
@@ -926,6 +919,8 @@ local initialize = function()
 
         instance.statetime = instance.statetime + 1
     end)
+
+    --i have a custom object to handle the slowly expanding explosion
 
     obj_powerbomb_explosion:onStep(function(instance)
         local data = instance:get_data()
