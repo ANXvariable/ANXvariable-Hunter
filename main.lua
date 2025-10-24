@@ -516,6 +516,103 @@ local initialize = function()
         --    actor:sound_play(snd_ondeath, 1, 1)
         --end--actor onStep doesn't run when you die i guess
     end)
+
+    --ice beam debuff
+    local freeze86 = Buff.new(NAMESPACE, "freeze86")
+    freeze86.icon_sprite = gm.constants.sBuffs
+    freeze86.icon_subimage = 7
+    freeze86.is_debuff = true
+    freeze86:clear_callbacks()
+
+    local obj_iceBlock_86 = Object.new(NAMESPACE, "iceBlock_86")
+    obj_iceBlock_86.obj_sprite = gm.constants.sNoSpawn
+    obj_iceBlock_86.obj_depth = 1
+    obj_iceBlock_86:clear_callbacks()
+    block = Object.find("ror-bNoSpawn")
+
+    --BEHOLD THE WORST POSSIBLE IMPLEMENTATION OF CUSTOM SOLID??
+
+    obj_iceBlock_86:onCreate(function(instance)
+        instance.visible = false
+        --instance.solid = true--this doesn't do anything
+        instance.parent = -4
+        instance.trueblock = -4
+        --instance.pos_changed = false
+    end)
+
+    obj_iceBlock_86:onDestroy(function(instance)
+        if Instance.exists(instance.trueblock) then
+            instance.trueblock:destroy()
+            return
+        end
+    end)
+
+    obj_iceBlock_86:onStep(function(instance)
+        if not Instance.exists(instance.parent) then
+            instance:destroy()
+            return
+        end
+        instance.x = instance.parent.x
+        instance.y = instance.parent.y
+        instance.trueblock.x = instance.x
+        instance.trueblock.y = instance.y
+    end)
+    
+    freeze86:onApply(function(actor, stack)
+        actor.image_speed = 0
+        actor._myblock_freeze86_anx = obj_iceBlock_86:create(actor.x, actor.y)
+        if actor.mask_index >= 0 then
+            actor._myblock_freeze86_anx.sprite_index = actor.mask_index
+        else
+            actor._myblock_freeze86_anx.sprite_index = actor.sprite_index
+        end
+        actor._myblock_freeze86_anx.parent = actor
+        actor._myblock_freeze86_anx.trueblock = block:create(actor.x, actor.y)
+        actor._myblock_freeze86_anx.trueblock.sprite_index = actor._myblock_freeze86_anx.sprite_index
+        if not GM.actor_drawscript_attached(actor, Global.DrawScript_actor_frozen) then
+            GM.actor_drawscript_attach(actor, Global.DrawScript_actor_frozen)
+        end
+        actor:sound_play(gm.constants.wFrozen, 1, 0.9 + math.random() * 0.2)
+        --somehow they still move after having all their speeds set to 0 so i just used the code from timestop_active_update
+        actor.is_update_enabled = not actor.disable_ai and actor.object_index == gm.constants.oP and not GM.actor_state_is_climb_state(actor.actor_state_current_id) and actor.activity_type ~= 7 and actor.activity ~= 90
+    end)
+    
+    freeze86:onPostStatRecalc(function(actor, stack)
+        actor.damage = 0
+        actor.pHmax = 0
+        actor.pHspeed = 0
+        actor.pVmax = 0
+        actor.pVspeed = 0
+        actor.image_speed = 0
+        end)
+    
+    freeze86:onPostStep(function(actor, stack)
+	    local bufftime = GM.get_buff_time(actor, freeze86)
+        actor.pHspeed = 0
+        actor.pVspeed = 0
+        actor.activity = 50
+		actor:alarm_set(7, 10)
+		actor:alarm_set(2, 10)
+        actor.image_speed = 0
+        if Global.time_stop > 0 and bufftime > 1 then
+            GM.set_buff_time(actor, freeze86, bufftime + 1)
+        end
+        actor.is_update_enabled = not actor.disable_ai and actor.object_index == gm.constants.oP and not GM.actor_state_is_climb_state(actor.actor_state_current_id) and actor.activity_type ~= 7 and actor.activity ~= 90
+    end)
+
+    freeze86:onRemove(function(actor, stack)
+        actor.is_update_enabled = true
+        actor:skill_util_reset_activity_state()
+        if GM.actor_drawscript_attached(actor, Global.DrawScript_actor_frozen) then
+            GM.actor_drawscript_remove(actor, Global.DrawScript_actor_frozen)
+        end
+        if Instance.exists(actor._myblock_freeze86_anx) then
+            actor._myblock_freeze86_anx:destroy()
+            return
+        end
+    end)
+
+    --after all this, evolved lemurians will STILL ATTACK YOU WHILE FROZEN
     
     obj_beam:onStep(function(instance)
         local data = instance:get_data()
@@ -591,17 +688,24 @@ local initialize = function()
                     data.canhit = 0
                 end
                 if GM.bool(data.ice) then--the following is supposed to apply the permafrost debuff, 20%-100% chance based on the base damage and only if the actor is alive and not a boss
+                    --if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and resolved_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
+                    --    GM.remove_buff(resolved_actor, slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
+                    --    GM.apply_buff(resolved_actor, snare, 4 * 60, 1)
+				    --    Alarm.create(function()
+                    --        if not Instance.exists(other_actor) or type(resolved_actor) == "number" then
+                    --            return
+                    --        elseif resolved_actor.hp > 0 then--i have redundant checks for if the actor is still alive but yknow
+                    --            GM.apply_buff(resolved_actor, slow2, 4 * 60, 1)
+                    --            --log.info("success")
+                    --        end
+                    --    end, 1)
+                    --end
                     if math.random() <= math.max(0.2, math.min(1, data.damage_coefficient / 9)) and resolved_actor.hp > 0 and not GM.actor_is_boss(other_actor) then
-                        GM.remove_buff(resolved_actor, slow2)--for some reason we have to use the GM functions directly and not the actor instance methods
-                        GM.apply_buff(resolved_actor, snare, 4 * 60, 1)
-				        Alarm.create(function()
-                            if not Instance.exists(other_actor) or type(resolved_actor) == "number" then
-                                return
-                            elseif resolved_actor.hp > 0 then--i have redundant checks for if the actor is still alive but yknow
-                                GM.apply_buff(resolved_actor, slow2, 4 * 60, 1)
-                                --log.info("success")
-                            end
-                        end, 1)
+                        if resolved_actor:buff_stack_count(freeze86) == 0 then
+                            GM.apply_buff(resolved_actor, freeze86, 4 * 60, 1)
+                        else
+                            GM.set_buff_time(resolved_actor, freeze86, 4 * 60)
+                        end
                     end
                 end
 
