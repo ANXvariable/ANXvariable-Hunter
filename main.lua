@@ -344,7 +344,7 @@ local initialize = function()
                     end
                 end
                 --firing a charged beam creates a damaging flare at your muzzle
-                if actor:is_authority() then
+                if actor:is_authority() and b == 1 then
                     local attack = actor:fire_explosion(actor.x + spawn_offset + direction * 5, actor.y - 6, 24, 24, damage * 0.6, spr_none, spr_none)
                     attack.attack_info.climb = i * 8 + 16
                 end
@@ -1032,7 +1032,7 @@ local initialize = function()
                 if actor:skill_util_update_heaven_cracker(actor, damage) then
                     doproc = false
                 end
-                    for i=0, actor:buff_stack_count(buff_shadow_clone) do 
+                    for i=0, actor:buff_stack_count(buff_shadow_clone) do
                         fireBeam(actorData, actor, spawn_offset, direction, damage, doproc, i)
                     end
                 actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 2 + math.random() * 0.1)
