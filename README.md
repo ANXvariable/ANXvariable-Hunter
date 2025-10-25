@@ -45,6 +45,8 @@ Multiplayer technically works, but there may be multiplayer-specific bugs. Pleas
    - You cannot see other players charging beams or firing charged beams.
    - Online players can damage enemies with invisible beams with Destroy Offscreen Beams enabled (this one is intentional for now).
    - Standing on an enemy as it unfreezes will allow the player to stand in midair until they move or jump.
+   - Multi-segment enemies only allow you to stand on their primary segment when frozen (i.e. bramble legs).
+   - If you stand inside a large enemy and freeze them you may get stuck.
    - The Beam Limit setting may occasionally crash clients in multiplayer in late stages of the run.
 
 
