@@ -9,7 +9,7 @@ envy.auto()
 mods["RoRRModdingToolkit-RoRR_Modding_Toolkit"].auto(true)
 
 local PATH = _ENV["!plugins_mod_folder_path"]
-local NAMESPACE = "ANXvariable"
+local NAMESPACE = "anx"
 
 --gui settings
 local beam_limit = false
