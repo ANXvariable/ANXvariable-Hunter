@@ -1544,9 +1544,9 @@ Initialize.add(initialize)
 if hotload then initialize() end
 
 Hook.add_pre("gml_Object_oLava_Collision_pActorCollisionBase", function(self, other)
-    local actor = gm.attack_collision_resolve(other)
+    local actor = GM.attack_collision_resolve(other)
     if actor ~= -4 then
-        if gm.item_stack_count(actor, Item.find("gravitySuit").value, 3) > 0 then
+        if actor:item_count(Item.find("gravitySuit")) > 0 then
             return false
         end
     end
