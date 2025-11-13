@@ -1,11 +1,11 @@
 ﻿{
-	"name": "Hunter",
-	"version_number": "0.2.3",
+	"name": "Hunter2",
+	"version_number": "0.2.4",
 	"website_url": "https://github.com/ANXvariable/ANXvariable-Hunter",
 	"description": "She's sent an emergency directive: ''Join the fight!''",
 	"dependencies": [
-		"ReturnOfModding-ReturnOfModding-1.0.53",
-		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.2.0",
+		"ReturnOfModding-ReturnOfModding-1.1.7",
+		"ReturnsAPI-ReturnsAPI-0.1.39",
 		"LuaENVY-ENVY-1.2.0"
 	]
 }

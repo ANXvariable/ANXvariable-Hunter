@@ -1,3 +1,6 @@
+### v0.2.4
+* RAPI Port
+
 ### v0.2.3
 * Ice beam now has a custom debuff instead of using a combination of vanilla debuffs; it now stops enemies in their tracks and allows the player to stand on them.
 * Fixed an issue with charge flare that caused it to deal triple the intended damage.
