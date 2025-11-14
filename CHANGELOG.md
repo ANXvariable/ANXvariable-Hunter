@@ -1,5 +1,6 @@
 ### v0.2.4
-* RAPI Port
+* ReturnsAPI
+* Fixed an issue where online charge shots were not displayed.
 
 ### v0.2.3
 * Ice beam now has a custom debuff instead of using a combination of vanilla debuffs; it now stops enemies in their tracks and allows the player to stand on them.
