@@ -1143,10 +1143,9 @@ local initialize = function()
         local release = false
         if Util.bool(actor.is_local) then
             release = not actor:input_check("skill1", actor.input_player_index)
-        end
-    --    if not actor:is_authority() then
-    --        release = Util.bool(actor.activity_var2)
-    --    end--i took some code from nemmando, this gets referenced later
+        elseif not actor:is_authority() then
+            release = Util.bool(actor.activity_var2)
+        end--i took some code from nemmando, this gets referenced later
         local damage = actor:skill_get_damage(hunterZ)
         local direction = GM.cos(GM.degtorad(actor:skill_util_facing_direction()))
         local buff_shadow_clone = Buff.find("shadowClone", "ror")
@@ -1211,15 +1210,13 @@ local initialize = function()
                     end
                 end
             else
-            --    these lines were taken from nemmando to try to sync the characters holding down the skill button
-            --    however we discovered that it will set the image xscale for all actors of the same type so we removed it for now
-            --    if GM._mod_net_isOnline() then
-            --        if GM._mod_net_isHost() then
-            --            GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
-            --        else
-            --            GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
-            --        end
-            --    end
+                if actor:is_authority() then--this is where the nemmando code goes into play, this is some packet stuff to try to sync the held-down charge
+                    if GM._mod_net_isHost() then
+                        GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
+                    else
+                        GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
+                    end
+                end
                 if actor.image_index2 >= 0 and data.fired == 1 and data.wannacharge >= 10 then
                     data.fired = 2--since i'm firing a second beam
                     if actorData.beamcharged == 1 then
