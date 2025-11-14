@@ -357,14 +357,6 @@ local initialize = function()
     hunter_log.portrait_id = spr_log
     hunter_log.sprite_id = sprites.walk
     hunter_log.sprite_icon_id = spr_portrait
-    hunter_log.stat_hp_base      = 99
-    hunter_log.stat_hp_level     = 32
-    hunter_log.stat_damage_base  = 12
-    hunter_log.stat_damage_level = 3.3125
-    hunter_log.stat_regen_base   = 0.01
-    hunter_log.stat_regen_level  = 0.002
-    hunter_log.stat_armor_base   = 0
-    hunter_log.stat_armor_level  = 0
 
     local obj_beam = Object.new("hunter_beam")
     obj_beam.obj_sprite = spr_beam
