@@ -7,7 +7,7 @@ log.info("Loading ".._ENV["!guid"]..".")
 local envy = mods["LuaENVY-ENVY"]
 envy.auto()
 mods["ReturnsAPI-ReturnsAPI"].auto{
-    namespace = "anx",
+    namespace = "hunter",
     mp = true
 }
 
