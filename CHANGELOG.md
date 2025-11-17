@@ -1,3 +1,6 @@
+### v0.2.5
+* ReturnsAPI adjustment (RecalculateStats)
+
 ### v0.2.4
 * ReturnsAPI
 * Fixed an issue where online charge shots were not displayed.

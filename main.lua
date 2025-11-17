@@ -64,12 +64,11 @@ local initialize = function()
             local skill2 = actor:get_active_skill(1)
             skill2.stock = skill2.stock + 1
         end)
-        RecalculateStats.add(function(actor)
+        RecalculateStats.add(function(actor, api)
 	        local stack = actor:item_count(missiletank)
             if stack <= 0 then return end
 
-            local skill2 = actor:get_active_skill(1)
-            skill2.max_stock = skill2.max_stock + stack
+            api.skill_secondary.max_stock_add(stack)
         end)
 
         local hijump = Item.new("hiJumpBoots")
@@ -77,11 +76,11 @@ local initialize = function()
         hijump:set_tier(5)
         hijump:toggle_loot(false)
         hijump.is_hidden = true
-        RecalculateStats.add(function(actor)
+        RecalculateStats.add(function(actor, api)
 	        local stack = actor:item_count(hijump)
             if stack <= 0 then return end
 
-            actor.pVmax = actor.pVmax + 2.4 * stack
+            api.pVmax_add(2.4 * stack)
         end)
 
         local spacejumpboots = Item.new("spaceJumpBoots")
@@ -89,11 +88,11 @@ local initialize = function()
         spacejumpboots:set_tier(5)
         spacejumpboots:toggle_loot(false)
         spacejumpboots.is_hidden = true
-        RecalculateStats.add(Callback.Priority.AFTER, function(actor)
+        RecalculateStats.add(Callback.Priority.AFTER, function(actor, api)
 	        local stack = actor:item_count(spacejumpboots)
             if stack <= 0 then return end
 
-            actor.pGravity2 = actor.pGravity2 * (0.9 ^ (stack ^ 0.2))
+            api.pGravity2_mult(0.9 ^ (stack ^ 0.2))
         end)
 
         local varsuit = Item.new("variaSuit")
@@ -108,11 +107,11 @@ local initialize = function()
                 actor.buff_immune:set(Buff.find("slow2", "ror"))
             end
         end)
-        RecalculateStats.add(function(actor)
+        RecalculateStats.add(function(actor, api)
 	        local stack = actor:item_count(varsuit)
             if stack <= 0 then return end
 
-            actor.armor = actor.armor + 50 * stack
+            api.armor_add(50 * stack)
         end)
 
         local gravsuit = Item.new("gravitySuit")
@@ -178,11 +177,11 @@ local initialize = function()
                 --log.info("vmax = "..actor.pVmax)  
             end          
         end)
-        RecalculateStats.add(function(actor)
+        RecalculateStats.add(function(actor, api)
 	        local stack = actor:item_count(gravsuit)
             if stack <= 0 then return end
 
-            actor.armor = actor.armor + 50 * stack
+            api.armor_add(50 * stack)
         end)
         --Callback.add(gravsuit.on_removed, function(actor, stack)
         --    actor.image_blend = Color.WHITE
@@ -614,16 +613,13 @@ local initialize = function()
     end)
     
     
-    RecalculateStats.add(Callback.Priority.AFTER, function(actor)
+    RecalculateStats.add(Callback.Priority.AFTER, function(actor, api)
         local stack = actor:buff_count(freeze86)
         if stack <= 0 then return end
 
-        actor.damage = 0
-        actor.pHmax = 0
-        actor.pHspeed = 0
-        actor.pVmax = 0
-        actor.pVspeed = 0
-        actor.image_speed = 0
+        api.damage_mult(0)
+        api.pHmax_mult(0)
+        api.pVmax_mult(0)
     end)
     
     
