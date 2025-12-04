@@ -145,7 +145,7 @@ local initialize = function()
             local actors = gravsuit:get_holding_actors()
             
             for _, actor in ipairs(actors) do
-	            local stack = actor:item_count(varsuit)
+	            local stack = actor:item_count(gravsuit)
                 if stack <= 0 then return end
 
                 actor.buff_immune:set(Buff.find("slowGoop", "ror"), true)
@@ -282,7 +282,7 @@ local initialize = function()
 
     --snd
     local snd_chargeloop = rapi_sound("hunter_chargeloop", "wDivineTP_CompleteAmbience_Loopable_steeled.ogg")
-    local snd_ondeath = rapi_sound("hunter_chargeloop", "snd_badexplosion.ogg")
+    local snd_ondeath = rapi_sound("hunter_explode", "snd_badexplosion.ogg")
 
     -- Assign sprites to various survivor fields
     hunter.sprite_loadout = spr_loadout
@@ -1138,7 +1138,7 @@ local initialize = function()
         local actorData = Instance.get_data(actor)
         local release = false
         if Util.bool(actor.is_local) then
-            release = not actor:input_check("skill1", actor.input_player_index)
+            release = not GM.SO.control(actor, nil, "skill1", 0)
         elseif not actor:is_authority() then
             release = Util.bool(actor.activity_var2)
         end--i took some code from nemmando, this gets referenced later
@@ -1207,7 +1207,7 @@ local initialize = function()
                 end
             else
                 if actor:is_authority() then--this is where the nemmando code goes into play, this is some packet stuff to try to sync the held-down charge
-                    if GM._mod_net_isHost() then
+                    if Net.host then
                         GM.server_message_send(0, 43, actor:get_object_index_self(), actor.m_id, 1, gm.sign(actor.image_xscale))
                     else
                         GM.client_message_send(43, 1, gm.sign(actor.image_xscale))
@@ -1226,7 +1226,7 @@ local initialize = function()
                         end
                     actor:sound_play(gm.constants.wGuardDeathOLD, 0.4, 1.5 + math.random() * 0.1)
                     data.released = 1
-                    if GM._mod_sound_isPlaying(snd_chargeloop) then
+                    if actor:is_authority() and GM._mod_sound_isPlaying(snd_chargeloop) then
                         GM._mod_sound_stop(snd_chargeloop)
                     end
                 end
@@ -1244,6 +1244,9 @@ local initialize = function()
     Callback.add(stateHunterZ.on_exit, function(actor, data)
         actor:skill_util_strafe_exit()
         data.statetime = 0
+        --if actor:is_authority() and GM._mod_sound_isPlaying(snd_chargeloop) then
+        --    GM._mod_sound_stop(snd_chargeloop)
+        --end
     end)
 
     -- Executed when stateHunterX is entered
