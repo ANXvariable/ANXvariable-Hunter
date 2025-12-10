@@ -507,7 +507,7 @@ local initialize = function()
 
         --Missile tanks on-level
         data.mtanks = actor:item_count(missiletank)
-        if data.mtanks < actor.level then
+        if not experimental and data.mtanks < actor.level - 1 then
             actor:item_give(missiletank)
         end
 
@@ -1098,7 +1098,7 @@ local initialize = function()
     hunterZ.use_delay = 5
     hunterX.damage = 4.0
     hunterX.cooldown = 120
-    local base_stocks = 4
+    local base_stocks = 5
     hunterX.max_stock = base_stocks
     hunterX.start_with_stock = base_stocks
     hunterC.damage = 0
@@ -1590,14 +1590,26 @@ local initialize = function()
         return candidates
     end
 
+    local function chinytozo_give_reward_alarm(instance, item)
+        if not Instance.exists(instance) then return end
+        local target
+        if Instance.exists(instance.activator) then target = instance.activator end
+        Sound.wrap(gm.constants.wChest1):play(instance.x, instance.y, 1, 1)
+        if Net.host then item:create(instance.x, instance.y, target) end
+        Util.print(instance.rewards)
+        instance.rewards = instance.rewards - 1
+        if instance.rewards > 0 then Alarm.add(45, chinytozo_give_reward_alarm, instance, item, target) end
+    end
+
     Callback.add(oChinyTozo.on_create, function(instance)
-        GM.interactable_init_cost(instance, 0, 125)
+        GM.interactable_init_cost(instance, 0, 100)
         instance:interactable_init_name()
         instance.candidates = chinytozo_get_candidates()
         instance.minions = Array.new()
         instance.minions_max = math.max(1, math.floor((math.log(gm._mod_game_getDirector().enemy_buff) / math.log(2))))
         instance.minions_dead = 0
-        instance.spawn_elite = Elite.find("blighted", "ror").value
+        instance.spawn_elite = math.random(0, 5)
+        instance.rewards = math.random(3)
         instance.has_item = true
     end)
 
@@ -1609,12 +1621,19 @@ local initialize = function()
             if ssrOn and math.random() > 0.5 and director.stages_passed > 8 then
                 instance.spawn_elite = Elite.find("empyrean", "ssr").value
                 instance.minions_max = math.max(1, math.floor(instance.minions_max / 2))
+            elseif gm.elite_can_spawn_blighted_enemies() then
+                instance.spawn_elite = Elite.find("blighted", "ror").value
+            else
+                instance.minions_max = math.min(32, math.ceil(2 ^ instance.minions_max))
             end
             local preserve_elite = director.spawn_elite
             for i = 1, instance.minions_max do
                 local spawn = director:director_spawn_monster_card(instance.x, instance.y, card, director.bonus_rate)
                 director.spawn_elite = instance.spawn_elite
                 director:director_try_elite_spawn(spawn, card, false)
+                if MonsterCard.wrap(card).spawn_type ~= 3 then
+                    GM.teleport_nearby(spawn, instance.x + math.random(-960 , 960), instance.y)
+                end
                 instance.minions:push(spawn)
             end
             director.spawn_elite = preserve_elite
@@ -1631,10 +1650,7 @@ local initialize = function()
                 instance.minions_dead = dead
             end
             if instance.minions_dead == instance.minions_max and instance.has_item then
-                local target
-                if Instance.exists(instance.activator) then target = instance.activator end
-                Item.find("classifiedAccessCodes", "ror"):create(instance.x, instance.y, target)
-                instance:sound_play(gm.constants.wChest1, 1, 1)
+                chinytozo_give_reward_alarm(instance, Item.find("missileTank", "hunter"))
                 instance.has_item = false
             end
         end
