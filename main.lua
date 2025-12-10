@@ -11,26 +11,37 @@ mods["ReturnsAPI-ReturnsAPI"].auto{
     mp = true
 }
 
+local ssrOn = false
+mods.on_all_mods_loaded(function()
+    --for k,v in pairs(mods) do print(k,v) end
+    print("on_all_mods_loaded", debugmsg)
+    if mods["StarstormReturns-StarstormReturns"] or mods["RobomandosLab-StarstormReturns"] then
+        ssrOn = true
+    end
+end)
+
 local PATH = _ENV["!plugins_mod_folder_path"]
 local NAMESPACE = "anx"
+local debugmsg = "If you're reading this, I forgot to remove the debug message."
 
 --gui settings
 local beam_limit = false
 local offscr_destroy = true
 local gui_maxbeams = 12
 local input_maxbeams = 12
+local pressed = {false, true, false, false}
 --local has_spazer = false
 --local has_plasma = false
 
 gui.add_to_menu_bar(function()
-	beam_limit, pressed = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", beam_limit)
+	beam_limit, pressed[1] = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", beam_limit)
     input_maxbeams = ImGui.DragFloat("Max Beams", input_maxbeams, 1, 0, 600)
 	if pressed or beam_limit then
 		gui_maxbeams = math.max(0, math.floor(input_maxbeams))
     else
         gui_maxbeams = math.huge
 	end
-    offscr_destroy, pressed2 = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
+    offscr_destroy, pressed[2] = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
 end)
 
 --blendmodes from gm
@@ -46,14 +57,6 @@ local initialize = function()
     hotload = true
     local hunter = Survivor.new("hunter")
 
-    --tempsection
-        --Callback.add(Callback.ON_STEP, function()
-        --    local actors = item:get_holding_actors()
-        --    
-        --    for _, actor in ipairs(actors) do
-        --        -- Do stuff
-        --    end
-        --end)
     --all the upgrades are hidden items
         local missiletank = Item.new("missileTank")
         missiletank:set_sprite(gm.constants.sMissileBox)
@@ -260,6 +263,7 @@ local initialize = function()
     --local spr_morphandbomb = rapi_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
     local spr_morph = rapi_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
     local spr_morph2 = rapi_sprite("hunter_morph2", "sHunterMorph2.png", 8, 6, 12)
+
     local spr_beam = rapi_sprite("hunter_beam", "sHunterBeam.png", 4)
     local spr_beam_c0000 = rapi_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
     local spr_beam_cs000 = rapi_sprite("hunter_beam_cs000", "sHunterBeamCS000.png", 4, 14, 2)
