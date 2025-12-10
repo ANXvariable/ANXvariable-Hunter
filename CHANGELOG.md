@@ -1,3 +1,16 @@
+### v0.3.0
+* New Experimental Settings (Toggle from ImGui window)
+  * Unlink missile - level relation
+  * Interactable: ChinyTozo
+  * When playing as hunter, a couple will spawn every stage (minus Contact Light)
+  * Interacting with ChinyTozo summons a wave of enemies. Defeating the enemies will reward the player with 1-3 missile tanks.
+  * Minor SSR interaction
+* Fixed bug where VarSuit was giving GravSuit's effects
+* Fixed unused sound asset having the same identifier as another sound
+* Minor changes to charge looping sound
+* Freeze no longer makes enemies fully solid
+  * Configurable ImGui option to revert to old behavior
+
 ### v0.2.5
 * ReturnsAPI adjustment (RecalculateStats)
 

@@ -11,6 +11,10 @@ mods["ReturnsAPI-ReturnsAPI"].auto{
     mp = true
 }
 
+local PATH = _ENV["!plugins_mod_folder_path"]
+local NAMESPACE = "anx"
+local debugmsg = "If you're reading this, I forgot to remove the debug message."
+
 local ssrOn = false
 mods.on_all_mods_loaded(function()
     --for k,v in pairs(mods) do print(k,v) end
@@ -19,10 +23,6 @@ mods.on_all_mods_loaded(function()
         ssrOn = true
     end
 end)
-
-local PATH = _ENV["!plugins_mod_folder_path"]
-local NAMESPACE = "anx"
-local debugmsg = "If you're reading this, I forgot to remove the debug message."
 
 --gui settings
 local beam_limit = false
@@ -1596,7 +1596,6 @@ local initialize = function()
         if Instance.exists(instance.activator) then target = instance.activator end
         Sound.wrap(gm.constants.wChest1):play(instance.x, instance.y, 1, 1)
         if Net.host then item:create(instance.x, instance.y, target) end
-        Util.print(instance.rewards)
         instance.rewards = instance.rewards - 1
         if instance.rewards > 0 then Alarm.add(45, chinytozo_give_reward_alarm, instance, item, target) end
     end
