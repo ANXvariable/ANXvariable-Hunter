@@ -30,6 +30,7 @@ local offscr_destroy = true
 local gui_maxbeams = 12
 local input_maxbeams = 12
 local solid_ice = false
+local experimental = false
 local pressed = {false, true, false, false}
 --local has_spazer = false
 --local has_plasma = false
@@ -44,6 +45,7 @@ gui.add_to_menu_bar(function()
 	end
     offscr_destroy, pressed[2] = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
     solid_ice, pressed[3] = ImGui.Checkbox("Fully Solid Ice Blocks", solid_ice)
+	experimental, pressed[4] = ImGui.Checkbox("Enable Experimental Settings", experimental)
 end)
 
 --blendmodes from gm
@@ -282,6 +284,7 @@ local initialize = function()
     local spr_bomb = rapi_sprite("hunter_bomb", "sHunterBomb.png")
     local spr_powerbomb = rapi_sprite("hunter_powerbomb", "sHunterPowerBomb.png")
     local spr_powerbomb_explosion = rapi_sprite("hunter_powerbomb_explosion", "sHunterPowerBombExplode.png", 8, 889, 499)
+    local spr_chinytozo = rapi_sprite("hunter_chinytozo", "sChinyTozo.png", 2, 16, 32)
     
     -- Colour for the character's skill names on character select
     hunter.primary_color = Color.from_rgb(8, 253, 142)
@@ -1570,7 +1573,94 @@ local initialize = function()
         end
     end)
 
-    
+    local oChinyTozo = Object.new("hunter_chinyTozo", Object.Parent.INTERACTABLE)
+    oChinyTozo:set_sprite(spr_chinytozo)
+    oChinyTozo:set_depth(90)
+
+    local function chinytozo_get_candidates()
+        local stage = Stage.wrap(Global.stage_id)
+        local spawn_enemies = List.wrap(stage.spawn_enemies)
+        local candidates = Array.new()
+        for i = 0, (math.max(0, spawn_enemies:size() - 1)) do
+            local card = MonsterCard.wrap(spawn_enemies:get(i))
+            if card.can_be_blighted and card.spawn_cost < 760 then
+                candidates:push(card)
+            end
+        end
+        return candidates
+    end
+
+    Callback.add(oChinyTozo.on_create, function(instance)
+        GM.interactable_init_cost(instance, 0, 125)
+        instance:interactable_init_name()
+        instance.candidates = chinytozo_get_candidates()
+        instance.minions = Array.new()
+        instance.minions_max = math.max(1, math.floor((math.log(gm._mod_game_getDirector().enemy_buff) / math.log(2))))
+        instance.minions_dead = 0
+        instance.spawn_elite = Elite.find("blighted", "ror").value
+        instance.has_item = true
+    end)
+
+    Callback.add(oChinyTozo.on_step, function(instance)
+        if instance.active == 1 then
+            instance:sound_play(gm.constants.wShrine1, 1, 1)
+            local director = gm._mod_game_getDirector()
+            local card = instance.candidates:get(math.random(0, instance.candidates:size() - 1))
+            if ssrOn and math.random() > 0.5 and director.stages_passed > 8 then
+                instance.spawn_elite = Elite.find("empyrean", "ssr").value
+                instance.minions_max = math.max(1, math.floor(instance.minions_max / 2))
+            end
+            local preserve_elite = director.spawn_elite
+            for i = 1, instance.minions_max do
+                local spawn = director:director_spawn_monster_card(instance.x, instance.y, card, director.bonus_rate)
+                director.spawn_elite = instance.spawn_elite
+                director:director_try_elite_spawn(spawn, card, false)
+                instance.minions:push(spawn)
+            end
+            director.spawn_elite = preserve_elite
+            local ep = Instance.wrap(instance.minions:get(0)):actor_create_enemy_party_from_ids(instance.minions)
+            director.register_boss_party(director, nil, ep.value)
+        elseif instance.active == 2 then
+            if math.fmod(Global._current_frame, 60) == 0 then
+                local dead = 0
+                for i = 0, instance.minions:size() - 1 do
+                    if not Instance.exists(instance.minions:get(i)) then
+                        dead = dead + 1
+                    end
+                end
+                instance.minions_dead = dead
+            end
+            if instance.minions_dead == instance.minions_max and instance.has_item then
+                local target
+                if Instance.exists(instance.activator) then target = instance.activator end
+                Item.find("classifiedAccessCodes", "ror"):create(instance.x, instance.y, target)
+                instance:sound_play(gm.constants.wChest1, 1, 1)
+                instance.has_item = false
+            end
+        end
+    end)
+
+    Callback.add(Callback.ON_STAGE_START, function()
+	if Net.client or Global.__gamemode_current >= 2 or Stage.wrap(Global.stage_id).identifier == "riskOfRain" then return end
+    -- host handles spawning, don't spawn in trials or tutorial, don't spawn on contact light
+    local do_chinytozo_spawn = false
+    local players = Instance.find_all(gm.constants.oP)
+    local hunters = {}
+    for _, player in ipairs(players) do
+        if player.class == hunter.value then
+            do_chinytozo_spawn = true
+            table.insert(hunters, player)
+        end
+    end
+    if not do_chinytozo_spawn or not experimental then return end
+
+    local attempts = 0
+    while Instance.count(oChinyTozo) < #hunters * 2 do
+	    gm._mod_game_getDirector():mapobject_spawn(oChinyTozo.value, 1, nil, nil, nil, nil, gm.constants.oB, nil, nil, nil, nil, nil, nil, attempts > 32)
+        attempts = attempts + 1
+    end
+
+end)
     
 end
 Initialize.add(initialize)
