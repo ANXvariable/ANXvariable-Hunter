@@ -29,6 +29,7 @@ local beam_limit = false
 local offscr_destroy = true
 local gui_maxbeams = 12
 local input_maxbeams = 12
+local solid_ice = false
 local pressed = {false, true, false, false}
 --local has_spazer = false
 --local has_plasma = false
@@ -42,6 +43,7 @@ gui.add_to_menu_bar(function()
         gui_maxbeams = math.huge
 	end
     offscr_destroy, pressed[2] = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
+    solid_ice, pressed[3] = ImGui.Checkbox("Fully Solid Ice Blocks", solid_ice)
 end)
 
 --blendmodes from gm
@@ -598,16 +600,19 @@ local initialize = function()
     
     Callback.add(freeze86.on_apply, function(actor, stack)
         actor.image_speed = 0
-        actor._myblock_freeze86_anx = obj_iceBlock_86:create(actor.x, actor.y)
-        if actor.mask_index >= 0 then
-            actor._myblock_freeze86_anx.sprite_index = actor.mask_index
-        else
-            actor._myblock_freeze86_anx.sprite_index = actor.sprite_index
+        if solid_ice then
+            actor._myblock_freeze86_anx = obj_iceBlock_86:create(actor.x, actor.y)
+            if actor.mask_index >= 0 then
+                actor._myblock_freeze86_anx.sprite_index = actor.mask_index
+            else
+                actor._myblock_freeze86_anx.sprite_index = actor.sprite_index
+            end
+            actor._myblock_freeze86_anx.parent = actor
+            --then we create a real solid from the game that you can actually stand on and just put it where the custom object is. like an insane person would, i think
+            actor._myblock_freeze86_anx.trueblock = block:create(actor.x, actor.y)
+            actor._myblock_freeze86_anx.trueblock.sprite_index = actor._myblock_freeze86_anx.sprite_index
         end
-        actor._myblock_freeze86_anx.parent = actor
-        --then we create a real solid from the game that you can actually stand on and just put it where the custom object is. like an insane person would, i think
-        actor._myblock_freeze86_anx.trueblock = block:create(actor.x, actor.y)
-        actor._myblock_freeze86_anx.trueblock.sprite_index = actor._myblock_freeze86_anx.sprite_index
+
         if not GM.actor_drawscript_attached(actor, Global.DrawScript_actor_frozen) then
             GM.actor_drawscript_attach(actor, Global.DrawScript_actor_frozen)
         end
@@ -638,6 +643,32 @@ local initialize = function()
 		    actor:alarm_set(7, 10)
 		    actor:alarm_set(2, 10)
             actor.image_speed = 0
+
+            if not solid_ice then
+                if Instance.exists(actor) then
+                    if not actor.ridable_collider or not Instance.exists(actor.ridable_collider) then
+                        actor.ridable_collider = Object.find("ridableCollider", "ror"):create(actor.x, actor.y)
+                        if actor.mask_index >= 0 then
+                            actor.ridable_collider.mask_index = actor.mask_index
+                        else
+                            actor.ridable_collider.sprite_index = actor.sprite_index
+                            actor.ridable_collider.mask_index = actor.sprite_index
+                            actor.ridable_collider.image_index = actor.image_index
+                            actor.ridable_collider.image_angle = actor.image_index
+                        end
+                        actor.ridable_collider.parent_object = actor.object_index
+                        actor.ridable_collider.parent_mid = actor.m_id
+                    end
+                    actor.ridable_collider.x = actor.x
+                    actor.ridable_collider.y = actor.y
+                    --if bufftime < 1 and Instance.exists(actor.ridable_collider) then
+                    --    Instance.destroy(actor.ridable_collider)
+                    --end
+                elseif Instance.exists(actor.ridable_collider) then
+                    Instance.destroy(actor.ridable_collider)
+                end
+            end
+
             if Global.time_stop > 0 and bufftime > 1 then
                 GM.set_buff_time(actor, freeze86, bufftime + 1)
             end
@@ -653,7 +684,19 @@ local initialize = function()
         end
         if Instance.exists(actor._myblock_freeze86_anx) then
             actor._myblock_freeze86_anx:destroy()
-            return
+        end
+        if not solid_ice and Instance.exists(actor.ridable_collider) then
+            --Destroy this in a 1-frame alarm because it otherwise persists for some reason
+            Alarm.add(1, function()
+                if Instance.exists(actor.ridable_collider) then Instance.destroy(actor.ridable_collider) end
+            end)
+        end
+    end)
+
+    Hook.add_post("gml_Object_pActor_CleanUp_0", function(self, other)
+        if solid_ice then return end
+        if self.ridable_collider and Instance.exists(self.ridable_collider) then
+            Instance.destroy(self.ridable_collider)
         end
     end)
     
