@@ -42,9 +42,8 @@ There are also a modGUI options to reduce the lag caused by having too many beam
 
 Multiplayer technically works, but there may be multiplayer-specific bugs. Please contact me if you encounter any issues.
  - Known:
-   - You cannot see other players charging beams or firing charged beams.
    - Online players can damage enemies with invisible beams with Destroy Offscreen Beams enabled (this one is intentional for now).
-   - Standing on an enemy as it unfreezes will allow the player to stand in midair until they move or jump.
+   - Standing on a fully solid enemy as it unfreezes will allow the player to stand in midair until they move or jump.
    - Multi-segment enemies only allow you to stand on their primary segment when frozen (i.e. bramble legs).
    - If you stand inside a large enemy and freeze them you may get stuck.
    - The Beam Limit setting may occasionally crash clients in multiplayer in late stages of the run.
@@ -54,6 +53,7 @@ Multiplayer technically works, but there may be multiplayer-specific bugs. Pleas
 
 If you experience any bugs or issues, ping me (@anxvariable) on the 
 [Return of Modding server](https://discord.gg/VjS57cszMq), or use the issues section of the mod's GitHub. Try to include the log of the issue and as much info as possible about what was happening at the time.
+Feedback is also welcome!
 
 ---
 

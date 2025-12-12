@@ -1,3 +1,23 @@
+### v0.3.0
+* New Experimental Settings (Toggle from ImGui window)
+  * Unlink missile - level relation
+  * Interactable: ChinyTozo
+  * When playing as hunter, a couple will spawn every stage (minus Contact Light)
+  * Interacting with ChinyTozo summons a wave of enemies. Defeating the enemies will reward the player with 1-3 missile tanks.
+  * Minor SSR interaction
+* Fixed bug where VarSuit was giving GravSuit's effects
+* Fixed unused sound asset having the same identifier as another sound
+* Minor changes to charge looping sound
+* Freeze no longer makes enemies fully solid
+  * Configurable ImGui option to revert to old behavior
+
+### v0.2.5
+* ReturnsAPI adjustment (RecalculateStats)
+
+### v0.2.4
+* ReturnsAPI
+* Fixed an issue where online charge shots were not displayed.
+
 ### v0.2.3
 * Ice beam now has a custom debuff instead of using a combination of vanilla debuffs; it now stops enemies in their tracks and allows the player to stand on them.
 * Fixed an issue with charge flare that caused it to deal triple the intended damage.
