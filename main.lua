@@ -423,7 +423,11 @@ local initialize = function()
             beam_data.shadowclimb = i
             beam_data.parent = actor
             beam_data.horizontal_velocity = 10 * direction * (1 + 0.5 * actorData.beamcharged)--it should move faster if charged
-            beam_data.damage_coefficient = damage
+            if b > 1 then--spazer nerf, main beam still does the most damage
+                beam_data.damage_coefficient = damage / 2
+            else
+                beam_data.damage_coefficient = damage
+            end
             beam_data.doproc = doproc--damage, doproc, and i get defined in stateHunterZ on_step
             beam_data.canhit = 1
             beam_data.shot = b
@@ -1184,7 +1188,6 @@ local initialize = function()
         actor:skill_util_strafe_update(0.25 * actor.attack_speed, 1.0) -- 0.25 means 4 ticks per frame at base attack speed
         actor:skill_util_step_strafe_sprites()
         actor:skill_util_strafe_turn_update()
-        --actor:skill_util_strafe_turn_turn_if_direction_changed()--i used to want to turn while shooting but it didn't work so i commented it out until i find out how it works
         local actorData = Instance.get_data(actor)
         local release = false
         if Util.bool(actor.is_local) then
@@ -1206,6 +1209,10 @@ local initialize = function()
         end
         if actorData.wave > 0 then
             damage = damage * 1.25
+        end
+        if actor.local_aim_dir ~= 0 then
+            actor.image_xscale = actor.local_aim_dir
+            actor.image_xscale2 = actor.local_aim_dir
         end
 
         --if actor:is_authority() then
