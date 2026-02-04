@@ -24,7 +24,7 @@ mods.on_all_mods_loaded(function()
     end
 end)
 
---gui settings
+--settings
 local beam_limit = false
 local offscr_destroy = true
 local gui_maxbeams = 12
@@ -46,6 +46,39 @@ gui.add_to_menu_bar(function()
     offscr_destroy, pressed[2] = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
     solid_ice, pressed[3] = ImGui.Checkbox("Fully Solid Ice Blocks", solid_ice)
 	experimental, pressed[4] = ImGui.Checkbox("Enable Experimental Settings", experimental)
+end)
+
+local modOptions = ModOptions.new()
+local beamLimitCheckbox = modOptions:add_checkbox("beamLimit")
+beamLimitCheckbox:add_getter(function()
+    return beam_limit
+end)
+beamLimitCheckbox:add_setter(function()
+    beam_limit = not beam_limit
+end)
+
+local offscreenLimitCheckbox = modOptions:add_checkbox("offscreenLimit")
+offscreenLimitCheckbox:add_getter(function()
+    return offscr_destroy
+end)
+offscreenLimitCheckbox:add_setter(function()
+    offscr_destroy = not offscr_destroy
+end)
+
+local solidIceCheckbox = modOptions:add_checkbox("solidIce")
+solidIceCheckbox:add_getter(function()
+    return solid_ice
+end)
+solidIceCheckbox:add_setter(function()
+    solid_ice = not solid_ice
+end)
+
+local experimentalCheckbox = modOptions:add_checkbox("experimentalSettings")
+experimentalCheckbox:add_getter(function()
+    return experimental
+end)
+experimentalCheckbox:add_setter(function()
+    experimental = not experimental
 end)
 
 --blendmodes from gm
