@@ -31,7 +31,10 @@ local Options = {
     gui_maxbeams = 12,
     input_maxbeams = 12,
     solid_ice = false,
-    experimental = false
+    experimental = {
+        false,
+        false
+    }
 }
 
 local OptionsTOML = TOML.new()
@@ -51,7 +54,8 @@ gui.add_to_menu_bar(function()
 	end
     Options.offscr_destroy = ImGui.Checkbox("Destroy Offscreen Beams", Options.offscr_destroy)
     Options.solid_ice = ImGui.Checkbox("Fully Solid Ice Blocks", Options.solid_ice)
-	Options.experimental = ImGui.Checkbox("Enable Experimental Settings", Options.experimental)
+	Options.experimental[1] = ImGui.Checkbox("Enable Experimental Settings", Options.experimental[1])
+	Options.experimental[2] = ImGui.Checkbox("Experimental Settings: Grapple Beam", Options.experimental[2])
 end)
 
 local modOptions = ModOptions.new()
@@ -84,10 +88,19 @@ end)
 
 local experimentalCheckbox = modOptions:add_checkbox("experimentalSettings")
 experimentalCheckbox:add_getter(function()
-    return Options.experimental
+    return Options.experimental[1]
 end)
 experimentalCheckbox:add_setter(function(value)
-    Options.experimental = value
+    Options.experimental[1] = value
+    OptionsTOML:write(Options)
+end)
+
+local experimentalGrappleCheckbox = modOptions:add_checkbox("experimentalGrapple")
+experimentalGrappleCheckbox:add_getter(function()
+    return Options.experimental[2]
+end)
+experimentalGrappleCheckbox:add_setter(function(value)
+    Options.experimental[2] = value
     OptionsTOML:write(Options)
 end)
 
@@ -465,7 +478,7 @@ local initialize = function()
                     end
                 end
             end
-            beam.statetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam on_step and i use it to do things
+            beam.lifetime = 0--this tracks how long the beam object has existed, it increments by 1 in obj_beam on_step and i use it to do things
             beam.duration = math.min(actor.level * 10, 170)--like compare it to this variable and destroy it if it has existed too long
             beam_data.shadowclimb = i
             beam_data.parent = actor
@@ -558,7 +571,7 @@ local initialize = function()
 
         --Missile tanks on-level
         data.mtanks = actor:item_count(missiletank)
-        if not Options.experimental and data.mtanks < actor.level - 1 then
+        if not Options.experimental[1] and data.mtanks < actor.level - 1 then
             actor:item_give(missiletank)
         end
 
@@ -792,7 +805,7 @@ local initialize = function()
         local slow2 = Buff.find("slow2", "ror")
         local snare = Buff.find("snare", "ror")
         instance.x = instance.x + data.horizontal_velocity + data.parent.pHspeed--my beam inherits the momentum of its creator in real-time
-        if instance.statetime < 3 and not Util.bool(data.wave) then--this is to reposition extra beams from the spazer upgrade
+        if instance.lifetime < 3 and not Util.bool(data.wave) then--this is to reposition extra beams from the spazer upgrade
             if data.shot == 2 then
                 instance.y = instance.y - 3
             end
@@ -802,10 +815,10 @@ local initialize = function()
         end
         if Util.bool(data.wave) and Util.bool(data.spazer) then--wave shots move... in a wave
             if data.shot == 2 then
-                instance.y = instance.y - GM.cos(instance.statetime / 10)
+                instance.y = instance.y - GM.cos(instance.lifetime / 10)
             end
             if data.shot == 3 then
-                instance.y = instance.y + GM.cos(instance.statetime / 10)
+                instance.y = instance.y + GM.cos(instance.lifetime / 10)
             end
         end
 
@@ -874,15 +887,15 @@ local initialize = function()
         end
 
         -- The beam cannot exist for too long
-        if (Options.offscr_destroy) and gm._mod_net_isOnline() and not actor:is_authority() and instance.statetime >= 20 then
+        if (Options.offscr_destroy) and gm._mod_net_isOnline() and not actor:is_authority() and instance.lifetime >= 20 then
             instance:destroy()
             return
         end
-        if instance.statetime >= 20 + (instance.duration) then
+        if instance.lifetime >= 20 + (instance.duration) then
             instance:destroy()
             return
         end
-        instance.statetime = instance.statetime + 1--statetime tracks how long the beam has existed, duration is set by the creator
+        instance.lifetime = instance.lifetime + 1--lifetime tracks how long the beam has existed, duration is set by the creator
     end)
 
     local obj_missile = Object.new("hunter_missile")
@@ -895,7 +908,7 @@ local initialize = function()
         if data.horizontal_velocity < 16
             and data.horizontal_velocity > - 16
         then
-            data.horizontal_velocity = GM.sign(instance.image_xscale) * 16 * ((1.15^instance.statetime - 1) / (1.125^32 - 1))
+            data.horizontal_velocity = GM.sign(instance.image_xscale) * 16 * ((1.15^instance.lifetime - 1) / (1.125^32 - 1))
         end
         -- Hit the first enemy actor that's been collided with
         local actor_collisions, _ = instance:get_collisions(gm.constants.pActorCollisionBase)
@@ -939,7 +952,7 @@ local initialize = function()
         end
 
         -- The missile cannot exist for too long
-        if instance.statetime >= 360 then
+        if instance.lifetime >= 360 then
             instance:destroy()
             return
         end
@@ -951,7 +964,7 @@ local initialize = function()
         trail.image_xscale = instance.image_xscale * (data.horizontal_velocity / 16)
         trail.image_yscale = 0.8
         trail.depth = instance.depth + 1
-        instance.statetime = instance.statetime + 1
+        instance.lifetime = instance.lifetime + 1
     end)
 
     local oGrapplePoint = Object.new("oGrapplePoint")
@@ -962,7 +975,8 @@ local initialize = function()
         local data = Instance.get_data(instance)
 
         instance.done = false
-        instance.statetime = 0
+        instance.lifetime = 0
+        instance.hittime = -1
         instance.failed = false
         instance.target = -4
         instance.parent = -4
@@ -1003,13 +1017,14 @@ local initialize = function()
                 if ti ~= -4 then
                     instance.done = true
                     instance.target = ti
-                    instance.xo = instance.target.x - instance.y
+                    instance.xo = instance.target.x - instance.x
                     instance.yo = instance.target.y - instance.y
                 end
             end
 
             if instance.done then
                 instance.speed = 0
+                instance.hittime = Global._current_frame
 
                 if actor:is_authority() then
                     for i=0, actor:buff_count(Buff.find("shadowClone", "ror")) do
@@ -1026,12 +1041,24 @@ local initialize = function()
             if Instance.exists(instance.target) then
                 instance.x = instance.target.x - instance.xo
                 instance.y = instance.target.y - instance.yo
+                if instance.target.elite_type == Elite.find("overloading", "ror").value and math.fmod(Global._current_frame - instance.hittime, 30) == 0 then
+                    local enemyshock = Object.find("chainLightning", "ror"):create(actor.x, actor.y)
+                    enemyshock.parent = instance.target
+                    enemyshock.team = instance.target.team
+                    enemyshock.damage = (actor.maxhp_base + ((actor.level - 1) * actor.maxhp_level)) / 20
+                    enemyshock.range = 100
+                    local frnlyshock = Object.find("chainLightning", "ror"):create(instance.x, instance.y)
+                    frnlyshock.parent = actor
+                    frnlyshock.team = actor.team
+                    frnlyshock.damage =  (instance.target.maxhp / 10) + ((actor.damage / (actor.damage_base + ((actor.level - 1) * actor.damage_level))) - 1)
+                    frnlyshock.range = 100
+                end
             end
         end
-        if instance.statetime >= 60 and instance.speed > 0 then
+        if instance.lifetime >= 60 and instance.speed > 0 then
             instance.failed = true
         end
-        instance.statetime = instance.statetime + 1
+        instance.lifetime = instance.lifetime + 1
     end)
 
     Callback.add(oGrapplePoint.on_draw, function(instance)
@@ -1049,7 +1076,7 @@ local initialize = function()
         local data = Instance.get_data(instance)
 
         -- Fuse
-        if instance.statetime >= 30 then
+        if instance.lifetime >= 30 then
             local parentalignx = data.parent.x - 4
             local diffx = parentalignx - instance.x
             --bomb jumping
@@ -1079,12 +1106,12 @@ local initialize = function()
             end
         end
 
-        if instance.statetime >= 32 then
+        if instance.lifetime >= 32 then
             instance:destroy()
             return
         end
 
-        instance.statetime = instance.statetime + 1
+        instance.lifetime = instance.lifetime + 1
     end)
     
     local obj_powerbomb = Object.new("hunter_powerbomb")
@@ -1099,7 +1126,7 @@ local initialize = function()
         local data = Instance.get_data(instance)
 
         -- Fuse
-        if instance.statetime >= 70 then
+        if instance.lifetime >= 70 then
             local parentalignx = data.parent.x - 4
             local diffx = parentalignx - instance.x
             --if instance.hitowner == 0 then
@@ -1114,7 +1141,7 @@ local initialize = function()
             end
             if data.fired == 0 then
                 local powerbombex = obj_powerbomb_explosion:create(instance.x + 4, instance.y + 4)
-                powerbombex.statetime = 0
+                powerbombex.lifetime = 0
                 powerbombex.image_xscale = 0
                 powerbombex.image_yscale = 0
                 powerbombex.image_alpha = 0.8
@@ -1130,12 +1157,12 @@ local initialize = function()
             end
         end
 
-        if instance.statetime >= 72 then
+        if instance.lifetime >= 72 then
             instance:destroy()
             return
         end
 
-        instance.statetime = instance.statetime + 1
+        instance.lifetime = instance.lifetime + 1
     end)
 
     --i have a custom object to handle the slowly expanding explosion
@@ -1150,7 +1177,7 @@ local initialize = function()
             if instance.image_index >= 4 then
                 instance.image_index = 3
             end
-            if math.fmod(instance.statetime, 5) == 0 then
+            if math.fmod(instance.lifetime, 5) == 0 then
                 if data.parent:is_authority() then
                     local attack = data.parent:fire_explosion(instance.x, instance.y,  1366 * instance.image_xscale, 768 * instance.image_yscale, 0, spr_none, spr_none)
                     attack.attack_info.climb = data.shadowclimb * 8
@@ -1196,7 +1223,7 @@ local initialize = function()
             return
         end
 
-        instance.statetime = instance.statetime + 1
+        instance.lifetime = instance.lifetime + 1
     end)
     
     -- Grab references to skills. Consider renaming the variables to match your skill names, in case 
@@ -1205,7 +1232,9 @@ local initialize = function()
     local hunterX = hunter:get_skills(1)[1]
     local hunterC = hunter:get_skills(2)[1]
     local hunterC2 = Skill.new("hunterC2")
-    hunter:add_skill(Skill.Slot.UTILITY, hunterC2)
+    if Options.experimental[2] then
+        hunter:add_skill(Skill.Slot.UTILITY, hunterC2)
+    end
     local hunterV = hunter:get_skills(3)[1]
     local hunterVBoosted = Skill.new("hunterVBoosted")
     hunterV.upgrade_skill = hunterVBoosted.value
@@ -1249,7 +1278,7 @@ local initialize = function()
     hunterC.max_stock = 2
     hunterC.start_with_stock = 2
     hunterC.is_utility = true
-    hunterC2.damage = 100
+    hunterC2.damage = 2.1
     hunterC2.cooldown = 180
     hunterC2.require_key_press = true
     hunterC2.max_stock = 2
@@ -1330,7 +1359,7 @@ local initialize = function()
             end
             actorData.sound_has_played = played_sounds
         --end
-        data.statetime = 0
+        data.lifetime = 0
     end)
 
     -- Executed every game tick during this state
@@ -1452,7 +1481,7 @@ local initialize = function()
 
     Callback.add(stateHunterZ.on_exit, function(actor, data)
         actor:skill_util_strafe_exit()
-        data.statetime = 0
+        data.lifetime = 0
         --if actor:is_authority() and GM._mod_sound_isPlaying(snd_chargeloop) then
         --    GM._mod_sound_stop(snd_chargeloop)
         --end
@@ -1487,7 +1516,7 @@ local initialize = function()
                 local missile = obj_missile:create(actor.x + spawn_offset, actor.y - 10)
                 missile.image_speed = 0.25
                 missile.image_xscale = direction
-                missile.statetime = 0
+                missile.lifetime = 0
                 local missile_data = Instance.get_data(missile)
                 missile_data.shadowclimb = i
                 missile_data.parent = actor
@@ -1740,7 +1769,7 @@ local initialize = function()
             local buff_shadow_clone = Buff.find("shadowClone", "ror")
             for i=0, actor:buff_count(buff_shadow_clone) do
                 local bomb = obj_bomb:create(actor.x - 4, actor.y - 3)
-                bomb.statetime = 0
+                bomb.lifetime = 0
                 bomb.hitowner = 0
                 local bomb_data = Instance.get_data(bomb)
                 bomb_data.shadowclimb = i
@@ -1820,7 +1849,7 @@ local initialize = function()
             local buff_shadow_clone = Buff.find("shadowClone", "ror")
             for i=0, actor:buff_count(buff_shadow_clone) do
                 local powerbomb = obj_powerbomb:create(actor.x - 4, actor.y - 3)
-                powerbomb.statetime = 0
+                powerbomb.lifetime = 0
                 powerbomb.hitowner = 0
                 local powerbomb_data = Instance.get_data(powerbomb)
                 powerbomb_data.shadowclimb = i
@@ -1955,7 +1984,7 @@ local initialize = function()
             table.insert(hunters, player)
         end
     end
-    if not do_chinytozo_spawn or not Options.experimental then return end
+    if not do_chinytozo_spawn or not Options.experimental[1] then return end
 
     local attempts = 0
     while Instance.count(oChinyTozo) < #hunters * 2 do
