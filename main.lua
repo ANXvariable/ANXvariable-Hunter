@@ -52,32 +52,32 @@ local beamLimitCheckbox = modOptions:add_checkbox("beamLimit")
 beamLimitCheckbox:add_getter(function()
     return beam_limit
 end)
-beamLimitCheckbox:add_setter(function()
-    beam_limit = not beam_limit
+beamLimitCheckbox:add_setter(function(value)
+    beam_limit = value
 end)
 
 local offscreenLimitCheckbox = modOptions:add_checkbox("offscreenLimit")
 offscreenLimitCheckbox:add_getter(function()
     return offscr_destroy
 end)
-offscreenLimitCheckbox:add_setter(function()
-    offscr_destroy = not offscr_destroy
+offscreenLimitCheckbox:add_setter(function(value)
+    offscr_destroy = value
 end)
 
 local solidIceCheckbox = modOptions:add_checkbox("solidIce")
 solidIceCheckbox:add_getter(function()
     return solid_ice
 end)
-solidIceCheckbox:add_setter(function()
-    solid_ice = not solid_ice
+solidIceCheckbox:add_setter(function(value)
+    solid_ice = value
 end)
 
 local experimentalCheckbox = modOptions:add_checkbox("experimentalSettings")
 experimentalCheckbox:add_getter(function()
     return experimental
 end)
-experimentalCheckbox:add_setter(function()
-    experimental = not experimental
+experimentalCheckbox:add_setter(function(value)
+    experimental = value
 end)
 
 --blendmodes from gm
