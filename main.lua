@@ -856,7 +856,7 @@ local initialize = function()
             if data.parent:attack_collision_canhit(other_actor) then
                 -- Deal damage
                 if data.parent:is_authority() then
-                    local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                    local attack = data.parent:fire_explosion(instance.x, instance.y, 64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
                     attack.attack_info.climb = data.shadowclimb * 8
                 end
                 if data.parent:item_count(Item.find("brilliantBehemoth", "ror")) == 0 then
@@ -871,7 +871,7 @@ local initialize = function()
         -- Hitting terrain destroys the missile
         if instance:is_colliding(gm.constants.pSolidBulletCollision) then
             if data.parent:is_authority() then
-                local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                local attack = data.parent:fire_explosion(instance.x, instance.y, 64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
                 attack.attack_info.climb = data.shadowclimb * 8
             end
             if data.parent:item_count(Item.find("brilliantBehemoth", "ror")) == 0 then
@@ -928,7 +928,7 @@ local initialize = function()
             end
             if data.fired == 0 then
                 if data.parent:is_authority() then
-                    local attack = data.parent:fire_explosion(instance.x, instance.y,  64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
+                    local attack = data.parent:fire_explosion(instance.x, instance.y, 64, 64, data.damage_coefficient, spr_missile_explosion, spr_none)
                     attack.attack_info.climb = data.shadowclimb * 8
                 end
                 if data.parent:item_count(Item.find("brilliantBehemoth", "ror")) == 0 then
