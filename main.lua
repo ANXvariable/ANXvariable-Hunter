@@ -51,7 +51,7 @@ gui.add_to_menu_bar(function()
 	end
     Options.offscr_destroy = ImGui.Checkbox("Destroy Offscreen Beams", Options.offscr_destroy)
     Options.solid_ice = ImGui.Checkbox("Fully Solid Ice Blocks", Options.solid_ice)
-	Options.experimental = ImGui.Checkbox("Enable experimental Settings", Options.experimental)
+	Options.experimental = ImGui.Checkbox("Enable Experimental Settings", Options.experimental)
 end)
 
 local modOptions = ModOptions.new()

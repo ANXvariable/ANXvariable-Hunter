@@ -33,5 +33,21 @@ return {
            departure = "<y>Departure:</c>\nCeres Space Colony,\nZebes",
            arrival = "<y>Destination:</c>\nB.S.L. Research Station,\nSR388"
 		}
-	}
+	},
+
+    ui = {
+        options = {
+            hunter = {
+                header = "HUNTER",
+                beamLimit = "Enable Beam Limit",
+                ["beamLimit.desc"] = "Limits the amount of beams by destroying the oldest beam when a new one is fired.\n<r>Slight risk of crashing in multiplayer when firing too many beams.</c>",
+                offscreenLimit = "Destroy Offscreen Beams",
+                ["offscreenLimit.desc"] = "Beams are removed as soon as they exit your view.",
+                solidIce = "Fully Solid Ice Blocks",
+                ["solidIce.desc"] = "When enabled, enemies frozen by Ice Beam have block collision like walls, floors, and ceilings, instead of only floor collision (like Trokks and Engineer Turrets).",
+                experimentalSettings = "Enable Experimental Settings",
+                ["experimentalSettings.desc"] = "Toggles experimental beta content. See README for more info."
+            }
+        }
+    }
 }
