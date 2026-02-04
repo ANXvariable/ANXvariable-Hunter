@@ -24,28 +24,71 @@ mods.on_all_mods_loaded(function()
     end
 end)
 
---gui settings
-local beam_limit = false
-local offscr_destroy = true
-local gui_maxbeams = 12
-local input_maxbeams = 12
-local solid_ice = false
-local experimental = false
-local pressed = {false, true, false, false}
---local has_spazer = false
---local has_plasma = false
+--settings
+local Options = {
+    beam_limit = false,
+    offscr_destroy = true,
+    gui_maxbeams = 12,
+    input_maxbeams = 12,
+    solid_ice = false,
+    experimental = false
+}
+
+local OptionsTOML = TOML.new()
+if not OptionsTOML:read() then
+    OptionsTOML:write(Options)
+else
+    Options = OptionsTOML:read()
+end
 
 gui.add_to_menu_bar(function()
-	beam_limit, pressed[1] = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", beam_limit)
-    input_maxbeams = ImGui.DragFloat("Max Beams", input_maxbeams, 1, 0, 600)
-	if pressed or beam_limit then
-		gui_maxbeams = math.max(0, math.floor(input_maxbeams))
+	Options.beam_limit = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", Options.beam_limit)
+    Options.input_maxbeams = ImGui.DragFloat("Max Beams", Options.input_maxbeams, 1, 0, 600)
+	if Options.beam_limit then
+		Options.gui_maxbeams = math.max(0, math.floor(Options.input_maxbeams))
     else
-        gui_maxbeams = math.huge
+        Options.gui_maxbeams = math.huge
 	end
-    offscr_destroy, pressed[2] = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
-    solid_ice, pressed[3] = ImGui.Checkbox("Fully Solid Ice Blocks", solid_ice)
-	experimental, pressed[4] = ImGui.Checkbox("Enable Experimental Settings", experimental)
+    Options.offscr_destroy = ImGui.Checkbox("Destroy Offscreen Beams", Options.offscr_destroy)
+    Options.solid_ice = ImGui.Checkbox("Fully Solid Ice Blocks", Options.solid_ice)
+	Options.experimental = ImGui.Checkbox("Enable Experimental Settings", Options.experimental)
+end)
+
+local modOptions = ModOptions.new()
+local beamLimitCheckbox = modOptions:add_checkbox("beamLimit")
+beamLimitCheckbox:add_getter(function()
+    return Options.beam_limit
+end)
+beamLimitCheckbox:add_setter(function(value)
+    Options.beam_limit = value
+    OptionsTOML:write(Options)
+end)
+
+local offscreenLimitCheckbox = modOptions:add_checkbox("offscreenLimit")
+offscreenLimitCheckbox:add_getter(function()
+    return Options.offscr_destroy
+end)
+offscreenLimitCheckbox:add_setter(function(value)
+    Options.offscr_destroy = value
+    OptionsTOML:write(Options)
+end)
+
+local solidIceCheckbox = modOptions:add_checkbox("solidIce")
+solidIceCheckbox:add_getter(function()
+    return Options.solid_ice
+end)
+solidIceCheckbox:add_setter(function(value)
+    Options.solid_ice = value
+    OptionsTOML:write(Options)
+end)
+
+local experimentalCheckbox = modOptions:add_checkbox("experimentalSettings")
+experimentalCheckbox:add_getter(function()
+    return Options.experimental
+end)
+experimentalCheckbox:add_setter(function(value)
+    Options.experimental = value
+    OptionsTOML:write(Options)
 end)
 
 --blendmodes from gm
@@ -515,7 +558,7 @@ local initialize = function()
 
         --Missile tanks on-level
         data.mtanks = actor:item_count(missiletank)
-        if not experimental and data.mtanks < actor.level - 1 then
+        if not Options.experimental and data.mtanks < actor.level - 1 then
             actor:item_give(missiletank)
         end
 
@@ -611,7 +654,7 @@ local initialize = function()
     
     Callback.add(freeze86.on_apply, function(actor, stack)
         actor.image_speed = 0
-        if solid_ice then
+        if Options.solid_ice then
             actor._myblock_freeze86_anx = obj_iceBlock_86:create(actor.x, actor.y)
             if actor.mask_index >= 0 then
                 actor._myblock_freeze86_anx.sprite_index = actor.mask_index
@@ -655,7 +698,7 @@ local initialize = function()
 		    actor:alarm_set(2, 10)
             actor.image_speed = 0
 
-            if not solid_ice then
+            if not Options.solid_ice then
                 if Instance.exists(actor) then
                     if not actor.ridable_collider or not Instance.exists(actor.ridable_collider) then
                         actor.ridable_collider = Object.find("ridableCollider", "ror"):create(actor.x, actor.y)
@@ -696,7 +739,7 @@ local initialize = function()
         if Instance.exists(actor._myblock_freeze86_anx) then
             actor._myblock_freeze86_anx:destroy()
         end
-        if not solid_ice and Instance.exists(actor.ridable_collider) then
+        if not Options.solid_ice and Instance.exists(actor.ridable_collider) then
             --Destroy this in a 1-frame alarm because it otherwise persists for some reason
             Alarm.add(1, function()
                 if Instance.exists(actor.ridable_collider) then Instance.destroy(actor.ridable_collider) end
@@ -705,7 +748,7 @@ local initialize = function()
     end)
 
     Hook.add_post("gml_Object_pActor_CleanUp_0", function(self, other)
-        if solid_ice then return end
+        if Options.solid_ice then return end
         if self.ridable_collider and Instance.exists(self.ridable_collider) then
             Instance.destroy(self.ridable_collider)
         end
@@ -717,7 +760,7 @@ local initialize = function()
         if Util.bool(data.wave) and instance.depth > -300 then
             instance.depth = -301
         end
-        if Util.bool(data.plasma) and not (beam_limit or pressed or offscr_destroy or pressed2) then
+        if Util.bool(data.plasma) and not (Options.beam_limit or Options.offscr_destroy) then
             local trail = GM.instance_create(instance.x, instance.y, gm.constants.oEfTrail)
             trail.sprite_index = instance.sprite_index
             trail.image_index = 0
@@ -729,14 +772,14 @@ local initialize = function()
             trail.rate = 0.25
         end
         
-        local maxbeams = gui_maxbeams
+        local maxbeams = Options.gui_maxbeams
         if Util.bool(data.spazer) then
             --has_spazer = true
         end
         if Util.bool(data.plasma) then
             --has_plasma = true
         end
-        if beam_limit or pressed then
+        if Options.beam_limit then
             local all, _ = Instance.find_all(obj_beam)--too many of these lag so we KILL them
             for _, other_beam in ipairs(all) do
                 if _ > maxbeams then
@@ -825,13 +868,13 @@ local initialize = function()
             return
         end
         --Check if we've gone offscreen if the "Destroy Offscreen Beams" GUI option is set
-        if (offscr_destroy or pressed2) and not Util.bool(GM.inside_view(instance.x, instance.y)) then
+        if (Options.offscr_destroy) and not Util.bool(GM.inside_view(instance.x, instance.y)) then
             instance:destroy()
             return
         end
 
         -- The beam cannot exist for too long
-        if (offscr_destroy or pressed2) and gm._mod_net_isOnline() and not actor:is_authority() and instance.statetime >= 20 then
+        if (Options.offscr_destroy) and gm._mod_net_isOnline() and not actor:is_authority() and instance.statetime >= 20 then
             instance:destroy()
             return
         end
@@ -1912,7 +1955,7 @@ local initialize = function()
             table.insert(hunters, player)
         end
     end
-    if not do_chinytozo_spawn or not experimental then return end
+    if not do_chinytozo_spawn or not Options.experimental then return end
 
     local attempts = 0
     while Instance.count(oChinyTozo) < #hunters * 2 do
