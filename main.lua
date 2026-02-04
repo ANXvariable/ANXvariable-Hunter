@@ -31,21 +31,20 @@ local gui_maxbeams = 12
 local input_maxbeams = 12
 local solid_ice = false
 local experimental = false
-local pressed = {false, true, false, false}
 --local has_spazer = false
 --local has_plasma = false
 
 gui.add_to_menu_bar(function()
-	beam_limit, pressed[1] = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", beam_limit)
+	beam_limit = ImGui.Checkbox("Enable Beam Limit (can crash in multiplayer)", beam_limit)
     input_maxbeams = ImGui.DragFloat("Max Beams", input_maxbeams, 1, 0, 600)
-	if pressed or beam_limit then
+	if beam_limit then
 		gui_maxbeams = math.max(0, math.floor(input_maxbeams))
     else
         gui_maxbeams = math.huge
 	end
-    offscr_destroy, pressed[2] = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
-    solid_ice, pressed[3] = ImGui.Checkbox("Fully Solid Ice Blocks", solid_ice)
-	experimental, pressed[4] = ImGui.Checkbox("Enable Experimental Settings", experimental)
+    offscr_destroy = ImGui.Checkbox("Destroy Offscreen Beams", offscr_destroy)
+    solid_ice = ImGui.Checkbox("Fully Solid Ice Blocks", solid_ice)
+	experimental = ImGui.Checkbox("Enable Experimental Settings", experimental)
 end)
 
 local modOptions = ModOptions.new()
@@ -746,7 +745,7 @@ local initialize = function()
         if Util.bool(data.wave) and instance.depth > -300 then
             instance.depth = -301
         end
-        if Util.bool(data.plasma) and not (beam_limit or pressed or offscr_destroy or pressed2) then
+        if Util.bool(data.plasma) and not (beam_limit or offscr_destroy) then
             local trail = GM.instance_create(instance.x, instance.y, gm.constants.oEfTrail)
             trail.sprite_index = instance.sprite_index
             trail.image_index = 0
@@ -765,7 +764,7 @@ local initialize = function()
         if Util.bool(data.plasma) then
             --has_plasma = true
         end
-        if beam_limit or pressed then
+        if beam_limit then
             local all, _ = Instance.find_all(obj_beam)--too many of these lag so we KILL them
             for _, other_beam in ipairs(all) do
                 if _ > maxbeams then
@@ -854,13 +853,13 @@ local initialize = function()
             return
         end
         --Check if we've gone offscreen if the "Destroy Offscreen Beams" GUI option is set
-        if (offscr_destroy or pressed2) and not Util.bool(GM.inside_view(instance.x, instance.y)) then
+        if (offscr_destroy) and not Util.bool(GM.inside_view(instance.x, instance.y)) then
             instance:destroy()
             return
         end
 
         -- The beam cannot exist for too long
-        if (offscr_destroy or pressed2) and gm._mod_net_isOnline() and not actor:is_authority() and instance.statetime >= 20 then
+        if (offscr_destroy) and gm._mod_net_isOnline() and not actor:is_authority() and instance.statetime >= 20 then
             instance:destroy()
             return
         end
