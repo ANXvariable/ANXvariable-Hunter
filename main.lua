@@ -54,6 +54,10 @@ local bm_add = 1
 local bm_max = 2
 local bm_subtract = 3
 
+local grappleables = {
+    gm.constants.pEnemy, gm.constants.pActorHitbox, gm.constants.oConsRod, gm.constants.oConsRodB
+}
+
 
 -- ========== Main ==========
 
@@ -906,6 +910,93 @@ local initialize = function()
         trail.depth = instance.depth + 1
         instance.statetime = instance.statetime + 1
     end)
+
+    local oGrapplePoint = Object.new("oGrapplePoint")
+    oGrapplePoint.obj_sprite = gm.constants.sLoaderHand
+    oGrapplePoint.obj_depth = -206
+
+    Callback.add(oGrapplePoint.on_create, function(instance)
+        local data = Instance.get_data(instance)
+
+        instance.done = false
+        instance.statetime = 0
+        instance.failed = false
+        instance.target = -4
+        instance.parent = -4
+        instance.xo = 0
+        instance.yo = 0
+        instance.speed = 28
+        instance.image_speed = 0.5
+    end)
+
+    Callback.add(oGrapplePoint.on_step, function(instance)
+        local data = Instance.get_data(instance)
+        local actor = instance.parent
+
+        if not instance:actor_is_alive(actor) then
+            instance:destroy()
+            return
+        elseif actor.actor_state_current_id ~= ActorState.find("stateHunterC2Fire").value and actor.actor_state_current_id ~= ActorState.find("stateHunterC2Swing").value then
+            instance:destroy()
+            return
+        end
+        if instance.failed then
+            instance:destroy()
+            return
+        end
+
+        if not instance.done then
+            if instance:is_colliding(gm.constants.pBlock, instance.x, instance.y) or instance:is_colliding(gm.constants.pBlock, instance.x, instance.y - 12) or instance:is_colliding(gm.constants.pBlock, instance.x, instance.y + 12) then
+                instance.done = true
+                instance.target = -4
+            else
+                local ti = instance:instance_place(instance.x, instance.y, gm.constants.pEnemy)
+                for i = 1, 4 do
+                    if ti ~= -4 then
+                        break
+                    end
+                    ti = instance:instance_place((instance.x + instance.xprevious) / 2, (instance.x + instance.xprevious) / 2, grappleables[i])
+                end
+                if ti ~= -4 then
+                    instance.done = true
+                    instance.target = ti
+                    instance.xo = instance.target.x - instance.y
+                    instance.yo = instance.target.y - instance.y
+                end
+            end
+
+            if instance.done then
+                instance.speed = 0
+
+                if actor:is_authority() then
+                    for i=0, actor:buff_count(Buff.find("shadowClone", "ror")) do
+                        local attack = actor:fire_explosion(instance.x, instance.y, 56, 40, Skill.find("hunterC2").damage)
+                        attack.attack_info.climb = i * 8
+                    end
+                end
+            end
+        else
+            instance.image_speed = 0
+            instance.image_index = 1
+            instance.speed = 0
+
+            if Instance.exists(instance.target) then
+                instance.x = instance.target.x - instance.xo
+                instance.y = instance.target.y - instance.yo
+            end
+        end
+        if instance.statetime >= 60 and instance.speed > 0 then
+            instance.failed = true
+        end
+        instance.statetime = instance.statetime + 1
+    end)
+
+    Callback.add(oGrapplePoint.on_draw, function(instance)
+        gm.draw_set_colour(Color(0x73eeff))
+        if Instance.exists(instance.parent) then
+            gm.draw_line(instance.x, instance.y, instance.parent.ghost_x - (3 * instance.parent.image_xscale), instance.parent.ghost_y - 8)
+        end
+    end)
     
     local obj_bomb = Object.new("hunter_bomb")
     obj_bomb.obj_sprite = spr_bomb
@@ -1070,6 +1161,8 @@ local initialize = function()
     local hunterZ = hunter:get_skills(0)[1]
     local hunterX = hunter:get_skills(1)[1]
     local hunterC = hunter:get_skills(2)[1]
+    local hunterC2 = Skill.new("hunterC2")
+    hunter:add_skill(Skill.Slot.UTILITY, hunterC2)
     local hunterV = hunter:get_skills(3)[1]
     local hunterVBoosted = Skill.new("hunterVBoosted")
     hunterV.upgrade_skill = hunterVBoosted.value
@@ -1078,6 +1171,7 @@ local initialize = function()
     hunterZ.animation = sprites.walk
     hunterX.animation = sprites.walk
     hunterC.animation = spr_flashshift
+    hunterC2.animation = sprites.walk
     hunterV.animation = spr_morph
     hunterVBoosted.animation = spr_morph
     
@@ -1088,6 +1182,8 @@ local initialize = function()
     hunterX.subimage = 1
     hunterC.sprite = spr_skills
     hunterC.subimage = 2
+    hunterC2.sprite = gm.constants.sLoaderSkills
+    hunterC2.subimage = 2
     hunterV.sprite = spr_skills
     hunterV.subimage = 3
     hunterVBoosted.sprite = spr_skills
@@ -1110,6 +1206,13 @@ local initialize = function()
     hunterC.max_stock = 2
     hunterC.start_with_stock = 2
     hunterC.is_utility = true
+    hunterC2.damage = 100
+    hunterC2.cooldown = 180
+    hunterC2.require_key_press = true
+    hunterC2.max_stock = 2
+    hunterC2.start_with_stock = 2
+    hunterC2.is_utility = true
+    hunterC2.disable_aim_stall = true
     hunterV.damage = 1.5
     hunterV.cooldown = 0
     hunterV.is_primary = true
@@ -1128,6 +1231,8 @@ local initialize = function()
     local stateHunterX = ActorState.new(hunterX.identifier)
     local stateHunterC = ActorState.new(hunterC.identifier)
     stateHunterC.activity_flags = ActorState.ActivityFlag.ALLOW_ROPE_CANCEL
+    local stateHunterC2Fire = ActorState.new("stateHunterC2Fire")
+    local stateHunterC2Swing = ActorState.new("stateHunterC2Swing")
     local stateHunterV = ActorState.new(hunterV.identifier)
     local stateHunterVBoosted = ActorState.new(hunterVBoosted.identifier)
     
@@ -1146,6 +1251,10 @@ local initialize = function()
     
     Callback.add(hunterC.on_activate, function(actor, skill, slot)
         actor:set_state(stateHunterC)
+    end)
+    
+    Callback.add(hunterC2.on_activate, function(actor, skill, slot)
+        actor:set_state(stateHunterC2Fire)
     end)
     
     Callback.add(hunterV.on_activate, function(actor, skill, slot)
@@ -1418,6 +1527,135 @@ local initialize = function()
     Callback.add(stateHunterC.on_exit, function(actor, data)
         actor.pHspeed = 0
         data.direction = nil
+    end)
+
+    -- Executed when stateHunterC is entered
+    Callback.add(stateHunterC2Fire.on_enter, function(actor, data)
+        local actorData = Instance.get_data(actor)
+        actor.image_index = 0 -- Make sure our animation starts on its first frame
+        -- From here we can setup custom data that we might want to refer back to in on_step
+        actorData.grapple_point = -4
+        data.fired = 0
+    end)
+    
+    -- Executed every game tick during this state
+    Callback.add(stateHunterC2Fire.on_step, function(actor, data)
+        local actorData = Instance.get_data(actor)
+        actor:skill_util_fix_hspeed()
+        -- Set the animation and animation speed. This speed will automatically have the survivor's 
+        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
+        local animation = actor:actor_get_skill_animation(hunterC2)
+        local animation_speed = 0.25
+        if actor.image_index < 3 then
+            actor:actor_animation_set(animation, animation_speed)
+        else
+            actor:actor_animation_set(animation, 0)
+            if data.fired == 0 then
+                data.fired = 1
+                actor:sound_play(gm.constants.wHANDShoot4_2, 0.9, 2.5)
+                --with
+                local g = oGrapplePoint:create(actor.x, actor.y - 8)
+                actorData.grapple_point = g
+                g.direction = 90 - (actor.image_xscale * 45)
+                g.parent = actor
+                g.image_angle = g.direction
+                g.image_yscale = actor.image_xscale
+            end
+        end
+        if data.fired > 0 then
+            local grapple_point = actorData.grapple_point
+
+            if not Instance.exists(grapple_point) then
+                actor:set_state(ActorState.wrap(-1))
+            elseif actor:is_authority() then
+                if grapple_point.done then
+                    actor:set_state_networked(stateHunterC2Swing)
+                elseif grapple_point.failed then
+                    actor:set_state_networked(ActorState.wrap(-1))
+                end
+            end
+        end
+    end)
+
+    Callback.add(stateHunterC2Swing.on_enter, function(actor, data)
+        local actorData = Instance.get_data(actor)
+        if not actorData.grapple_point then
+            actorData.grapple_point = -4
+        end
+        actorData.ran_once = false
+        actor:sound_play(gm.constants.wHANDShoot1_2, 1, 2)
+        actor.free = true
+        actor.activity_free = true
+        local grapple_point = actorData.grapple_point
+        actorData.grapple_x = grapple_point.x
+        actorData.grapple_y = grapple_point.y
+        actorData.grapple_l = math.max(0, gm.point_distance(actor.x, actor.y - 8, actorData.grapple_x, actorData.grapple_y) - 4)
+        --actor.activity_type = 2
+        if grapple_point.done then
+            actor.pHspeed = actor.pHspeed + gm.lengthdir_x(4, gm.point_direction(actor.x, actor.y - 8, grapple_point.x, grapple_point.y))
+            actor.pVspeed = actor.pVspeed + gm.lengthdir_y(4, gm.point_direction(actor.x, actor.y - 8, grapple_point.x, grapple_point.y))
+        end
+    end)
+
+    Callback.add(stateHunterC2Swing.on_step, function(actor, data)
+        local actorData = Instance.get_data(actor)
+        -- Set the animation and animation speed. This speed will automatically have the survivor's 
+        -- attack speed bonuses applied (e.g. from Soldier's Syringe)
+        local animation = actor:actor_get_skill_animation(hunterC2)
+        actor:actor_animation_set(animation, 0)
+        actor.image_index = 3
+        --actor.pGravity1 = 0
+        local grapple_point = actorData.grapple_point
+
+        if not Instance.exists(grapple_point) then
+            actor:set_state(ActorState.wrap(-1))
+        elseif grapple_point.done then
+            if not (actor:control("skill3", 0) or actor.x_skill) then
+                actor:set_state(ActorState.wrap(-1))
+                return
+            end
+            if not actor.free then actor.free = true end
+            if Util.bool(actor.ropeUp) and not actor:is_colliding(gm.constants.pBlock, actor.x, actor.bbox_top) then
+                actorData.grapple_l = math.max(0, actorData.grapple_l - 3)
+            end
+            if Util.bool(actor.ropeDown) then
+                actorData.grapple_l = actorData.grapple_l + 3
+            end
+            if not (Util.bool(actor.moveLeft) and Util.bool(actor.moveRight)) then
+                if Util.bool(actor.moveLeft) then
+                    actor.pHspeed = actor.pHspeed - 0.15
+                end
+                if Util.bool(actor.moveRight) then
+                    actor.pHspeed = actor.pHspeed + 0.15
+                end
+            end
+            local grapple_x = actorData.grapple_x
+            local grapple_y = actorData.grapple_y
+            local grapple_l = actorData.grapple_l
+            local adj = actor.x - grapple_x
+            local opp = actor.y - grapple_y
+            local hyp = math.sqrt((adj ^ 2) + (opp ^ 2))
+
+            if hyp > grapple_l then
+                  local soh = opp / hyp
+                  local cah = adj / hyp
+                --local toa = opp / adj
+
+                actor.x = grapple_x + cah * grapple_l
+                actor.y = grapple_y + soh * grapple_l
+                local tvtime = actor.pHspeed * -soh + actor.pVspeed * cah
+                actor.pHspeed = -soh * tvtime
+                actor.pVspeed = cah * tvtime
+            end
+        end
+    end)
+
+    Callback.add(stateHunterC2Swing.on_exit, function(actor, data)
+        local actorData = Instance.get_data(actor)
+        actor.jump_count = 0
+        --actor:recalculate_stats()
+
+        if Instance.exists(actorData.grapple_point) then actorData.grapple_point:destroy() end
     end)
 
     -- Executed when stateHunterV is entered
