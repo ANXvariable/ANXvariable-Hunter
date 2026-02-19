@@ -635,7 +635,7 @@ local initialize = function()
     local obj_iceBlock_86 = Object.new("iceBlock_86")
     obj_iceBlock_86.obj_sprite = gm.constants.sNoSpawn
     obj_iceBlock_86.obj_depth = 1
-    block = Object.find("bNoSpawn", "ror")
+    block = Object.find("BNoSpawn", "ror")
 
     --BEHOLD THE WORST POSSIBLE IMPLEMENTATION OF CUSTOM SOLID??
     --first, we make a custom object that has the behavior i want but isn't actually solid because i can't make it i guess. i need it to move with the actor and disappear if they die.
@@ -714,7 +714,7 @@ local initialize = function()
             if not Options.solid_ice then
                 if Instance.exists(actor) then
                     if not actor.ridable_collider or not Instance.exists(actor.ridable_collider) then
-                        actor.ridable_collider = Object.find("ridableCollider", "ror"):create(actor.x, actor.y)
+                        actor.ridable_collider = Object.find("RidableCollider", "ror"):create(actor.x, actor.y)
                         if actor.mask_index >= 0 then
                             actor.ridable_collider.mask_index = actor.mask_index
                         else
@@ -1042,12 +1042,12 @@ local initialize = function()
                 instance.x = instance.target.x - instance.xo
                 instance.y = instance.target.y - instance.yo
                 if instance.target.elite_type == Elite.find("overloading", "ror").value and math.fmod(Global._current_frame - instance.hittime, 30) == 0 then
-                    local enemyshock = Object.find("chainLightning", "ror"):create(actor.x, actor.y)
+                    local enemyshock = Object.find("ChainLightning", "ror"):create(actor.x, actor.y)
                     enemyshock.parent = instance.target
                     enemyshock.team = instance.target.team
                     enemyshock.damage = (actor.maxhp_base + ((actor.level - 1) * actor.maxhp_level)) / 20
                     enemyshock.range = 100
-                    local frnlyshock = Object.find("chainLightning", "ror"):create(instance.x, instance.y)
+                    local frnlyshock = Object.find("ChainLightning", "ror"):create(instance.x, instance.y)
                     frnlyshock.parent = actor
                     frnlyshock.team = actor.team
                     frnlyshock.damage =  (instance.target.maxhp / 10) + ((actor.damage / (actor.damage_base + ((actor.level - 1) * actor.damage_level))) - 1)
