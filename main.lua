@@ -618,7 +618,7 @@ local initialize = function()
     local obj_iceBlock_86 = Object.new("iceBlock_86")
     obj_iceBlock_86.obj_sprite = gm.constants.sNoSpawn
     obj_iceBlock_86.obj_depth = 1
-    block = Object.find("bNoSpawn", "ror")
+    block = Object.find("BNoSpawn", "ror")
 
     --BEHOLD THE WORST POSSIBLE IMPLEMENTATION OF CUSTOM SOLID??
     --first, we make a custom object that has the behavior i want but isn't actually solid because i can't make it i guess. i need it to move with the actor and disappear if they die.
@@ -697,7 +697,7 @@ local initialize = function()
             if not Options.solid_ice then
                 if Instance.exists(actor) then
                     if not actor.ridable_collider or not Instance.exists(actor.ridable_collider) then
-                        actor.ridable_collider = Object.find("ridableCollider", "ror"):create(actor.x, actor.y)
+                        actor.ridable_collider = Object.find("RidableCollider", "ror"):create(actor.x, actor.y)
                         if actor.mask_index >= 0 then
                             actor.ridable_collider.mask_index = actor.mask_index
                         else

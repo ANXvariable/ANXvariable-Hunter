@@ -1,3 +1,9 @@
+### v0.3.1
+* Nerfed Spazer (3 * 1 -> 1 + 2 * 0.5)
+* Allowed turning while charging primary
+* Added options to the Settings (Settings -> MODS -> HUNTER)
+* ReturnsAPI adjustment (min 0.1.46 required)
+
 ### v0.3.0
 * New Experimental Settings (Toggle from ImGui window)
   * Unlink missile - level relation
