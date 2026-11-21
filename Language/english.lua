@@ -49,7 +49,7 @@ return {
     item = {
         missileTank = {
             name = "Missile Tank",
-            text = "+1 Missile"
+            pickup = "+1 Missile"
         }
     },
 

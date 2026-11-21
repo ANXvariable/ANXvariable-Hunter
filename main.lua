@@ -1054,6 +1054,31 @@ local initialize = function()
         end
         actor:get_active_skill(Skill.Slot.UTILITY):freeze_cooldown()
 
+        if instance:is_colliding(gm.constants.pPickup) then
+            for _, pickup in ipairs(instance:get_collisions(gm.constants.pPickup)) do
+                local is_equipment = pickup:__lf_pPickup_step_get_equipment_id() ~= -1
+                if pickup.spawned then
+                    if Net.client and (not is_equipment) then
+                        pickup.force_pickup = actor.m_id
+                    elseif pickup:alarm_get(0) == -1 then
+                        local x = actor.x
+                        local y = actor.y
+                        actor.x = pickup.x
+                        actor.y = pickup.y
+                        pickup:event_perform(gm.constants.ev_step, 0)
+                        actor.x = x
+                        actor.y = y
+                    end
+                end
+            end
+        end
+        if instance:is_colliding(gm.constants.pClientPickup) then
+            for _, pickup in ipairs(instance:get_collisions(gm.constants.pClientPickup)) do
+                pickup.x = actor.x
+                pickup.y = actor.y
+            end
+        end
+
         if not instance.done then
             if instance:is_colliding(gm.constants.pBlock, instance.x, instance.y) or instance:is_colliding(gm.constants.pBlock, instance.x, instance.y - 3) or instance:is_colliding(gm.constants.pBlock, instance.x, instance.y + 3) then
                 instance.done = true

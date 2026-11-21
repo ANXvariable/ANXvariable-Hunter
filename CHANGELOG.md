@@ -1,3 +1,7 @@
+### v0.4.1
+* Grapple beam can now be used to collect items
+* Fixed error in missile tank text
+
 ### v0.4.0
 * New Experimental Setting (requires restart after enabling)
   * New skill: Grapple Beam
