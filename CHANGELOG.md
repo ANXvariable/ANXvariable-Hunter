@@ -1,3 +1,13 @@
+### v0.4.0
+* New Experimental Setting (requires restart after enabling)
+  * New skill: Grapple Beam
+  * Functions similar to Loader's Hydraulic Gauntlet
+   * Fire a long-range tether that latches onto a target and pulls you toward it.
+   * Can be aimed forwards, upwards, and...?
+   * Watch out for overloading enemies!
+* ChinyTozo are now free
+* An additional ChinyTozo will spawn near where the stage's environment log would be generated.
+
 ### v0.3.1
 * Nerfed Spazer (3 * 1 -> 1 + 2 * 0.5)
 * Allowed turning while charging primary

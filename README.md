@@ -50,8 +50,7 @@ Multiplayer technically works, but there may be multiplayer-specific bugs. Pleas
 
 ## Experimental Beta
 
-Currently, "Enable Experimental Settings" changes the following:
-- Missiles are no longer acquired via level. A new interactable spawns to give the player a chance to earn the missile tank.
+Currently, experimental settings are available which add beta content when enabled. You can turn them on via Settings > MODS > HUNTER > select the feature which you would like to enable. The content is work-in-progress and is meant to be implemented in a future update in some form, so please don't hesitate to leave feedback about it!
 
 
 ## Contact
