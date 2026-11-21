@@ -12,6 +12,10 @@ return {
            name = "Flash Shift",
            description = "Blink <y>forward a short distance.</c>\nYou <b>cannot be hit</c> while blinking."
         },
+       hunterC2 = {
+           name = "Grapple Beam",
+           description = "Fire an <b>electric tether</c> that <y>pulls you forward</c> and latches onto enemies for <y>200% damage</c>.\nTake care not to <r>overload</c> the beam."
+        },
        hunterV = {
            name = "Morph Bomb",
            description = "Curl into a ball and lay a <y>small, timed bomb</c> that explodes for <y>300% damage</c>."
@@ -35,6 +39,20 @@ return {
 		}
 	},
 
+    interactable = {
+        hunter_chinyTozo = {
+            text = "chinytozo...",
+            name = "Chiny Tozo"
+        }
+    },
+
+    item = {
+        missileTank = {
+            name = "Missile Tank",
+            text = "+1 Missile"
+        }
+    },
+
     ui = {
         options = {
             hunter = {
@@ -45,8 +63,10 @@ return {
                 ["offscreenLimit.desc"] = "Beams are removed as soon as they exit your view.",
                 solidIce = "Fully Solid Ice Blocks",
                 ["solidIce.desc"] = "When enabled, enemies frozen by Ice Beam have block collision like walls, floors, and ceilings, instead of only floor collision (like Trokks and Engineer Turrets).",
-                experimentalSettings = "Enable Experimental Settings",
-                ["experimentalSettings.desc"] = "Toggles experimental beta content. See README for more info."
+                experimentalSettings = "Experimental Settings: Missile Collection",
+                ["experimentalSettings.desc"] = "Missiles are no longer acquired via level. A new interactable spawns to give the player a chance to earn the missile tank.",
+                experimentalGrapple = "Experimental Settings: Grapple Beam",
+                ["experimentalGrapple.desc"] = "Adds the beta utility skill, Grapple Beam.\n<r>RESTART REQUIRED.</c>"
             }
         }
     }
