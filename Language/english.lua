@@ -66,7 +66,11 @@ return {
                 experimentalSettings = "Experimental Settings: Missile Collection",
                 ["experimentalSettings.desc"] = "Missiles are no longer acquired via level. A new interactable spawns to give the player a chance to earn the missile tank.",
                 experimentalGrapple = "Experimental Settings: Grapple Beam",
-                ["experimentalGrapple.desc"] = "Adds the beta utility skill, Grapple Beam.\n<r>RESTART REQUIRED.</c>"
+                ["experimentalGrapple.desc"] = "Adds the beta utility skill, Grapple Beam.\n<r>RESTART REQUIRED.</c>",
+                experimentalMDrops = "Experimental Settings: Missile Drops",
+                ["experimentalMDrops.desc"] = "Missiles no longer auto-restock. Killing enemies drops missile collectibles.",
+                experimentalEDrops = "Experimental Settings: Energy Drops",
+                ["experimentalEDrops.desc"] = "The hunter <r>can no longer regenerate naturally.</c> Killing enemies drops energy orbs, which restore health."
             }
         }
     }

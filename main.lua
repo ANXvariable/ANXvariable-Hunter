@@ -11,7 +11,7 @@ mods["ReturnsAPI-ReturnsAPI"].auto{
     mp = true
 }
 
-local PATH = _ENV["!plugins_mod_folder_path"]
+PATH = _ENV["!plugins_mod_folder_path"]
 local NAMESPACE = "anx"
 local debugmsg = "If you're reading this, I forgot to remove the debug message."
 local do_chinytozo_spawn = false
@@ -33,6 +33,8 @@ local Options = {
     input_maxbeams = 12,
     solid_ice = false,
     experimental = {
+        false,
+        false,
         false,
         false
     }
@@ -62,8 +64,10 @@ gui.add_to_menu_bar(function()
 	end
     Options.offscr_destroy = ImGui.Checkbox("Destroy Offscreen Beams", Options.offscr_destroy)
     Options.solid_ice = ImGui.Checkbox("Fully Solid Ice Blocks", Options.solid_ice)
-	Options.experimental[1] = ImGui.Checkbox("Enable Experimental Settings", Options.experimental[1])
+	Options.experimental[1] = ImGui.Checkbox("Experimental Settings: Missile Collection", Options.experimental[1])
 	Options.experimental[2] = ImGui.Checkbox("Experimental Settings: Grapple Beam", Options.experimental[2])
+	Options.experimental[3] = ImGui.Checkbox("Experimental Settings: Missile Drops", Options.experimental[3])
+	Options.experimental[4] = ImGui.Checkbox("Experimental Settings: Energy Drops", Options.experimental[4])
 end)
 
 local modOptions = ModOptions.new()
@@ -112,6 +116,49 @@ experimentalGrappleCheckbox:add_setter(function(value)
     OptionsTOML:write(Options)
 end)
 
+local experimentalMDropsCheckbox = modOptions:add_checkbox("experimentalMDrops")
+experimentalMDropsCheckbox:add_getter(function()
+    return Options.experimental[3]
+end)
+experimentalMDropsCheckbox:add_setter(function(value)
+    Options.experimental[3] = value
+    OptionsTOML:write(Options)
+    local _hunterX = Skill.find("hunterX", "hunter")
+    if _hunterX then
+        if value then
+            _hunterX.max_stock = 30
+            _hunterX.auto_restock = false
+        else
+            _hunterX.max_stock = 5
+            _hunterX.auto_restock = true
+        end
+    end
+end)
+
+local experimentalEDropsCheckbox = modOptions:add_checkbox("experimentalEDrops")
+experimentalEDropsCheckbox:add_getter(function()
+    return Options.experimental[4]
+end)
+experimentalEDropsCheckbox:add_setter(function(value)
+    Options.experimental[4] = value
+    OptionsTOML:write(Options)
+    local _hunter = Survivor.find("hunter", "hunter")
+    if _hunter then
+    _hunter:set_stats_base({
+        health = 99,
+        damage = 12,
+        regen = value and 0 or 0.01
+    })
+    
+    _hunter:set_stats_level({
+        health = 32,
+        damage = 3.3125,
+        regen = value and 0 or 0.002,
+        armor = 0,
+    })
+    end
+end)
+
 --blendmodes from gm
 local bm_normal = 0
 local bm_add = 1
@@ -122,11 +169,28 @@ local grappleables = {
     gm.constants.pEnemy, gm.constants.pActorHitbox, gm.constants.oConsRod, gm.constants.oConsRodB
 }
 
+local Hunter = {
+    Pickup = {
+        ENERGY_SMALL = 0,
+        ENERGY_MED = 1,
+        ENERGY_LARGE = 2,
+        MISSILE = 3
+    }
+}
+local len = 0
+for k, v in pairs(Hunter.Pickup) do
+    len = len + 1
+end
+Hunter.Pickup.table_length = len
+len = nil
+
 
 -- ========== Main ==========
 
 local initialize = function()
     hotload = true
+    require("./Util/utility")
+
     local hunter = Survivor.new("hunter")
 
     --all the upgrades are hidden items
@@ -136,14 +200,14 @@ local initialize = function()
         missiletank:toggle_loot(false)
         missiletank.is_hidden = true
         Callback.add(missiletank.on_acquired, function(actor, stack)
-            local skill2 = actor:get_active_skill(1)
-            skill2.stock = skill2.stock + 1
+            local skill2 = actor:get_active_skill(Skill.Slot.SECONDARY)
+            skill2.stock = skill2.stock + ((Options.experimental[3]) and 2 or 1)
         end)
         RecalculateStats.add(function(actor, api)
 	        local stack = actor:item_count(missiletank)
             if stack <= 0 then return end
 
-            api.skill_secondary.max_stock_add(stack)
+            api.skill_secondary.max_stock_add(stack * (Options.experimental[3] and 2 or 1))
         end)
 
         local hijump = Item.new("hiJumpBoots")
@@ -289,16 +353,6 @@ local initialize = function()
         plasmabeam.loot_tags = Item.LootTag.CATEGORY_DAMAGE
         plasmabeam:toggle_loot(false)
         plasmabeam.is_hidden = true
-
-    -- Utility function for getting paths concisely
-    local rapi_sprite = function(identifier, filename, image_number, x_origin, y_origin) 
-        local sprite_path = path.combine(PATH, "Sprites",  filename)
-        return Sprite.new(identifier, sprite_path, image_number, x_origin, y_origin)
-    end
-    local rapi_sound = function(id, filename)
-        local sound_path = path.combine(PATH, "Sounds", filename)
-        return Sound.new(id, sound_path)
-    end
     
     -- Load the common survivor sprites into a table
     local sprites = {
@@ -323,36 +377,38 @@ local initialize = function()
     local spr_shoot1_half = rapi_sprite("hunter_shoot1_half", "sHunterShoot1Half.png", 4, 13, 25)
     
     --placeholder category, todo organize later
-    local spr_skills = rapi_sprite("hunter_skills", "sHunterSkills.png", 5, 0, 0)
-    local spr_loadout = rapi_sprite("hunter_loadout", "sSelectHunter.png", 18, 28)
-    local spr_portrait = rapi_sprite("hunter_portrait", "sHunterPortrait.png", 3)
-    local spr_portrait_small = rapi_sprite("hunter_portrait_small", "sHunterPortraitSmall.png")
-    local spr_portrait_cropped = rapi_sprite("hunter_portrait_cropped", "sHunterPortraitC.png")
-    local spr_palette = rapi_sprite("hunter_palette", "sHunterPalette.png")
-    local spr_log = rapi_sprite("hunter_log", "sPortraitHunter.png")
-    local spr_flashshift = rapi_sprite("hunter_flashshift", "sHunterFlashShift.png", 4, 19, 17)
-    local spr_flashshifttrail = rapi_sprite("hunter_flashshifttrail", "sHunterFlashShift.png", 4, 19, 17)
+    local spr_skills = rapi_sprite("sHunterSkills", "sHunterSkills.png", 5, 0, 0)
+    local spr_loadout = rapi_sprite("sSelectHunter", "sSelectHunter.png", 18, 28)
+    local spr_portrait = rapi_sprite("sHunterPortrait", "sHunterPortrait.png", 3)
+    local spr_portrait_small = rapi_sprite("sHunterPortraitSmall", "sHunterPortraitSmall.png")
+    local spr_portrait_cropped = rapi_sprite("sHunterPortraitC", "sHunterPortraitC.png")
+    local spr_palette = rapi_sprite("sHunterPalette", "sHunterPalette.png")
+    local spr_log = rapi_sprite("sPortraitHunter", "sPortraitHunter.png")
+    local spr_flashshift = rapi_sprite("sHunterFlashShift", "sHunterFlashShift.png", 4, 19, 17)
+    local spr_flashshifttrail = rapi_sprite("sHunterFlashShift", "sHunterFlashShift.png", 4, 19, 17)
     --local spr_morphandbomb = rapi_sprite("hunter_morphandbomb", "sHunterMorphAndBomb.png", 10, 6, 0)
-    local spr_morph = rapi_sprite("hunter_morph", "sHunterMorph.png", 8, 6, 0)
-    local spr_morph2 = rapi_sprite("hunter_morph2", "sHunterMorph2.png", 8, 6, 12)
+    local spr_morph = rapi_sprite("sHunterMorph", "sHunterMorph.png", 8, 6, 0)
+    local spr_morph2 = rapi_sprite("sHunterMorph2", "sHunterMorph2.png", 8, 6, 12)
 
-    local spr_beam = rapi_sprite("hunter_beam", "sHunterBeam.png", 4)
-    local spr_beam_c0000 = rapi_sprite("hunter_beam_c0000", "sHunterBeamC0000.png", 4, 14, 4)
-    local spr_beam_cs000 = rapi_sprite("hunter_beam_cs000", "sHunterBeamCS000.png", 4, 14, 2)
-    local spr_beam_csi00 = rapi_sprite("hunter_beam_csi00", "sHunterBeamCSI00.png", 4, 14, 2)
-    local spr_beam_csiw0 = rapi_sprite("hunter_beam_csiw0", "sHunterBeamCSIW0.png", 4, 14, 2)
-    local spr_beam_csiwp = rapi_sprite("hunter_beam_csiwp", "sHunterBeamCSIWP.png", 4, 14, 2)
-    local spr_beam_0s000 = rapi_sprite("hunter_beam_0s000", "sHunterBeam0S000.png", 4)
-    local spr_beam_0si00 = rapi_sprite("hunter_beam_0si00", "sHunterBeam0SI00.png", 4)
-    local spr_beam_0siw0 = rapi_sprite("hunter_beam_0siw0", "sHunterBeam0SIW0.png", 4)
-    local spr_beam_0siwp = rapi_sprite("hunter_beam_0siwp", "sHunterBeam0SIWP.png", 4)
-    local spr_beam_flare_0000 = rapi_sprite("hunter_beam_flare_0000", "sSparksHunterChargeFlare.png", 5, 12, 12)
-    local spr_missile = rapi_sprite("hunter_missile", "sHunterMissile.png", 3, 22)
+    local spr_beam = rapi_sprite("sHunterBeam", "sHunterBeam.png", 4)
+    local spr_beam_c0000 = rapi_sprite("sHunterBeamC0000", "sHunterBeamC0000.png", 4, 14, 4)
+    local spr_beam_cs000 = rapi_sprite("sHunterBeamCS000", "sHunterBeamCS000.png", 4, 14, 2)
+    local spr_beam_csi00 = rapi_sprite("sHunterBeamCSI00", "sHunterBeamCSI00.png", 4, 14, 2)
+    local spr_beam_csiw0 = rapi_sprite("sHunterBeamCSIW0", "sHunterBeamCSIW0.png", 4, 14, 2)
+    local spr_beam_csiwp = rapi_sprite("sHunterBeamCSIWP", "sHunterBeamCSIWP.png", 4, 14, 2)
+    local spr_beam_0s000 = rapi_sprite("sHunterBeam0S000", "sHunterBeam0S000.png", 4)
+    local spr_beam_0si00 = rapi_sprite("sHunterBeam0SI00", "sHunterBeam0SI00.png", 4)
+    local spr_beam_0siw0 = rapi_sprite("sHunterBeam0SIW0", "sHunterBeam0SIW0.png", 4)
+    local spr_beam_0siwp = rapi_sprite("sHunterBeam0SIWP", "sHunterBeam0SIWP.png", 4)
+    local spr_beam_flare_0000 = rapi_sprite("sSparksHunterChargeFlare", "sSparksHunterChargeFlare.png", 5, 12, 12)
+    local spr_missile = rapi_sprite("sHunterMissile", "sHunterMissile.png", 3, 22)
+    local sPickupMissile = rapi_sprite("sPickupMissile", "sPickupMissile.png", 4, 4, 7)
+    local sPickupEnergy = rapi_sprite("sPickupEnergy", "sPickupEnergy.png", 4, 11, 11)
     local spr_missile_explosion = gm.constants.sEfMissileExplosion
-    local spr_bomb = rapi_sprite("hunter_bomb", "sHunterBomb.png")
-    local spr_powerbomb = rapi_sprite("hunter_powerbomb", "sHunterPowerBomb.png")
-    local spr_powerbomb_explosion = rapi_sprite("hunter_powerbomb_explosion", "sHunterPowerBombExplode.png", 8, 889, 499)
-    local spr_chinytozo = rapi_sprite("hunter_chinytozo", "sChinyTozo.png", 2, 16, 32)
+    local spr_bomb = rapi_sprite("sHunterBomb", "sHunterBomb.png")
+    local spr_powerbomb = rapi_sprite("sHunterPowerBomb", "sHunterPowerBomb.png")
+    local spr_powerbomb_explosion = rapi_sprite("sHunterPowerBombExplode", "sHunterPowerBombExplode.png", 8, 889, 499)
+    local spr_chinytozo = rapi_sprite("sChinyTozo", "sChinyTozo.png", 2, 16, 32)
     
     -- Colour for the character's skill names on character select
     hunter.primary_color = Color.from_rgb(8, 253, 142)
@@ -419,13 +475,13 @@ local initialize = function()
     hunter:set_stats_base({
         health = 99,
         damage = 12,
-        regen = 0.01
+        regen = Options.experimental[4] and 0 or 0.01
     })
 
     hunter:set_stats_level({
         health = 32,
         damage = 3.3125,
-        regen = 0.002,
+        regen = Options.experimental[4] and 0 or 0.002,
         armor = 0,
     })
 
@@ -518,7 +574,7 @@ local initialize = function()
         local free = actor.free
         local lr = l ~= r
         local ud = u ~= d
-        if actor:player_util_get_use_mouse_aim(actor) then
+        if actor.is_local and actor:player_util_get_use_mouse_aim(actor) then
             local angles = {}
             for i = 0, 7 do
                 angles[i + 1] = i * 45
@@ -1004,7 +1060,7 @@ local initialize = function()
             return
         end
 
-        local trail = GM.instance_create(instance.x - 18 * instance.image_xscale, instance.y + 5, gm.constants.oEfTrail)
+        local trail = Instance.create(instance.x - 18 * instance.image_xscale, instance.y + 5, gm.constants.oEfTrail)
         trail.sprite_index = gm.constants.sEfMissileTrail
         trail.image_index = 0
         trail.image_speed = 8 / 9
@@ -1014,24 +1070,300 @@ local initialize = function()
         instance.lifetime = instance.lifetime + 1
     end)
 
+    local oHunterPickup = Object.new("HunterPickup")
+    oHunterPickup:set_sprite(sPickupMissile)
+    oHunterPickup:set_depth(1)
+    Object.add_serializers(oHunterPickup,
+    function(instance, buffer)
+    	buffer:write_int(Instance.get_data(instance).pickup_type)
+        buffer:write_float(instance.speed)
+        buffer:write_float(Instance.get_data(instance).accel)
+    	buffer:write_int(instance.direction)
+    end,
+    function(instance, buffer)
+    	Instance.get_data(instance).pickup_type = buffer:read_int()
+	    instance.speed = buffer:read_float()
+        Instance.get_data(instance).accel = buffer:read_float()
+    	instance.direction = buffer:read_int()
+    end)
+
+    local function init_pickup(instance, data, pickup_type)
+        data = data or Instance.get_data(instance)
+        data.pickup_type = pickup_type
+        switch(pickup_type, {
+            [Hunter.Pickup.ENERGY_SMALL] = function()
+                instance.sprite_index = sPickupEnergy
+                data.amount = 5
+                instance.image_speed = 0.2
+                instance.image_xscale = 0.5
+                instance.image_yscale = 0.5
+            end,
+            [Hunter.Pickup.ENERGY_MED] = function()
+                instance.sprite_index = sPickupEnergy
+                data.amount = 10
+                instance.image_speed = 0.2
+                instance.image_xscale = 0.75
+                instance.image_yscale = 0.75
+            end,
+            [Hunter.Pickup.ENERGY_LARGE] = function()
+                instance.sprite_index = sPickupEnergy
+                data.amount = 20
+                instance.image_speed = 0.2
+            end,
+            [Hunter.Pickup.MISSILE] = function()
+                instance.sprite_index = sPickupMissile
+                data.amount = 1
+                instance.image_speed = 0.5
+                data.circle = Color.RED
+            end,
+            ["default"] = function()
+                instance.sprite_index = sPickupEnergy
+                data.amount = 5
+                instance.image_speed = 0.5
+                instance:destroy()
+            end
+        })
+    end
+
+    local function grant_pickup(instance, data, actor)
+        local pickup_type = data.pickup_type
+        switch(pickup_type, {
+            [Hunter.Pickup.ENERGY_SMALL] = function()
+                if Net.host then
+                    actor:heal(data.amount)
+                    instance:sound_play(gm.constants.wUse, 1, (math.random(12, 16) / 10))
+                end
+            end,
+            [Hunter.Pickup.ENERGY_MED] = function()
+                if Net.host then
+                    actor:heal(data.amount)
+                    instance:sound_play(gm.constants.wUse, 1, (math.random(8, 12) / 10))
+                end
+            end,
+            [Hunter.Pickup.ENERGY_LARGE] = function()
+                if Net.host then
+                    actor:heal(data.amount)
+                    instance:sound_play(gm.constants.wUse, 1, (math.random(4, 8) / 10))
+                end
+            end,
+            [Hunter.Pickup.MISSILE] = function()
+                local skill2 = actor:get_active_skill(Skill.Slot.SECONDARY)
+                skill2:add_stock(data.amount, false)
+                instance:sound_play(gm.constants.wAmethyst, 0.6, 2)
+            end,
+            ["default"] = function()
+                instance:sound_play(gm.constants.wError, 1, 1)
+            end
+        })
+    end
+
+    Callback.add(oHunterPickup.on_create, function(instance)
+        local data = Instance.get_data(instance)
+        data.spawned = false
+        data.parent = -4
+        data.lifetime = 0
+        data.pickup_type = 0
+        data.amount = 5
+        instance.speed = 5 * math.random()
+        data.accel = instance.speed / 20
+        instance.direction = math.random(0, 359)
+        instance.image_alpha = 0
+        instance.image_speed = 0.2
+        instance:instance_sync()
+    end)
+
+    Callback.add(oHunterPickup.on_step, function(instance)
+        local data = Instance.get_data(instance)
+        if not Instance.exists(data.parent) then
+            for _, actor in ipairs(Instance.find_all(gm.constants.oP)) do
+                data.parent = actor
+                if actor.class == hunter.value then break end
+            end
+        end
+        local parent = data.parent
+        if not data.spawned then
+            instance.speed = math.max(0, instance.speed - data.accel)
+            instance.image_alpha = math.min(1, instance.image_alpha + 0.05)
+            if instance.speed == 0 and math.floor(instance.image_alpha) == 1 then
+                data.spawned = Global._current_frame
+                data.lifetime = data.spawned
+            end
+        else
+            if math.fmod(data.spawned, 120) == 0 and data.circle then
+                local circle = Instance.create(instance.x, instance.y, gm.constants.oEfCircle)
+                circle.depth = instance.depth + 1
+                circle.rate = 8
+                circle.image_blend = data.circle
+            end
+            if instance:is_colliding(parent) then
+                grant_pickup(instance, data, parent)
+                instance:destroy()
+                return
+            else
+                for _, actor in ipairs(instance:get_collisions(gm.constants.oP)) do
+                    grant_pickup(instance, data, actor)
+                    instance:destroy()
+                    return
+                end
+            end
+            if data.lifetime + 600 < data.spawned then
+                instance.image_alpha = instance.image_alpha - 0.01
+                if instance.image_alpha <= 0 then instance:destroy() return end
+            end
+            data.spawned = data.spawned + 1
+        end
+    end)
+
+    Callback.add(Callback.ON_KILL_PROC, function(victim, killer)
+        if not ((Options.experimental[3] or Options.experimental[4]) and killer and victim) or killer.class ~= hunter.value then return end
+        local count = 1
+        local limit = 50
+        local htotal = 0
+        local mtotal = 0
+        local elite = GM.actor_is_elite(victim)
+        local boss = GM.actor_is_boss(victim)
+        if elite then
+            count = count + 2
+        end
+        if boss then
+            count = (count + 3) * 3
+        end
+        limit = math.min(200, limit * Instance.find(gm.constants.oInit, 1).player_max_chosen)
+        while Instance.count(oHunterPickup) < limit do
+            local hd = oHunterPickup:create(victim.x, victim.y)
+            local pickup_type
+            local hp_percent = killer.hp / killer.maxhp
+            local skill2 = killer:get_active_skill(Skill.Slot.SECONDARY)
+            local m_percent = skill2.stock / skill2.max_stock
+            local weights = {}
+            local do_edrops = Options.experimental[4] and hp_percent < 1
+            local do_mdrops = Options.experimental[3] and m_percent < 1
+            if do_edrops then
+                weights[Hunter.Pickup.ENERGY_SMALL] = 20 * hp_percent
+                weights[Hunter.Pickup.ENERGY_MED] = 30
+                weights[Hunter.Pickup.ENERGY_LARGE] = 20 / hp_percent
+            end
+            if do_mdrops then
+                weights[Hunter.Pickup.MISSILE] = 50 / m_percent
+            end
+            --local table_length = 0
+            --for k, v in pairs(weights) do
+            --    table_length = table_length + 1
+            --end
+            --if table_length == 0 then
+            --    weights[0] = 1
+            --    table_length = 1
+            --end
+            local total_weight = 0
+            for i, weight in pairs(weights) do
+                if weight < math.huge then
+                    total_weight = total_weight + weight
+                else
+                    total_weight = math.huge
+                    pickup_type = i
+                    break
+                end
+            end
+            if total_weight ~= math.huge then
+                local chance = math_random_float(total_weight)
+                local check = 0
+                local pickup_selected = false
+                if weights[0] then
+                    check = check + weights[0]
+                    if chance <= check then
+                        pickup_type = i
+                        pickup_selected = true
+                    end
+                end
+                if not pickup_selected then
+                    for i, weight in pairs(weights) do
+                        if i ~= 0 then
+                            check = check + weight
+                            if chance <= check then
+                                pickup_type = i
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+            init_pickup(hd, Instance.get_data(hd), pickup_type)
+            count = count - 1
+            if count <= 0 then
+                break
+            end
+        end
+    end)
+
+    local mstock = {}
+    Callback.add(Callback.ON_DIRECTOR_POPULATE_SPAWN_ARRAYS, function()
+        if not Options.experimental[3] then return end
+        for _, actor in ipairs(Instance.find_all(gm.constants.oP)) do
+            if actor.class == hunter.value then
+                local skill2 = actor:get_active_skill(Skill.Slot.SECONDARY)
+                mstock[actor.id] = skill2.stock
+            end
+        end
+    end)
+    Callback.add(Callback.ON_STAGE_START, function()
+        if not Options.experimental[3] then return end
+        for _, actor in ipairs(Instance.find_all(gm.constants.oP)) do
+            if actor.class == hunter.value then
+                local skill2 = actor:get_active_skill(Skill.Slot.SECONDARY)
+                local id = actor.id
+                if mstock[id] then
+                    skill2.stock = mstock[id]
+                    mstock[id] = nil
+                end
+            end
+        end
+    end)
+
     local oGrapplePoint = Object.new("oGrapplePoint")
     oGrapplePoint.obj_sprite = gm.constants.sLoaderHand
     oGrapplePoint.obj_depth = -206
+    local GrapplePacket = Packet.new("GrapplePacket")
+    GrapplePacket:set_serializers(
+    function(buffer, instance)
+        buffer:write_int(instance.parent.m_id)
+        buffer:write_float(instance.x)
+        buffer:write_float(instance.y)
+    	buffer:write_int(instance.direction)
+    end,
+    function(buffer, player)
+        local m_id = buffer:read_int()
+        local x = buffer:read_float()
+        local y = buffer:read_float()
+    	local dir = buffer:read_int()
+        local instance = -4
+        local actor = GM.find_object(gm.constants.oP, m_id)
+        if Instance.exists(actor) then
+            for _, grapple in ipairs(Instance.find_all(oGrapplePoint)) do
+                if grapple.parent == actor then
+                    instance = grapple
+                    grapple.x = x
+                    grapple.y = y
+                    grapple.direction = dir
+                    break
+                end
+            end
+        end
+    end)
 
     Callback.add(oGrapplePoint.on_create, function(instance)
         local data = Instance.get_data(instance)
 
         instance.sprite_index = gm.constants.sNone
         instance.mask_index = gm.constants.sLoaderHand
-        instance.done = false
-        instance.lifetime = 0
-        instance.hittime = -1
-        instance.failed = false
-        instance.hit = false
+        data.done = false
+        data.lifetime = 0
+        data.hittime = -1
+        data.failed = false
+        data.hit = false
         instance.target = -4
         instance.parent = -4
-        instance.xo = 0
-        instance.yo = 0
+        data.xo = 0
+        data.yo = 0
         instance.speed = 28
         instance.image_speed = 0.5
     end)
@@ -1047,7 +1379,7 @@ local initialize = function()
             instance:destroy()
             return
         end
-        if instance.failed then
+        if data.failed then
             actor:get_active_skill(Skill.Slot.UTILITY):reset_cooldown()
             instance:destroy()
             return
@@ -1074,14 +1406,30 @@ local initialize = function()
         end
         if instance:is_colliding(gm.constants.pClientPickup) then
             for _, pickup in ipairs(instance:get_collisions(gm.constants.pClientPickup)) do
-                pickup.x = actor.x
-                pickup.y = actor.y
+                if actor:is_authority() then
+                    pickup.x = actor.x
+                    pickup.y = actor.y
+                end
+            end
+        end
+        local _pickup = Instance.nearest(instance.x, instance.y, oHunterPickup)
+        local pData = {}
+        if _pickup.value then
+            pData = Instance.get_data(_pickup)
+        end
+        while _pickup.value do
+            if Math.distance(instance.x, instance.y, _pickup.x, _pickup.y) <= 26 and pData.spawned then
+                grant_pickup(_pickup, pData, actor)
+                _pickup:destroy()
+                _pickup = Instance.nearest(instance.x, instance.y, oHunterPickup)
+            else
+                break
             end
         end
 
-        if not instance.done then
+        if not data.done then
             if instance:is_colliding(gm.constants.pBlock, instance.x, instance.y) or instance:is_colliding(gm.constants.pBlock, instance.x, instance.y - 3) or instance:is_colliding(gm.constants.pBlock, instance.x, instance.y + 3) then
-                instance.done = true
+                data.done = true
                 instance.target = -4
             else
                 local ti = instance:instance_place(instance.x, instance.y, gm.constants.pEnemy)
@@ -1092,23 +1440,26 @@ local initialize = function()
                     ti = instance:instance_place(instance.x, instance.y, grappleables[i])
                 end
                 if ti ~= -4 then
-                    instance.done = true
-                    instance.hit = true
+                    data.done = true
+                    data.hit = true
                     instance.target = ti
-                    instance.xo = instance.target.x - instance.x
-                    instance.yo = instance.target.y - instance.y
+                    data.xo = instance.target.x - instance.x
+                    data.yo = instance.target.y - instance.y
                 end
             end
 
-            if instance.done then
+            if data.done then
                 instance.speed = 0
-                instance.hittime = Global._current_frame
+                data.hittime = Global._current_frame
 
                 if actor:is_authority() then
                     for i=0, actor:buff_count(Buff.find("shadowClone", "ror")) do
                         local attack = actor:fire_explosion(instance.x, instance.y, 56, 40, Skill.find("hunterC2").damage)
                         attack.attack_info.climb = i * 8
                     end
+                end
+                if Net.online and actor:is_authority() then
+                    GrapplePacket:send_to_all(instance)
                 end
             end
         else
@@ -1117,11 +1468,11 @@ local initialize = function()
             instance.speed = 0
 
             if Instance.exists(instance.target) then
-                instance.x = instance.target.x - instance.xo
-                instance.y = instance.target.y - instance.yo
+                instance.x = instance.target.x - data.xo
+                instance.y = instance.target.y - data.yo
                 local enemy = instance:attack_collision_resolve(instance.target)
                 if instance:object_is(enemy, gm.constants.pActor) and enemy.team ~= actor.team then
-                    if enemy.elite_type == Elite.find("overloading", "ror").value and math.fmod(Global._current_frame - instance.hittime, 15) == 0 then
+                    if enemy.elite_type == Elite.find("overloading", "ror").value and math.fmod(Global._current_frame - data.hittime, 15) == 0 then
                         local enemyshock = Object.find("ChainLightning", "ror"):create(actor.x, actor.y)
                         enemyshock.parent = enemy
                         enemyshock.team = enemy.team
@@ -1133,17 +1484,17 @@ local initialize = function()
                         frnlyshock.damage = ((enemy.maxhp / 10) + ((actor.damage / (actor.damage_base + ((actor.level - 1) * actor.damage_level))) - 1)) / 2
                         frnlyshock.range = math.max(100, (gm.sprite_get_width(enemy.sprite_index) / 2) + 25)
                     end
-                Instance.get_data(actor).incur_cooldown = true
+                --Instance.get_data(actor).incur_cooldown = true
                 end
-            elseif instance.hit then
+            elseif data.hit then
                 instance:destroy()
                 return
             end
         end
-        if instance.lifetime >= 60 and instance.speed > 0 then
-            instance.failed = true
+        if data.lifetime >= 60 and instance.speed > 0 then
+            data.failed = true
         end
-        instance.lifetime = instance.lifetime + 1
+        data.lifetime = data.lifetime + 1
     end)
 
     local function _mod_draw_lightning(xx, yy, xdes, ydes, deviance, spread, blend, alpha)
@@ -1399,9 +1750,14 @@ local initialize = function()
     hunterZ.use_delay = 5
     hunterX.damage = 4.0
     hunterX.cooldown = 120
-    local base_stocks = 5
-    hunterX.max_stock = base_stocks
-    hunterX.start_with_stock = base_stocks
+    if Options.experimental[3] then
+        hunterX.max_stock = 30
+        hunterX.auto_restock = false
+    else
+        hunterX.max_stock = 5
+        hunterX.auto_restock = true
+    end
+    hunterX.start_with_stock = true
     hunterC.damage = 0
     hunterC.cooldown = 240
     hunterC.max_stock = 2
@@ -1566,6 +1922,20 @@ local initialize = function()
 			                    chargeflash.parent = actor
 			                    chargeflash.rate = 1 / 6
 			                    chargeflash.image_alpha = 0.5
+                            end
+                        end
+                        for _, pickup in ipairs(Instance.find_all(oHunterPickup)) do
+                            local pData = Instance.get_data(pickup)
+                            if pData.spawned then
+                                local dist = Math.distance(pickup.x, pickup.y, actor.x, actor.y)
+                                local maxdist = 300
+                                local dir = Math.direction(pickup.x, pickup.y, actor.x, actor.y)
+                                local vector = Vector.RIGHT
+                                vector.direction = dir
+                                if dist <= maxdist then
+                                    pickup.x = pickup.x + vector.x * math.min(3, 1 + ((maxdist - dist) / maxdist) * 4)
+                                    pickup.y = pickup.y + vector.y * math.min(3, 1 + ((maxdist - dist) / maxdist) * 4)
+                                end
                             end
                         end
                     end
@@ -1756,6 +2126,12 @@ local initialize = function()
             g.parent = actor
             g.image_angle = g.direction
             g.image_yscale = actor.image_xscale
+            Alarm.add(1, function()
+                if not (Instance.exists(actor) and Instance.exists(g)) then return end
+                if Net.online and actor:is_authority() then
+                    GrapplePacket:send_to_all(g)
+                end
+            end)
         end
         actor.moveLeft = 0
         actor.moveRight = false
@@ -1763,14 +2139,14 @@ local initialize = function()
             local grapple_point = data.grapple_point
 
             if not Instance.exists(grapple_point) then
-                actor:set_state(ActorState.wrap(-1))
+                actor:set_state_networked(ActorState.wrap(-1))
                 actor.pHspeed = data.sHspeed
                 actor.pVspeed = data.sVspeed
             elseif actor:is_authority() then
                 if not (actor:control("skill3", 0) or actor.x_skill) then
                     grapple_point.failed = true
                 end
-                if grapple_point.done then
+                if Instance.get_data(grapple_point).done then
                     actor:set_state_networked(stateHunterC2Swing)
                 elseif grapple_point.failed then
                     actor:get_active_skill(Skill.Slot.UTILITY):reset_cooldown()
@@ -1794,7 +2170,7 @@ local initialize = function()
         if not Instance.exists(grapple_point) then return end
         data.grapple_x = grapple_point.x
         data.grapple_y = grapple_point.y
-        if grapple_point.done then
+        if Instance.get_data(grapple_point).done then
             local dir = Math.direction(actor.x, actor.y, data.grapple_x, data.grapple_y)
             actor.pHspeed = gm.lengthdir_x(16, dir) + gm.lengthdir_x(math.max(0, actor.pHmax - 2.8), dir)
             actor.pVspeed = gm.lengthdir_y(16, dir) + gm.lengthdir_y(math.max(0, actor.pHmax - 2.8), dir)
@@ -1807,31 +2183,29 @@ local initialize = function()
         actor.image_index = 3
         local grapple_point = data.grapple_point
         if not Instance.exists(grapple_point) then
-            actor:set_state(ActorState.wrap(-1))
-        elseif grapple_point.done then
+            actor:set_state_networked(ActorState.wrap(-1))
+        elseif Instance.get_data(grapple_point).done then
             if not (actor:control("skill3", 0) or actor.x_skill) then
-                actor:set_state(ActorState.wrap(-1))
+                actor:set_state_networked(ActorState.wrap(-1))
                 return
             end
             data.grapple_x = grapple_point.x
             data.grapple_y = grapple_point.y
             local grapple_x = data.grapple_x
             local grapple_y = data.grapple_y
-            if actor:is_authority() then
-                if Math.distance(actor.x, actor.y, grapple_x, grapple_y) <= 32 or (actor:is_colliding(gm.constants.pBlock, actor.x + actor.pHspeed, actor.y + actor.pVspeed) and not Instance.exists(grapple_point.target)) then
-                    data.use_release_speed = true
-                    actor.activity_type = 8
-                    actor.pVspeed = 0
-                    actor.pHspeed = 0
-                    actor.moveLeft = 0
-                    actor.moveRight = false
-                else
-                    data.use_release_speed = false
-                    actor.activity_type = 1
-                    local dir = Math.direction(actor.x, actor.y, grapple_x, grapple_y)
-                    actor.pHspeed = gm.lengthdir_x(16, dir) + gm.lengthdir_x(math.max(0, actor.pHmax - 2.8), dir)
-                    actor.pVspeed = gm.lengthdir_y(16, dir) + gm.lengthdir_y(math.max(0, actor.pHmax - 2.8), dir)
-                end
+            if Math.distance(actor.x, actor.y, grapple_x, grapple_y) <= 32 or (actor:is_colliding(gm.constants.pBlock, actor.x + actor.pHspeed, actor.y + actor.pVspeed) and not Instance.exists(grapple_point.target)) then
+                data.use_release_speed = true
+                actor.activity_type = 8
+                actor.pVspeed = 0
+                actor.pHspeed = 0
+                actor.moveLeft = 0
+                actor.moveRight = false
+            else
+                data.use_release_speed = false
+                actor.activity_type = 1
+                local dir = Math.direction(actor.x, actor.y, grapple_x, grapple_y)
+                actor.pHspeed = gm.lengthdir_x(16, dir) + gm.lengthdir_x(math.max(0, actor.pHmax - 2.8), dir)
+                actor.pVspeed = gm.lengthdir_y(16, dir) + gm.lengthdir_y(math.max(0, actor.pHmax - 2.8), dir)
             end
         end
     end)
@@ -1845,11 +2219,11 @@ local initialize = function()
             actor.pHspeed = data.rHspeed or actor.pHmax * actor.image_xscale
             actor.pVspeed = -0.75 * actor.pVmax
         end
-        if data.incur_cooldown then
-            data.incur_cooldown = false
-        else
-            actor:get_active_skill(Skill.Slot.UTILITY):reset_cooldown()
-        end
+        --if data.incur_cooldown then
+        --    data.incur_cooldown = false
+        --else
+        --    actor:get_active_skill(Skill.Slot.UTILITY):reset_cooldown()
+        --end
     end)
 
     -- Executed when stateHunterV is entered
@@ -2038,8 +2412,12 @@ local initialize = function()
         instance.rewards = instance.rewards - 1
         if instance.rewards > 0 then Alarm.add(45, chinytozo_give_reward_alarm, instance, item, target) end
     end
-
+    
     Callback.add(oChinyTozo.on_create, function(instance)
+        while instance:is_colliding(gm.constants.pBlock, instance.x, instance.bbox_top) do
+            instance.y = instance.y + 1
+        end
+        instance:move_contact_solid(270, -1)
         GM.interactable_init_cost(instance, 0, 0)
         instance:interactable_init_name()
         instance.candidates = chinytozo_get_candidates()
@@ -2123,7 +2501,7 @@ local initialize = function()
         if not do_chinytozo_spawn or not Options.experimental[1] then return end
 
         local attempts = 0
-        while Instance.count(oChinyTozo) < #hunters * 2 + 1 do
+        while Instance.count(oChinyTozo) < #hunters * 2 do
     	    gm._mod_game_getDirector():mapobject_spawn(oChinyTozo.value, 1, nil, nil, nil, nil, gm.constants.oB, nil, nil, nil, nil, nil, nil, attempts > 32)
             attempts = attempts + 1
         end
@@ -2131,24 +2509,40 @@ local initialize = function()
     end)
 
     Hook.add_post("gml_Object_oBookDropEnvironment_Create_0", function(self, other)
-        if Net.client or not do_chinytozo_spawn or not Options.experimental[1] then return end
-        local rh32 = Global.room_height + 32
-        local ground, gx, gy = self:collision_line(self.x, self.y, self.x, rh32, gm.constants.pBlock, false, false)
-        if Instance.exists(ground) then
-            gx, gy = self.x, self.y
-        else
-            local g = self:ground_nearest(self.x, rh32, gm.constants.oB)
-            gx = Math.clamp(self.x, g.x + 16, (g.x + (g.width_box * 32)) - 16)
-            gy = g.y - 12
-        end
-        oChinyTozo:create(gx, gy)
+        if not do_chinytozo_spawn or not Options.experimental[1] then return end
+        local x, y = self.x, self.y
+        Alarm.add(1, function()
+            local rh32 = Global.room_height + 32
+            local ground, gx, gy = self:collision_line(x, y, x, rh32, gm.constants.pBlock, false, false)
+            if Instance.exists(ground) then
+                gx, gy = x, y
+            else
+                ground = self:collision_line(x - 1, y, x - 1, rh32, gm.constants.pBlock, false, false)
+                if Instance.exists(ground) then
+                    gx, gy = x, y
+                else
+                    local g = self:ground_nearest(x, rh32, gm.constants.oB)
+                    gx = Math.clamp(x, g.x + 16, (g.x + (g.width_box * 32)) - 16)
+                    gy = g.y - 12
+                end
+            end
+            oChinyTozo:create(gx, gy)
+        end)
     end)
     
 end
 Initialize.add(initialize)
 
 -- ** Uncomment the two lines below to re-call initialize() on hotload **
-if hotload then initialize() end
+if hotload then
+    initialize()
+    for _, actor in ipairs(Instance.find_all(gm.constants.oP)) do
+        if actor.class == Survivor.find("hunter", "hunter").value then
+            do_chinytozo_spawn = true
+            break
+        end
+    end
+end
 
 Hook.add_pre("gml_Object_oLava_Collision_pActorCollisionBase", function(self, other)
     local actor = GM.attack_collision_resolve(other)
